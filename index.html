@@ -157,9 +157,9 @@
     .post[data-format="retrato"]  .img-center-wrap { height: 19vw !important; }
     .post[data-format="quadrado"] .img-center-wrap { height: 18vw !important; }
     .post[data-format="stories"]  .img-center-wrap { height: 22vw !important; }
-    #title-line1, #title-line2 { font-size: 14px !important; }
-    #preview-desc { font-size: 7px !important; }
-    #preview-list li { font-size: 6px !important; }
+    #title-line1, #title-line2 { font-size: 14px; }
+    #preview-desc { font-size: 7px; }
+    #preview-list li { font-size: 6px; }
     #preview-list li::before { font-size: 8px !important; }
     #preview-tag1, #preview-tag2 { font-size: 7px !important; padding: 3px 8px !important; }
     .handle { font-size: 9px !important; }
@@ -1129,6 +1129,7 @@ Terceiro item da lista</textarea></div>
       img.src = '';
       if (wrap) wrap.style.display = 'none';
     }
+    applyTypography();
   }
 
   function applyTypography() {
@@ -1184,7 +1185,8 @@ Terceiro item da lista</textarea></div>
     const isMobile = window.innerWidth <= 700;
     // Base size proportional to actual post width
     const postW = post.offsetWidth;
-    const base = isMobile ? Math.max(10, Math.round(postW * 0.13)) : ({ retrato: 52, quadrado: 44, stories: 26 }[fmt] || 52);
+    const chosenSize = Number(document.getElementById('title-size')?.value || 52);
+    const base = isMobile ? Math.max(10, Math.round(chosenSize * postW / 520)) : chosenSize;
 
     function shrink(el, maxLines, baseSize) {
       let size = baseSize;
