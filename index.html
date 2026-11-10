@@ -310,7 +310,10 @@
   .post[data-format="retrato"]  { width: 520px; height: 650px; }
   .post[data-format="stories"]  { width: 366px; height: 650px; }
 
-  .post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 10%, var(--grad1) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, var(--grad2) 0%, transparent 55%); z-index: 0; opacity: var(--grad-intensity); transition: opacity 0.3s; }
+  .post-background { position:absolute; inset:0; z-index:0; background-position:center; background-size:cover; background-repeat:no-repeat; pointer-events:none; }
+  .post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 10%, var(--grad1) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, var(--grad2) 0%, transparent 55%); z-index: 1; opacity: var(--grad-intensity); transition: opacity 0.3s; }
+  #deco-c1, #deco-c2, #deco-svg-layer { z-index:2; }
+  .post .content, .post .tag-bottom-wrap, .post .footer { z-index:3; }
   .deco-circle  { position: absolute; width: 160px; height: 160px; border-radius: 50%; border: 1.5px solid rgba(126,219,126,0.12); top: -50px; right: -50px; z-index: 1; transition: opacity .3s; }
   .deco-circle2 { position: absolute; width:  90px; height:  90px; border-radius: 50%; border: 1px   solid rgba(126,219,126,0.08); top:  14px; right:  14px; z-index: 1; transition: opacity .3s; }
   #deco-svg-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -410,6 +413,10 @@
     </div>
     <div class="section-body">
       <div class="template-grid">
+        <button class="template-card" onclick="applyTemplate('original')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#1a3d1f,#2a6630)"><span></span></span>
+          <span class="template-name">Original</span><span class="template-desc">Layout clássico do gerador</span>
+        </button>
         <button class="template-card" onclick="applyTemplate('dicas')" type="button">
           <span class="template-preview" style="background:linear-gradient(135deg,#12351d,#39804a)"><span></span></span>
           <span class="template-name">Dicas práticas</span><span class="template-desc">Conteúdo direto e aplicável</span>
@@ -480,6 +487,12 @@ Terceiro item da lista</textarea></div>
       <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
       <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
       <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
+        <label>Tipografia da postagem</label>
+        <div class="field"><label>Estilo da fonte</label><select id="font-family" onchange="applyTypography();autoSaveDraft()"><option value="'Playfair Display', Georgia, serif">Clássica (serifada)</option><option value="'DM Sans', Arial, sans-serif">Moderna (sem serifa)</option><option value="Georgia, serif">Editorial (Georgia)</option><option value="Arial, sans-serif">Simples (Arial)</option><option value="Impact, sans-serif">Impacto (Impact)</option></select></div>
+        <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
+        <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
+      </div>
       <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn" type="button" onclick="saveBrandProfile()">💾 Salvar nas configurações</button>
@@ -595,6 +608,14 @@ Terceiro item da lista</textarea></div>
       </div>
       <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="toggle-row"><label>Cor original da imagem</label><label class="toggle"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
+        <label>Plano de fundo da postagem</label>
+        <label class="upload-btn" for="background-upload">🖼️ Enviar imagem de fundo</label>
+        <input type="file" id="background-upload" accept="image/*" onchange="handleBackgroundUpload(this)">
+        <div class="template-hint">O fundo fica atrás de todo o texto e dos elementos da postagem.</div>
+        <div class="field"><label>Ajuste do fundo</label><select id="background-fit" onchange="updateBackground();autoSaveDraft()"><option value="cover">Preencher (cortar bordas)</option><option value="contain">Mostrar imagem inteira</option></select></div>
+        <button type="button" class="btn secondary" onclick="clearBackground()">✕ Remover plano de fundo</button>
+      </div>
     </div>
   </div>
 
@@ -652,6 +673,7 @@ Terceiro item da lista</textarea></div>
 <!-- PREVIEW -->
 <div class="preview-wrap">
   <div class="post" id="post" data-format="retrato">
+    <div class="post-background" id="post-background"></div>
     <div class="deco-circle" id="deco-c1"></div>
     <div class="deco-circle2" id="deco-c2"></div>
     <svg id="deco-svg-layer" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 600 650" preserveAspectRatio="xMidYMid slice"></svg>
@@ -716,6 +738,19 @@ Terceiro item da lista</textarea></div>
   const activeDecos = new Set(['circulos']);
 
   const POST_TEMPLATES = {
+  "original": {
+    "line1": "Seu título",
+    "line2": "aqui",
+    "desc": "Escreva aqui uma descrição curta e envolvente sobre o assunto do post.",
+    "list": "Primeiro item da lista\\nSegundo item da lista\\nTerceiro item da lista",
+    "listNum": false,
+    "tag1": "👇 Leia a legenda",
+    "tag2": "👉 Arraste para o lado",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "verde",
+    "grad": "padrao"
+  },
   "dicas": {
     "line1": "Pequenas mudanças",
     "line2": "grandes resultados",
@@ -1059,6 +1094,7 @@ Terceiro item da lista</textarea></div>
     const imgUrlInput = document.getElementById('input-img').value;
     const uploadedSrc = window._uploadedImgSrc || '';
     const imgUrl  = uploadedSrc || imgUrlInput;
+    updateBackground();
 
     document.getElementById('title-line1').textContent = line1;
     document.getElementById('title-line2').textContent = line2;
@@ -1093,6 +1129,53 @@ Terceiro item da lista</textarea></div>
       img.src = '';
       if (wrap) wrap.style.display = 'none';
     }
+  }
+
+  function applyTypography() {
+    const family=document.getElementById('font-family').value;
+    const titleSize=Number(document.getElementById('title-size').value);
+    const bodySize=Number(document.getElementById('body-size').value);
+    document.getElementById('preview-title').style.fontFamily=family;
+    document.getElementById('title-line1').style.fontSize=titleSize+'px';
+    document.getElementById('title-line2').style.fontSize=titleSize+'px';
+    document.getElementById('preview-desc').style.fontFamily=family;
+    document.getElementById('preview-desc').style.fontSize=bodySize+'px';
+    document.getElementById('preview-list').style.fontFamily=family;
+    document.getElementById('preview-list').querySelectorAll('li').forEach(li=>li.style.fontSize=Math.max(9,bodySize-3)+'px');
+    document.getElementById('title-size-label').textContent=titleSize+' px';
+    document.getElementById('body-size-label').textContent=bodySize+' px';
+    requestAnimationFrame(fitTitleFonts);
+  }
+
+  let backgroundImageData = '';
+  function updateBackground() {
+    const layer=document.getElementById('post-background');
+    if(!layer)return;
+    layer.style.backgroundImage=backgroundImageData?'url("'+backgroundImageData+'")':'none';
+    layer.style.backgroundSize=document.getElementById('background-fit')?.value||'cover';
+  }
+  function handleBackgroundUpload(input) {
+    const file=input.files&&input.files[0]; if(!file)return;
+    if(!file.type.startsWith('image/')){showToast('Escolha um arquivo de imagem.');return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1800,scale=Math.min(1,max/Math.max(img.width,img.height));
+        const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        backgroundImageData=canvas.toDataURL('image/jpeg',0.86);
+        updateBackground();autoSaveDraft();showToast('Plano de fundo aplicado; texto preservado!');
+      };
+      img.onerror=()=>showToast('Não foi possível abrir esta imagem.');
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function clearBackground() {
+    backgroundImageData='';
+    const input=document.getElementById('background-upload');if(input)input.value='';
+    updateBackground();autoSaveDraft();showToast('Plano de fundo removido.');
   }
 
   function fitTitleFonts() {
@@ -1179,7 +1262,7 @@ Terceiro item da lista</textarea></div>
   function saveToHistory(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
     const name=prompt('Nome deste projeto:',title); if(name===null)return;
-    const snap={line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.format||'retrato'};
+    const snap={backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.format||'retrato'};
     const e={id:Date.now(),name:name.trim()||title,snapshot:snap,line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
     const h=getHistory();h.unshift(e);saveHistory(h);renderHistory();showToast('✅ Projeto salvo!');
   }
@@ -1234,6 +1317,14 @@ Terceiro item da lista</textarea></div>
     document.getElementById('toggle-list-num').checked = false;
     document.getElementById('toggle-img-color').checked = false;
     document.getElementById('input-img').value = '';
+    backgroundImageData = '';
+    document.getElementById('background-upload').value = '';
+    document.getElementById('background-fit').value = 'cover';
+    document.getElementById('font-family').value = "'Playfair Display', Georgia, serif";
+    document.getElementById('title-size').value = 52;
+    document.getElementById('body-size').value = 16;
+    applyTypography();
+    updateBackground();
     window._uploadedImgSrc = '';
     const prev = document.getElementById('upload-img-preview');
     if (prev) { prev.src = ''; prev.style.display = 'none'; }
@@ -1367,6 +1458,11 @@ Terceiro item da lista</textarea></div>
         showIco:  document.getElementById('toggle-icons').checked,
         showImg:  document.getElementById('toggle-img').checked,
         imgUrl:   document.getElementById('input-img').value,
+        backgroundImage: backgroundImageData,
+        backgroundFit: document.getElementById('background-fit').value,
+        fontFamily: document.getElementById('font-family').value,
+        titleSize: document.getElementById('title-size').value,
+        bodySize: document.getElementById('body-size').value,
         imgColor: document.getElementById('toggle-img-color').checked,
         gradVal:  document.getElementById('slider-grad').value,
         theme:    currentTheme,
@@ -1401,6 +1497,11 @@ Terceiro item da lista</textarea></div>
       }
       if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
       if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
+      if (d.backgroundImage !== undefined) backgroundImageData = d.backgroundImage || '';
+      if (d.backgroundFit) document.getElementById('background-fit').value = d.backgroundFit;
+      if (d.fontFamily) document.getElementById('font-family').value = d.fontFamily;
+      if (d.titleSize) document.getElementById('title-size').value = d.titleSize;
+      if (d.bodySize) document.getElementById('body-size').value = d.bodySize;
       if (d.imgColor !== undefined) document.getElementById('toggle-img-color').checked = d.imgColor;
       if (d.gradVal !== undefined) {
         document.getElementById('slider-grad').value = d.gradVal;
@@ -1426,6 +1527,8 @@ Terceiro item da lista</textarea></div>
         const fb = document.querySelector(`.format-btn[data-fmt="${d.format}"]`);
         if (fb) setFormat(fb);
       }
+      updateBackground();
+      applyTypography();
       return true;
     } catch(e) { return false; }
   }
