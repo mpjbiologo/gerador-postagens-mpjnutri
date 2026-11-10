@@ -328,6 +328,16 @@
   .carousel-actions { display:flex;gap:6px;flex-wrap:wrap;margin:8px 0; }
   .carousel-actions .btn { flex:1;min-width:90px; }
   .carousel-note { color:var(--app-label);font-size:10px;line-height:1.4;margin:6px 0; }
+  .carousel-thumb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0;max-height:260px;overflow:auto}
+  .carousel-thumb{position:relative;min-height:92px;padding:8px;border:1px solid var(--app-btn-border);border-radius:8px;background:var(--app-btn-bg);color:var(--app-text);text-align:left;cursor:grab;overflow:hidden}
+  .carousel-thumb.active{border:2px solid var(--accent);padding:7px}
+  .carousel-thumb strong{display:block;font-size:9px;color:var(--accent);margin-bottom:5px}
+  .carousel-thumb span{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:10px;line-height:1.3}
+  .carousel-thumb.dragging{opacity:.4}.carousel-thumb.drop-target{outline:2px dashed var(--accent)}
+  .field-counter{display:flex;justify-content:space-between;font-size:9px;color:var(--app-sub);margin-top:4px}
+  .field-counter.over{color:#ef8b70}.history-controls{display:flex;gap:6px;margin:8px 0}.history-controls .btn{padding:8px;font-size:11px}
+  .carousel-actions .btn.small{min-width:0;padding:8px 6px;font-size:10px}
+
 
   .post-background { position:absolute; inset:0; z-index:0; background-position:center; background-size:cover; background-repeat:no-repeat; pointer-events:none; }
   .post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 10%, var(--grad1) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, var(--grad2) 0%, transparent 55%); z-index: 1; opacity: var(--grad-intensity); transition: opacity 0.3s; }
@@ -653,15 +663,21 @@ Terceiro item da lista</textarea></div>
       <div class="carousel-tools" id="carousel-tools">
         <label>Slides do carrossel</label>
         <div class="carousel-slide-list" id="carousel-slide-list"></div>
+        <div class="carousel-thumb-grid" id="carousel-thumb-grid" aria-label="Miniaturas dos slides"></div>
         <div class="carousel-actions">
           <button type="button" class="btn" onclick="addCarouselSlide()">＋ Adicionar slide</button>
+          <button type="button" class="btn secondary small" onclick="duplicateCarouselSlide()">⧉ Duplicar</button>
           <button type="button" class="btn secondary" onclick="removeCarouselSlide()">✕ Excluir</button>
         </div>
         <div class="carousel-actions">
           <button type="button" class="btn secondary" onclick="moveCarouselSlide(-1)">← Mover</button>
           <button type="button" class="btn secondary" onclick="moveCarouselSlide(1)">Mover →</button>
         </div>
-        <div class="carousel-note">Selecione um slide e edite os campos de texto e imagem normalmente no painel. A capa tem estilo próprio; os demais slides usam o layout de conteúdo.</div>
+        <div class="carousel-actions">
+          <button type="button" class="btn secondary small" onclick="copySlideStyle()">Copiar estilo</button>
+          <button type="button" class="btn secondary small" onclick="pasteSlideStyle()">Aplicar estilo</button>
+        </div>
+        <div class="carousel-note">Arraste as miniaturas para reorganizar. Selecione um slide para editar texto e imagem.</div>
       </div>
     </div>
   </div>
@@ -674,6 +690,10 @@ Terceiro item da lista</textarea></div>
     <div class="section-body">
       <input type="search" id="project-search" class="project-search" placeholder="Buscar projeto pelo nome..." oninput="renderHistory()">
       <div id="history-list" class="history-list"><div class="history-empty">Nenhum projeto salvo ainda.</div></div>
+      <div class="history-controls">
+        <button class="btn secondary" id="undo-btn" onclick="undoEdit()" disabled>↶ Desfazer</button>
+        <button class="btn secondary" id="redo-btn" onclick="redoEdit()" disabled>↷ Refazer</button>
+      </div>
       <div class="btn-row">
         <button class="btn" onclick="saveToHistory()">💾 Salvar projeto</button>
         <button class="btn secondary" onclick="clearHistory()">🗑 Limpar tudo</button>
@@ -1129,11 +1149,20 @@ Terceiro item da lista</textarea></div>
   function renderCarouselTools(){
     const list=document.getElementById('carousel-slide-list');if(!list)return;
     list.innerHTML=carouselSlides.map((d,i)=>'<button type="button" class="carousel-slide-chip '+(i===activeCarouselSlide?'active':'')+'" onclick="selectCarouselSlide('+i+')">'+(i===0?'Capa':'Slide '+(i+1))+'</button>').join('');
+    const thumbs=document.getElementById('carousel-thumb-grid');
+    if(thumbs)thumbs.innerHTML=carouselSlides.map((d,i)=>'<button type="button" draggable="true" data-slide-index="'+i+'" class="carousel-thumb '+(i===activeCarouselSlide?'active':'')+'" onclick="selectCarouselSlide('+i+')" ondragstart="dragCarouselSlide(event,'+i+')" ondragover="event.preventDefault();this.classList.add(\'drop-target\')" ondragleave="this.classList.remove(\'drop-target\')" ondrop="dropCarouselSlide(event,'+i+')"><strong>'+(i===0?'CAPA':'SLIDE '+(i+1))+'</strong><span>'+escapeProjectText([d.line1,d.line2,d.desc,d.list].filter(Boolean).join(' · '))+'</span></button>').join('');
     document.getElementById('carousel-counter').textContent=(activeCarouselSlide+1)+' / '+(carouselSlides.length||1);
     const p=document.getElementById('post');p.classList.toggle('is-carousel',p.dataset.mode==='carrossel');
     p.classList.toggle('carousel-cover',p.dataset.mode==='carrossel'&&activeCarouselSlide===0);
     p.classList.toggle('carousel-content',p.dataset.mode==='carrossel'&&activeCarouselSlide!==0);
   }
+  let draggedCarouselSlide=-1;
+  function dragCarouselSlide(ev,i){draggedCarouselSlide=i;ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',String(i));}
+  function dropCarouselSlide(ev,to){ev.preventDefault();document.querySelectorAll('.carousel-thumb').forEach(x=>x.classList.remove('drop-target'));const from=draggedCarouselSlide>=0?draggedCarouselSlide:Number(ev.dataTransfer.getData('text/plain'));draggedCarouselSlide=-1;if(from<0||from>=carouselSlides.length||to<0||to>=carouselSlides.length||from===to)return;saveCurrentCarouselSlide();const moved=carouselSlides.splice(from,1)[0];carouselSlides.splice(to,0,moved);activeCarouselSlide=to;applyCarouselSlide(to);autoSaveDraft();}
+  function duplicateCarouselSlide(){if(!carouselSlides.length)return;saveCurrentCarouselSlide();const copy=JSON.parse(JSON.stringify(carouselSlides[activeCarouselSlide]));carouselSlides.splice(activeCarouselSlide+1,0,copy);applyCarouselSlide(activeCarouselSlide+1);autoSaveDraft();showToast('Slide duplicado.');}
+  let copiedSlideStyle=null;
+  function copySlideStyle(){if(!carouselSlides.length)return;saveCurrentCarouselSlide();const d=carouselSlides[activeCarouselSlide];copiedSlideStyle={theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value};showToast('Estilo copiado.');}
+  function pasteSlideStyle(){if(!copiedSlideStyle){showToast('Copie o estilo de um slide primeiro.');return;}if(copiedSlideStyle.theme){const b=document.querySelector('.theme-swatch[data-theme="'+copiedSlideStyle.theme+'"]');if(b)setTheme(b);}if(copiedSlideStyle.gradStyle){const b=document.querySelector('.grad-swatch[data-grad="'+copiedSlideStyle.gradStyle+'"]');if(b)setGrad(b);}activeDecos.clear();copiedSlideStyle.decos.forEach(x=>activeDecos.add(x));document.querySelectorAll('.deco-btn').forEach(b=>b.classList.toggle('active',activeDecos.has(b.dataset.deco)));document.getElementById('font-family').value=copiedSlideStyle.fontFamily;document.getElementById('title-size').value=copiedSlideStyle.titleSize;document.getElementById('body-size').value=copiedSlideStyle.bodySize;applyTypography();updatePreview();autoSaveDraft();}
   function selectCarouselSlide(i){if(i<0||i>=carouselSlides.length)return;saveCurrentCarouselSlide();applyCarouselSlide(i);}
   function addCarouselSlide(){
     saveCurrentCarouselSlide();carouselSlides.push({...readCarouselFields(),line1:'Novo slide',line2:'',desc:'Escreva o conteúdo deste slide.',list:'',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false});
@@ -1649,6 +1678,18 @@ Terceiro item da lista</textarea></div>
     } catch(e) { return false; }
   }
 
+
+  const undoStack=[],redoStack=[];let historyCaptureTimer=null;
+  function captureEditorState(){return JSON.stringify({fields:['input-line1','input-line2','input-desc','input-list','input-tag1','input-tag2','input-img'].reduce((o,id)=>(o[id]=document.getElementById(id).value,o),{}),format:document.getElementById('post').dataset.mode,slides:carouselSlides,active:activeCarouselSlide,theme:currentTheme,grad:currentGradStyle,decos:Array.from(activeDecos)});}
+  function recordEditorState(){const snap=captureEditorState();if(undoStack[undoStack.length-1]!==snap){undoStack.push(snap);if(undoStack.length>40)undoStack.shift();redoStack.length=0;updateUndoButtons();}}
+  function updateUndoButtons(){const u=document.getElementById('undo-btn'),r=document.getElementById('redo-btn');if(u)u.disabled=undoStack.length<2;if(r)r.disabled=!redoStack.length;}
+  function restoreEditorState(raw){const d=JSON.parse(raw);Object.entries(d.fields||{}).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});if(d.slides){carouselSlides=d.slides;activeCarouselSlide=d.active||0;}if(d.format==='carrossel'){const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b){setFormat(b);applyCarouselSlide(activeCarouselSlide);}}else{const b=document.querySelector('.format-btn[data-fmt="'+(d.format||'retrato')+'"]');if(b)setFormat(b);}if(d.theme){const b=document.querySelector('.theme-swatch[data-theme="'+d.theme+'"]');if(b)setTheme(b);}if(d.grad){const b=document.querySelector('.grad-swatch[data-grad="'+d.grad+'"]');if(b)setGrad(b);}updatePreview();autoSaveDraft();}
+  function undoEdit(){if(undoStack.length<2)return;redoStack.push(undoStack.pop());restoreEditorState(undoStack[undoStack.length-1]);updateUndoButtons();}
+  function redoEdit(){if(!redoStack.length)return;const s=redoStack.pop();undoStack.push(s);restoreEditorState(s);updateUndoButtons();}
+  function setupTextCounters(){[['input-line1',55],['input-line2',55],['input-desc',220],['input-list',420],['input-tag1',45],['input-tag2',45]].forEach(([id,max])=>{const el=document.getElementById(id);if(!el)return;const box=document.createElement('div');box.className='field-counter';box.innerHTML='<span>Caracteres</span><span></span>';el.insertAdjacentElement('afterend',box);const out=box.lastElementChild;const refresh=()=>{const n=el.value.length;out.textContent=n+' / '+max;box.classList.toggle('over',n>max);};el.addEventListener('input',refresh);refresh();});}
+  document.addEventListener('input',ev=>{if(ev.target.matches('#input-line1,#input-line2,#input-desc,#input-list,#input-tag1,#input-tag2')){clearTimeout(historyCaptureTimer);historyCaptureTimer=setTimeout(recordEditorState,500);}});
+  document.addEventListener('keydown',ev=>{if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'){ev.preventDefault();ev.shiftKey?redoEdit():undoEdit();}else if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='y'){ev.preventDefault();redoEdit();}});
+
   // Attach auto-save to all inputs & toggles
   document.querySelectorAll('#input-line1,#input-line2,#input-desc,#input-list,#input-tag1,#input-tag2,#input-handle,#input-wa,#input-img').forEach(el => {
     el.addEventListener('input', autoSaveDraft);
@@ -1664,7 +1705,9 @@ Terceiro item da lista</textarea></div>
   document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
 
   renderHistory();
+  setupTextCounters();
   const draftLoaded = loadDraft(false);
+  recordEditorState();
   // Identidade salva só é carregada quando o usuário solicitar nas configurações.
   updatePreview();
   renderDecos();
