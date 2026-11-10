@@ -309,6 +309,25 @@
   .post[data-format="quadrado"] { width: 520px; height: 520px; }
   .post[data-format="retrato"]  { width: 520px; height: 650px; }
   .post[data-format="stories"]  { width: 366px; height: 650px; }
+  .post.carousel-cover { border:5px solid rgba(255,255,255,.13); }
+  .post.carousel-cover #preview-title { text-align:center; }
+  .post.carousel-cover #title-line1 { text-transform:uppercase; letter-spacing:.025em; }
+  .post.carousel-content .content { justify-content:flex-start; padding-top:54px; }
+  .post.carousel-content #preview-title { text-align:left; margin-bottom:18px; }
+  .post.carousel-content #title-line1,.post.carousel-content #title-line2 { font-size:clamp(22px,4vw,34px)!important;line-height:1.12; }
+  .post.carousel-content .divider-post { margin:12px 0 18px; }
+  .post.carousel-content #preview-desc { font-size:clamp(14px,2vw,19px);line-height:1.45; }
+  .post.carousel-content #preview-list li { font-size:clamp(13px,1.8vw,17px);line-height:1.4;margin:8px 0; }
+  .carousel-counter { display:none;position:absolute;z-index:5;top:16px;right:18px;padding:6px 11px;border-radius:20px;color:#fff;background:rgba(0,0,0,.35);font:600 12px 'DM Sans',sans-serif; }
+  .post.is-carousel .carousel-counter { display:block; }
+  .carousel-tools { display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--app-section-border); }
+  .carousel-tools.visible { display:block; }
+  .carousel-slide-list { display:flex;flex-wrap:wrap;gap:6px;margin:8px 0; }
+  .carousel-slide-chip { min-width:38px;padding:7px 10px;border:1px solid var(--app-btn-border);border-radius:7px;color:var(--app-btn-color);background:var(--app-btn-bg);cursor:pointer;font:600 11px 'DM Sans',sans-serif; }
+  .carousel-slide-chip.active { border-color:var(--accent);color:var(--accent);background:rgba(126,219,126,.1); }
+  .carousel-actions { display:flex;gap:6px;flex-wrap:wrap;margin:8px 0; }
+  .carousel-actions .btn { flex:1;min-width:90px; }
+  .carousel-note { color:var(--app-label);font-size:10px;line-height:1.4;margin:6px 0; }
 
   .post-background { position:absolute; inset:0; z-index:0; background-position:center; background-size:cover; background-repeat:no-repeat; pointer-events:none; }
   .post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 10%, var(--grad1) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, var(--grad2) 0%, transparent 55%); z-index: 1; opacity: var(--grad-intensity); transition: opacity 0.3s; }
@@ -629,6 +648,20 @@ Terceiro item da lista</textarea></div>
         <button class="format-btn" data-fmt="quadrado" onclick="setFormat(this)"><div class="format-icon" style="width:28px;height:28px;"></div>1:1</button>
         <button class="format-btn active" data-fmt="retrato" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;"></div>4:5</button>
         <button class="format-btn" data-fmt="stories" onclick="setFormat(this)"><div class="format-icon" style="width:16px;height:28px;"></div>9:16</button>
+        <button class="format-btn" data-fmt="carrossel" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;border-style:dashed;"></div>Carrossel</button>
+      </div>
+      <div class="carousel-tools" id="carousel-tools">
+        <label>Slides do carrossel</label>
+        <div class="carousel-slide-list" id="carousel-slide-list"></div>
+        <div class="carousel-actions">
+          <button type="button" class="btn" onclick="addCarouselSlide()">＋ Adicionar slide</button>
+          <button type="button" class="btn secondary" onclick="removeCarouselSlide()">✕ Excluir</button>
+        </div>
+        <div class="carousel-actions">
+          <button type="button" class="btn secondary" onclick="moveCarouselSlide(-1)">← Mover</button>
+          <button type="button" class="btn secondary" onclick="moveCarouselSlide(1)">Mover →</button>
+        </div>
+        <div class="carousel-note">Selecione um slide e edite os campos de texto e imagem normalmente no painel. A capa tem estilo próprio; os demais slides usam o layout de conteúdo.</div>
       </div>
     </div>
   </div>
@@ -677,6 +710,7 @@ Terceiro item da lista</textarea></div>
     <div class="deco-circle" id="deco-c1"></div>
     <div class="deco-circle2" id="deco-c2"></div>
     <svg id="deco-svg-layer" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 600 650" preserveAspectRatio="xMidYMid slice"></svg>
+    <div class="carousel-counter" id="carousel-counter">1 / 1</div>
     <div class="content">
       <div id="preview-title">
         <div id="title-line1">Seu título</div>
@@ -1070,11 +1104,60 @@ Terceiro item da lista</textarea></div>
     }).join(' ');
   }
 
-  function setFormat(el) {
-    document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('post').dataset.format = el.dataset.fmt;
-    requestAnimationFrame(fitTitleFonts);
+  let carouselSlides=[];
+  let activeCarouselSlide=0;
+  function readCarouselFields(){
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked};
+  }
+  function saveCurrentCarouselSlide(){
+    if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
+    carouselSlides[activeCarouselSlide]={...carouselSlides[activeCarouselSlide],...readCarouselFields()};
+    renderCarouselTools();
+  }
+  function applyCarouselSlide(i){
+    const d=carouselSlides[i];if(!d)return;activeCarouselSlide=i;
+    document.getElementById('input-line1').value=d.line1||'';document.getElementById('input-line2').value=d.line2||'';
+    document.getElementById('input-desc').value=d.desc||'';document.getElementById('input-list').value=d.list||'';
+    document.getElementById('toggle-list-num').checked=!!d.listNum;
+    document.getElementById('input-tag1').value=d.tag1||'';document.getElementById('input-tag2').value=d.tag2||'';
+    setTagActive(1,!!d.showTag1);setTagActive(2,!!d.showTag2);
+    document.getElementById('input-img').value=d.imgUrl||'';document.getElementById('toggle-img').checked=d.showImg!==false;
+    document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';
+    const prev=document.getElementById('upload-img-preview');if(prev){prev.src=d.image||'';prev.style.display=d.image?'block':'none';}
+    updatePreview();renderCarouselTools();
+  }
+  function renderCarouselTools(){
+    const list=document.getElementById('carousel-slide-list');if(!list)return;
+    list.innerHTML=carouselSlides.map((d,i)=>'<button type="button" class="carousel-slide-chip '+(i===activeCarouselSlide?'active':'')+'" onclick="selectCarouselSlide('+i+')">'+(i===0?'Capa':'Slide '+(i+1))+'</button>').join('');
+    document.getElementById('carousel-counter').textContent=(activeCarouselSlide+1)+' / '+(carouselSlides.length||1);
+    const p=document.getElementById('post');p.classList.toggle('is-carousel',p.dataset.mode==='carrossel');
+    p.classList.toggle('carousel-cover',p.dataset.mode==='carrossel'&&activeCarouselSlide===0);
+    p.classList.toggle('carousel-content',p.dataset.mode==='carrossel'&&activeCarouselSlide!==0);
+  }
+  function selectCarouselSlide(i){if(i<0||i>=carouselSlides.length)return;saveCurrentCarouselSlide();applyCarouselSlide(i);}
+  function addCarouselSlide(){
+    saveCurrentCarouselSlide();carouselSlides.push({...readCarouselFields(),line1:'Novo slide',line2:'',desc:'Escreva o conteúdo deste slide.',list:'',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false});
+    applyCarouselSlide(carouselSlides.length-1);autoSaveDraft();
+  }
+  function removeCarouselSlide(){
+    if(carouselSlides.length<=1){showToast('O carrossel precisa ter pelo menos uma capa.');return;}
+    carouselSlides.splice(activeCarouselSlide,1);activeCarouselSlide=Math.max(0,activeCarouselSlide-1);applyCarouselSlide(activeCarouselSlide);autoSaveDraft();
+  }
+  function moveCarouselSlide(dir){
+    saveCurrentCarouselSlide();const to=activeCarouselSlide+dir;if(to<0||to>=carouselSlides.length)return;
+    [carouselSlides[activeCarouselSlide],carouselSlides[to]]=[carouselSlides[to],carouselSlides[activeCarouselSlide]];activeCarouselSlide=to;applyCarouselSlide(to);autoSaveDraft();
+  }
+  function setFormat(el){
+    const p=document.getElementById('post');if(p.dataset.mode==='carrossel')saveCurrentCarouselSlide();
+    document.querySelectorAll('.format-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
+    if(el.dataset.fmt==='carrossel'){
+      p.dataset.format='retrato';p.dataset.mode='carrossel';if(!carouselSlides.length)carouselSlides=[readCarouselFields()];
+      document.getElementById('carousel-tools').classList.add('visible');applyCarouselSlide(Math.min(activeCarouselSlide,carouselSlides.length-1));
+    }else{
+      p.dataset.format=el.dataset.fmt;p.dataset.mode=el.dataset.fmt;document.getElementById('carousel-tools').classList.remove('visible');
+      p.classList.remove('is-carousel','carousel-cover','carousel-content');
+    }
+    requestAnimationFrame(fitTitleFonts);autoSaveDraft();
   }
 
   function updatePreview() {
@@ -1095,6 +1178,11 @@ Terceiro item da lista</textarea></div>
     const uploadedSrc = window._uploadedImgSrc || '';
     const imgUrl  = uploadedSrc || imgUrlInput;
     updateBackground();
+    if(document.getElementById('post').dataset.mode==='carrossel'){
+      saveCurrentCarouselSlide();const p=document.getElementById('post');p.classList.add('is-carousel');
+      p.classList.toggle('carousel-cover',activeCarouselSlide===0);p.classList.toggle('carousel-content',activeCarouselSlide!==0);
+      document.getElementById('carousel-counter').textContent=(activeCarouselSlide+1)+' / '+carouselSlides.length;
+    }
 
     document.getElementById('title-line1').textContent = line1;
     document.getElementById('title-line2').textContent = line2;
@@ -1264,7 +1352,7 @@ Terceiro item da lista</textarea></div>
   function saveToHistory(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
     const name=prompt('Nome deste projeto:',title); if(name===null)return;
-    const snap={backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.format||'retrato'};
+    const snap={backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide};
     const e={id:Date.now(),name:name.trim()||title,snapshot:snap,line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
     const h=getHistory();h.unshift(e);saveHistory(h);renderHistory();showToast('✅ Projeto salvo!');
   }
@@ -1340,12 +1428,14 @@ Terceiro item da lista</textarea></div>
     activeDecos.clear(); activeDecos.add('circulos');
     document.querySelectorAll('.deco-btn').forEach(b => b.classList.toggle('active', b.dataset.deco === 'circulos'));
     setTheme(document.querySelector('.theme-swatch[data-theme="verde"]'));
+    carouselSlides=[];activeCarouselSlide=0;
     setFormat(document.querySelector('.format-btn[data-fmt="retrato"]'));
     try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
     updatePreview(); showToast('↺ Resetado!');
   }
 
   function saveImage() {
+    if(document.getElementById('post').dataset.mode==='carrossel'){saveCarouselImages();return;}
     const btn = document.getElementById('btn-save-img');
     btn.textContent = '⏳ Gerando...';
     btn.disabled = true;
@@ -1373,6 +1463,22 @@ Terceiro item da lista</textarea></div>
       btn.disabled = false;
       showToast('❌ Erro ao gerar imagem');
     });
+  }
+
+  async function saveCarouselImages(){
+    const btn=document.getElementById('btn-save-img');saveCurrentCarouselSlide();
+    if(!carouselSlides.length)return;const original=activeCarouselSlide,handle=document.getElementById('input-handle').value.replace('@','')||'post';
+    btn.disabled=true;btn.textContent='⏳ Gerando slides...';
+    try{
+      for(let i=0;i<carouselSlides.length;i++){
+        applyCarouselSlide(i);await new Promise(r=>setTimeout(r,180));
+        const canvas=await html2canvas(document.getElementById('post'),{scale:3,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
+        const a=document.createElement('a');a.download='carrossel-'+handle+'-slide-'+String(i+1).padStart(2,'0')+'.png';a.href=canvas.toDataURL('image/png');a.click();
+        await new Promise(r=>setTimeout(r,350));
+      }
+      showToast('✅ '+carouselSlides.length+' slides exportados individualmente!');
+    }catch(e){showToast('❌ Erro ao exportar o carrossel.');}
+    finally{applyCarouselSlide(original);btn.disabled=false;btn.textContent='💾 Salvar como imagem';}
   }
 
   function copyHTML() {
@@ -1471,7 +1577,9 @@ Terceiro item da lista</textarea></div>
         gradStyle: currentGradStyle,
         decos:    Array.from(activeDecos),
         appTheme: appTheme,
-        format:   document.getElementById('post').dataset.format || 'retrato',
+        format:   document.getElementById('post').dataset.mode || document.getElementById('post').dataset.format || 'retrato',
+        carouselSlides: document.getElementById('post').dataset.mode==='carrossel' ? (saveCurrentCarouselSlide(),carouselSlides) : [],
+        activeCarouselSlide: activeCarouselSlide,
       };
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch(e) {}
@@ -1528,6 +1636,11 @@ Terceiro item da lista</textarea></div>
       if (d.format) {
         const fb = document.querySelector(`.format-btn[data-fmt="${d.format}"]`);
         if (fb) setFormat(fb);
+      }
+      if(d.carouselSlides&&d.carouselSlides.length){
+        carouselSlides=d.carouselSlides;activeCarouselSlide=Math.min(Number(d.activeCarouselSlide)||0,carouselSlides.length-1);
+        const cb=document.querySelector('.format-btn[data-fmt="carrossel"]');
+        if(d.format==='carrossel'&&cb){setFormat(cb);applyCarouselSlide(activeCarouselSlide);}
       }
       updateBackground();
       applyTypography();
