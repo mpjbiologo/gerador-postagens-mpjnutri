@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Postagens - @mpjnutri</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent: #7edb7e;
+    --accent-dark: #0d1f0f;
+    --bg-post: #1a3d1f;
+    --grad1: rgba(100,200,100,0.25);
+    --grad2: rgba(60,140,70,0.3);
+    --grad-intensity: 1;
+    /* App theme vars - dark default */
+    --app-bg: #0a0a0a;
+    --app-panel: #1a1a1a;
+    --app-panel-border: #2a2a2a;
+    --app-section: #1f1f1f;
+    --app-section-border: #2a2a2a;
+    --app-section-hover: #252525;
+    --app-input-bg: #252525;
+    --app-input-border: #333;
+    --app-input-color: #eee;
+    --app-label: #888;
+    --app-text: #eee;
+    --app-sub: #666;
+    --app-btn-bg: #252525;
+    --app-btn-border: #333;
+    --app-btn-color: #aaa;
+    --app-toggle-bg: #333;
+    --app-slider-track: #333;
+  }
+
+  body.app-light {
+    --app-bg: #f0f2f5;
+    --app-panel: #ffffff;
+    --app-panel-border: #dde1e7;
+    --app-section: #f7f8fa;
+    --app-section-border: #e0e4ea;
+    --app-section-hover: #edf0f4;
+    --app-input-bg: #ffffff;
+    --app-input-border: #cdd2da;
+    --app-input-color: #1a1a2e;
+    --app-label: #6b7280;
+    --app-text: #1a1a2e;
+    --app-sub: #9ca3af;
+    --app-btn-bg: #f0f2f5;
+    --app-btn-border: #d1d5db;
+    --app-btn-color: #6b7280;
+    --app-toggle-bg: #d1d5db;
+    --app-slider-track: #d1d5db;
+  }
+
+  html { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--app-bg);
+    color: var(--app-text);
+    display: flex;
+    align-items: flex-start;
+    min-height: 100%;
+    overflow-x: hidden;
+    padding-top: 53px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* CABEÇALHO — fixo no topo */
+  .app-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 53px;
+    background: var(--app-panel);
+    border-bottom: 1px solid var(--app-panel-border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: background 0.3s, border-color 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .app-header-left { display: flex; flex-direction: column; gap: 3px; align-items: center; width: 100%; }
+  .app-header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* PAINEL — rola junto com a página */
+  .panel {
+    width: 320px;
+    min-width: 320px;
+    flex-shrink: 0;
+    background: var(--app-panel);
+    border-right: 1px solid var(--app-panel-border);
+    padding: 20px 18px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  /* PREVIEW — sticky: fica fixo enquanto o painel rola */
+  .preview-wrap {
+    position: sticky;
+    top: 53px;
+    height: calc(100vh - 53px);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--app-bg);
+    overflow: hidden;
+    align-self: flex-start;
+    transition: background 0.3s;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 700px) {
+    body { flex-direction: column; }
+    .app-header { padding: 8px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .app-header-right { width: 100%; justify-content: flex-end; }
+    .app-header-meta { gap: 4px; }
+    .app-header-meta span[style*="•"] { display: none; }
+    .preview-wrap { top: 0 !important; height: auto !important; }
+
+    .panel {
+      width: 100%;
+      min-width: unset;
+      max-width: unset;
+      border-right: none;
+      border-bottom: 1px solid var(--app-panel-border);
+      padding: 16px 14px 24px;
+      order: 2;
+    }
+
+    .preview-wrap {
+      position: relative;
+      height: auto;
+      width: 100%;
+      padding: 16px 12px;
+      order: 1;
+      align-self: auto;
+    }
+
+    #post {
+      max-width: 100% !important;
+      max-height: 70vw !important;
+    }
+
+    .post[data-format="retrato"]  { width: 56vw !important; height: 70vw !important; }
+    .post[data-format="quadrado"] { width: 70vw !important; height: 70vw !important; }
+    .post[data-format="stories"]  { width: 40vw !important; height: 71vw !important; }
+
+    .post[data-format="retrato"]  .img-center-wrap { height: 19vw !important; }
+    .post[data-format="quadrado"] .img-center-wrap { height: 18vw !important; }
+    .post[data-format="stories"]  .img-center-wrap { height: 22vw !important; }
+    #title-line1, #title-line2 { font-size: 14px !important; }
+    #preview-desc { font-size: 7px !important; }
+    #preview-list li { font-size: 6px !important; }
+    #preview-list li::before { font-size: 8px !important; }
+    #preview-tag1, #preview-tag2 { font-size: 7px !important; padding: 3px 8px !important; }
+    .handle { font-size: 9px !important; }
+    .whatsapp-number { font-size: 8px !important; }
+    .wa-svg { width: 10px !important; height: 10px !important; }
+    .icon-btn svg.outline { width: 14px !important; height: 14px !important; }
+    .icon-label { font-size: 5px !important; }
+    .footer { padding: 5px 10px !important; }
+    .content { padding: 6px 10px 0 !important; }
+    .deco-circle  { width: 60px !important; height: 60px !important; top: -20px !important; right: -20px !important; }
+    .deco-circle2 { width: 36px !important; height: 36px !important; top: 6px !important;  right: 6px !important;  }
+  }
+
+  .panel-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--accent); }
+  .panel-sub { font-size: 11px; color: var(--app-sub); margin-top: 2px; }
+
+  .section { background: var(--app-section); border: 1px solid var(--app-section-border); border-radius: 10px; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .section-header:hover { background: var(--app-section-hover); }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Theme toggle button */
+  .theme-app-toggle {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--app-btn-bg); border: 1.5px solid var(--app-btn-border);
+    border-radius: 20px; padding: 4px 12px 4px 8px;
+    cursor: pointer; font-size: 11px; font-weight: 600;
+    color: var(--app-btn-color); font-family: 'DM Sans', sans-serif;
+    transition: border-color .2s, color .2s, background .2s;
+    white-space: nowrap;
+  }
+  .theme-app-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .section-arrow { font-size: 10px; color: var(--app-sub); transition: transform 0.2s; }
+  .section.open .section-arrow { transform: rotate(180deg); }
+  .section-body { display: none; padding: 0 14px 14px; flex-direction: column; gap: 12px; }
+  .section.open .section-body { display: flex; }
+
+  .field label { display: block; font-size: 10px; font-weight: 600; color: #888; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 5px; }
+  .field input, .field textarea {
+    width: 100%; background: var(--app-input-bg); border: 1px solid var(--app-input-border); border-radius: 7px;
+    color: var(--app-input-color); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 9px 11px; outline: none; transition: border 0.2s, background 0.3s, color 0.3s;
+  }
+  .field textarea { resize: vertical; min-height: 90px; }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .toggle-row > label { font-size: 12px; color: #aaa; }
+  .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .toggle input { display: none; }
+  .toggle-track { position: absolute; inset: 0; background: #333; border-radius: 20px; cursor: pointer; transition: background 0.2s; }
+  .toggle input:checked + .toggle-track { background: var(--accent); }
+  .toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+  .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: var(--app-slider-track); border-radius: 4px; outline: none; padding: 0; border: none; }
+  .slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; cursor: pointer; }
+  .slider-val { font-size: 11px; color: var(--accent); width: 28px; text-align: right; }
+
+  .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .grad-grid  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .grad-swatch { position: relative; aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color .15s, transform .15s; overflow: hidden; }
+  .grad-swatch:hover { transform: scale(1.06); }
+  .grad-swatch.active { border-color: #fff; }
+  .grad-swatch span { position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 8px; color: rgba(255,255,255,0.85); font-weight: 600; pointer-events: none; }
+  .deco-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .deco-btn {
+    background: var(--app-btn-bg); border: 1.5px solid var(--app-btn-border); border-radius: 8px;
+    padding: 7px 3px 5px; cursor: pointer; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--app-btn-color); font-size: 8.5px; font-weight: 600; text-transform: uppercase;
+    font-family: "DM Sans", sans-serif; transition: border-color .15s, background .15s, color .15s;
+    letter-spacing: .3px;
+  }
+  .deco-btn svg { width: 20px; height: 20px; }
+  .deco-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .deco-btn.active { border-color: var(--accent); background: rgba(126,219,126,0.1); color: var(--accent); }
+  .theme-swatch { aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s; position: relative; overflow: hidden; }
+  .theme-swatch:hover { transform: scale(1.05); }
+  .theme-swatch.active { border-color: #fff; }
+  .theme-swatch span { position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 8px; color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  .format-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .format-btn {
+    background: var(--app-btn-bg); border: 1px solid var(--app-btn-border); border-radius: 8px; padding: 10px 6px;
+    cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s, color 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    color: var(--app-btn-color); font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'DM Sans', sans-serif;
+  }
+  .format-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .format-btn.active { border-color: var(--accent); background: rgba(126,219,126,0.08); color: var(--accent); }
+  .format-icon { background: var(--app-btn-border); border-radius: 3px; }
+  .format-btn.active .format-icon { background: rgba(126,219,126,0.2); }
+
+  .btn {
+    background: var(--accent); color: var(--accent-dark); border: none; border-radius: 9px;
+    padding: 12px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%;
+    font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .btn.secondary { background: var(--app-btn-bg); color: var(--app-btn-color); border: 1px solid var(--app-btn-border); transition: background 0.3s, color 0.3s, border-color 0.3s; }
+  .btn.secondary:hover { filter: brightness(0.95); color: var(--app-text); border-color: var(--accent); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  .divider { border: none; border-top: 1px solid #222; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+  .history-list::-webkit-scrollbar { width: 3px; }
+  .history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  .history-item { background: #252525; border: 1px solid #2e2e2e; border-radius: 7px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: border-color 0.15s; }
+  .history-item:hover { border-color: var(--accent); }
+  .history-item-text { flex: 1; overflow: hidden; }
+  .history-item-title { font-size: 12px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-item-date { font-size: 10px; color: #555; margin-top: 2px; }
+  .history-del { background: none; border: none; color: #444; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
+  .history-del:hover { color: #e05555; }
+  .history-empty { font-size: 11px; color: #444; text-align: center; padding: 10px 0; }
+
+  .step { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: #777; line-height: 1.5; }
+  .step-num { background: var(--accent); color: var(--accent-dark); font-weight: 700; font-size: 9px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: var(--accent-dark); font-size: 13px; font-weight: 700; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; z-index: 9999; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* POST */
+  .post { position: relative; overflow: hidden; background: var(--bg-post); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; transition: width 0.3s, height 0.3s; }
+  .post[data-format="quadrado"] { width: 520px; height: 520px; }
+  .post[data-format="retrato"]  { width: 520px; height: 650px; }
+  .post[data-format="stories"]  { width: 366px; height: 650px; }
+
+  .post::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 10%, var(--grad1) 0%, transparent 60%), radial-gradient(ellipse at 10% 90%, var(--grad2) 0%, transparent 55%); z-index: 0; opacity: var(--grad-intensity); transition: opacity 0.3s; }
+  .deco-circle  { position: absolute; width: 160px; height: 160px; border-radius: 50%; border: 1.5px solid rgba(126,219,126,0.12); top: -50px; right: -50px; z-index: 1; transition: opacity .3s; }
+  .deco-circle2 { position: absolute; width:  90px; height:  90px; border-radius: 50%; border: 1px   solid rgba(126,219,126,0.08); top:  14px; right:  14px; z-index: 1; transition: opacity .3s; }
+  #deco-svg-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .img-center-wrap {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center; align-items: center;
+    flex-shrink: 0; overflow: hidden; width: 100%;
+  }
+  .post[data-format="retrato"]  .img-center-wrap { height: 150px; }
+  .post[data-format="quadrado"] .img-center-wrap { height: 130px; }
+  .post[data-format="stories"]  .img-center-wrap { height: 180px; }
+  .pen-img {
+    display: block; width: 100%; height: 100%;
+    object-fit: contain; object-position: center;
+    opacity: 0.92; z-index: 2; pointer-events: none; border-radius: 10px;
+  }
+  .upload-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; background: var(--app-btn-bg); border: 1.5px dashed var(--app-btn-border); border-radius: 7px; color: var(--app-btn-color); font-size: 12px; font-weight: 600; font-family: "DM Sans", sans-serif; cursor: pointer; transition: border-color .2s, color .2s; }
+  .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #upload-img-file { display: none; }
+  .img-source-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+  .img-tab { flex: 1; padding: 5px; background: var(--app-btn-bg); border: 1.5px solid var(--app-btn-border); border-radius: 7px; font-size: 10px; font-weight: 700; color: var(--app-btn-color); cursor: pointer; text-align: center; font-family: "DM Sans", sans-serif; transition: border-color .15s, color .15s; }
+  .img-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(126,219,126,0.08); }
+  .img-upload-preview { width: 100%; height: 70px; object-fit: cover; border-radius: 7px; margin-top: 6px; display: none; border: 1px solid var(--app-btn-border); }
+
+
+  .content { position: relative; z-index: 2; padding: 24px 24px 0; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden; }
+  .post[data-format="stories"] .content { padding: 18px 18px 0; }
+
+  #preview-title { font-family: 'Playfair Display', serif; font-weight: 900; color: #f0f5f0; line-height: 1.1; letter-spacing: -1px; max-width: 90%; }
+  #title-line1 { line-height: 1.1; overflow: hidden; word-break: break-word; }
+  #title-line2 { line-height: 1.1; overflow: hidden; word-break: break-word; color: var(--accent); font-style: italic; transition: color 0.3s; margin-bottom: 12px; }
+
+  .divider-post { width: 40px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); margin-bottom: 12px; border-radius: 2px; }
+  #preview-desc { font-size: 16px; color: rgba(220,240,220,0.75); line-height: 1.7; font-weight: 300; max-width: 76%; }
+  .post[data-format="stories"] #preview-desc { font-size: 11px; max-width: 90%; }
+  #preview-list { list-style: none; margin: 8px 0 0; padding: 0; max-width: 82%; color: rgba(220,240,220,0.8); }
+  #preview-list.numbered { counter-reset: list-counter; }
+  #preview-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: inherit; line-height: 1.5; font-weight: 300; margin-bottom: 4px; }
+  #preview-list li::before { content: "•"; color: var(--accent); font-size: 16px; line-height: 1.2; flex-shrink: 0; }
+  #preview-list.numbered li { counter-increment: list-counter; }
+  #preview-list.numbered li::before { content: counter(list-counter) "."; font-size: 13px; font-weight: 600; color: var(--accent); line-height: 1.5; min-width: 16px; }
+  .post[data-format="stories"] #preview-list li { font-size: 10px; }
+  .post[data-format="stories"] #preview-list li::before { font-size: 12px; }
+
+  .tag-bottom-wrap { position: relative; z-index: 2; display: flex; justify-content: center; align-items: center; gap: 8px; padding-bottom: 8px; flex-wrap: wrap; }
+  .tag-bottom { display: inline-block; background: rgba(100,200,100,0.15); border: 1px solid rgba(100,200,100,0.35); color: var(--accent); font-size: 15px; font-weight: 600; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px; }
+  .post[data-format="stories"] .tag-bottom { font-size: 11px; }
+  .tag-quick-btns { display: flex; gap: 6px; margin-bottom: 4px; }
+  .tag-quick-btn { flex: 1; background: var(--app-btn-bg); border: 1.5px solid var(--app-btn-border); border-radius: 7px; color: var(--app-btn-color); font-size: 10px; font-weight: 600; padding: 5px 4px; cursor: pointer; text-align: center; transition: border-color .15s, color .15s, background .15s; font-family: "DM Sans", sans-serif; }
+  .tag-quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tag-quick-btn.active { border-color: var(--accent); background: rgba(126,219,126,0.1); color: var(--accent); }
+
+  .footer { position: relative; z-index: 2; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(126,219,126,0.2); padding: 9px 22px; display: flex; align-items: center; justify-content: space-between; }
+  .post[data-format="stories"] .footer { padding: 7px 14px; }
+  .footer-left { display: flex; flex-direction: column; gap: 3px; }
+  .handle { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--accent); transition: color 0.3s; }
+  .whatsapp-row { display: flex; align-items: center; gap: 5px; }
+  .wa-svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .whatsapp-number { font-size: 13px; color: rgba(220,240,220,0.72); }
+  .post[data-format="stories"] .handle { font-size: 11px; }
+  .post[data-format="stories"] .whatsapp-number { font-size: 9px; }
+  .post[data-format="stories"] .wa-svg { width: 10px; height: 10px; }
+  .icons { display: flex; align-items: center; gap: 12px; }
+  .post[data-format="stories"] .icons { gap: 7px; }
+  .icon-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .icon-btn svg.outline { width: 24px; height: 24px; fill: none; stroke: rgba(220,240,220,0.65); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .post[data-format="stories"] .icon-btn svg.outline { width: 15px; height: 15px; }
+  .icon-label { font-size: 8px; color: rgba(200,230,200,0.45); text-transform: uppercase; letter-spacing: 0.4px; }
+  .post[data-format="stories"] .icon-label { font-size: 5px; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- CABEÇALHO -->
+<header class="app-header">
+  <div class="app-header-left">
+    <div class="panel-title" style="font-size:20px;">Gerador de Postagens</div>
+    <div class="app-header-meta">
+      <span class="panel-sub" style="font-size:12px;">Padronizado para Instagram e outras redes sociais</span>
+      <span class="panel-sub" style="font-size:12px;">•</span>
+      <span class="panel-sub" style="font-size:12px;">Desenvolvido por <a href="https://instagram.com/mpjnutri" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600;">@mpjnutri</a> — uso, edição e distribuição livres</span>
+    </div>
+  </div>
+</header>
+
+<!-- PAINEL -->
+<div class="panel">
+
+  <button class="theme-app-toggle" id="app-theme-btn" onclick="toggleAppTheme()" style="width:100%">🌙 Escuro</button>
+
+  <div class="section open" id="sec-texto">
+    <div class="section-header" onclick="toggleSection('sec-texto')">
+      <div class="section-title">✏️ Texto</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="field"><label>Linha 1 do título</label><input type="text" id="input-line1" value="Seu título" oninput="updatePreview()"></div>
+      <div class="field"><label>Linha 2 (destaque colorido)</label><input type="text" id="input-line2" value="aqui" oninput="updatePreview()"></div>
+      <div class="field"><label>Descrição</label><textarea id="input-desc" oninput="updatePreview()">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</textarea></div>
+      <div class="field"><label>Lista de itens (1 por linha)</label><textarea id="input-list" oninput="updatePreview()" placeholder="Um item por linha...">Primeiro item da lista
+Segundo item da lista
+Terceiro item da lista</textarea></div>
+      <div class="toggle-row">
+        <label>Usar numeração na lista</label>
+        <label class="toggle"><input type="checkbox" id="toggle-list-num" onchange="updatePreview()"><div class="toggle-track"></div></label>
+      </div>
+      <div class="field">
+        <label>Botões centrais</label>
+        <div class="tag-quick-btns">
+          <button class="tag-quick-btn active" id="btn-tag1-toggle" onclick="toggleTag(1)">👇 Leia a legenda</button>
+          <button class="tag-quick-btn" id="btn-tag2-toggle" onclick="toggleTag(2)">👉 Arraste para o lado</button>
+        </div>
+        <div id="tag1-field" style="margin-bottom:6px">
+          <input type="text" id="input-tag1" value="👇 Leia a legenda" oninput="updatePreview()" placeholder="Texto do 1º botão">
+        </div>
+        <div id="tag2-field" style="display:none">
+          <input type="text" id="input-tag2" value="👉 Arraste para o lado" oninput="updatePreview()" placeholder="Texto do 2º botão">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section open" id="sec-ident">
+    <div class="section-header" onclick="toggleSection('sec-ident')">
+      <div class="section-title">👤 Identidade</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="Seu @ aqui" oninput="updatePreview()"></div>
+      <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="(00) 9 0000-0000" oninput="updatePreview()"></div>
+      <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+    </div>
+  </div>
+
+  <div class="section open" id="sec-visual">
+    <div class="section-header" onclick="toggleSection('sec-visual')">
+      <div class="section-title">🎨 Visual</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Tema de cor</label>
+        <div class="theme-grid">
+          <div class="theme-swatch active" data-theme="verde"    style="background:linear-gradient(135deg,#1a3d1f,#2a6630)" onclick="setTheme(this)"><span>Verde</span></div>
+          <div class="theme-swatch" data-theme="azul"            style="background:linear-gradient(135deg,#0d2a3d,#1a4d6e)" onclick="setTheme(this)"><span>Azul</span></div>
+          <div class="theme-swatch" data-theme="dourado"         style="background:linear-gradient(135deg,#2a1f0a,#4a3510)" onclick="setTheme(this)"><span>Dourado</span></div>
+          <div class="theme-swatch" data-theme="roxo"            style="background:linear-gradient(135deg,#1e0a2a,#3d1460)" onclick="setTheme(this)"><span>Roxo</span></div>
+          <div class="theme-swatch" data-theme="vermelho"        style="background:linear-gradient(135deg,#2a0d0d,#5c1a1a)" onclick="setTheme(this)"><span>Vinho</span></div>
+          <div class="theme-swatch" data-theme="escuro"          style="background:linear-gradient(135deg,#111,#222)"       onclick="setTheme(this)"><span>Escuro</span></div>
+          <div class="theme-swatch" data-theme="claro"           style="background:linear-gradient(135deg,#eef5ee,#c8e0c8)" onclick="setTheme(this)"><span>Claro</span></div>
+          <div class="theme-swatch" data-theme="salmon"          style="background:linear-gradient(135deg,#2a0f08,#5a2010)" onclick="setTheme(this)"><span>Coral</span></div>
+          <div class="theme-swatch" data-theme="petrol"          style="background:linear-gradient(135deg,#071c1c,#0d3535)" onclick="setTheme(this)"><span>Petróleo</span></div>
+          <div class="theme-swatch" data-theme="rose"            style="background:linear-gradient(135deg,#280a18,#5a1535)" onclick="setTheme(this)"><span>Rosê</span></div>
+          <div class="theme-swatch" data-theme="navy"            style="background:linear-gradient(135deg,#060d28,#0d2060)" onclick="setTheme(this)"><span>Navy</span></div>
+          <div class="theme-swatch" data-theme="terra"           style="background:linear-gradient(135deg,#1e1208,#3d2510)" onclick="setTheme(this)"><span>Terra</span></div>
+          <div class="theme-swatch" data-theme="oliva"           style="background:linear-gradient(135deg,#1a1e08,#36400f)" onclick="setTheme(this)"><span>Oliva</span></div>
+          <div class="theme-swatch" data-theme="grafite"         style="background:linear-gradient(135deg,#1c1c1e,#2e2e30)" onclick="setTheme(this)"><span>Grafite</span></div>
+          <div class="theme-swatch" data-theme="ceu"             style="background:linear-gradient(135deg,#0a1628,#142d50)" onclick="setTheme(this)"><span>Céu</span></div>
+          <div class="theme-swatch" data-theme="beetroot"        style="background:linear-gradient(135deg,#280a1a,#501530)" onclick="setTheme(this)"><span>Beetroot</span></div>
+          <div class="theme-swatch" data-theme="menta"           style="background:linear-gradient(135deg,#071a14,#0d3325)" onclick="setTheme(this)"><span>Menta</span></div>
+          <div class="theme-swatch" data-theme="lavanda"         style="background:linear-gradient(135deg,#120a28,#251550)" onclick="setTheme(this)"><span>Lavanda</span></div>
+          <div class="theme-swatch" data-theme="branco"          style="background:linear-gradient(135deg,#f8fafc,#dde4ee)" onclick="setTheme(this)"><span style="color:#334155">Branco</span></div>
+          <div class="theme-swatch" data-theme="pôr"             style="background:linear-gradient(135deg,#1a0a14,#3d1a08)" onclick="setTheme(this)"><span>Pôr-do-sol</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Estilo de gradiente</label>
+        <div class="grad-grid">
+          <div class="grad-swatch active" data-grad="padrao"     style="background:radial-gradient(ellipse at 80% 10%,rgba(126,219,126,0.4),transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(60,140,70,0.4),transparent 55%),#1a3d1f" onclick="setGrad(this)"><span>Padrão</span></div>
+          <div class="grad-swatch" data-grad="diagonal"          style="background:linear-gradient(135deg,#071c1c,#4ecdc4 80%)" onclick="setGrad(this)"><span>Diagonal</span></div>
+          <div class="grad-swatch" data-grad="sunset"            style="background:linear-gradient(180deg,#1a0a14 0%,#fb923c 100%)" onclick="setGrad(this)"><span>Sunset</span></div>
+          <div class="grad-swatch" data-grad="aurora"            style="background:linear-gradient(135deg,#071c1c 0%,#4ecdc4 45%,#1e0a2a 100%)" onclick="setGrad(this)"><span>Aurora</span></div>
+          <div class="grad-swatch" data-grad="radial"            style="background:radial-gradient(circle at 50% 40%,rgba(126,219,126,0.7),#0a0a14 70%)" onclick="setGrad(this)"><span>Radial</span></div>
+          <div class="grad-swatch" data-grad="tricolor"          style="background:linear-gradient(160deg,#1e0a2a 0%,#c084f5 50%,#000 100%)" onclick="setGrad(this)"><span>Tri-cor</span></div>
+          <div class="grad-swatch" data-grad="horiz"             style="background:linear-gradient(90deg,#0d2a3d,#7ec8db 100%)" onclick="setGrad(this)"><span>Horiz.</span></div>
+          <div class="grad-swatch" data-grad="conic"             style="background:conic-gradient(from 135deg,#1a3d1f,#7edb7e,#0d2a3d,#1a3d1f)" onclick="setGrad(this)"><span>Cônico</span></div>
+        </div>
+      </div>
+
+      <div class="field"><label>Intensidade do gradiente</label><div class="slider-row"><input type="range" id="slider-grad" min="0" max="100" value="100" oninput="updateGrad(this)"><span class="slider-val" id="grad-val">100%</span></div></div>
+
+      <div class="field">
+        <label>Elementos decorativos</label>
+        <div class="deco-btn-grid">
+          <button class="deco-btn active" data-deco="circulos" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/></svg>Círculos
+          </button>
+          <button class="deco-btn" data-deco="estrelas" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>Estrelas
+          </button>
+          <button class="deco-btn" data-deco="pontos" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>Pontos
+          </button>
+          <button class="deco-btn" data-deco="cruz" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>Cruz
+          </button>
+          <button class="deco-btn" data-deco="diamante" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="5" width="14" height="14" rx="1" transform="rotate(45 12 12)"/></svg>Diamante
+          </button>
+          <button class="deco-btn" data-deco="arco" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3,20 Q12,3 21,20"/></svg>Arco
+          </button>
+          <button class="deco-btn" data-deco="linhas" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>Linhas
+          </button>
+          <button class="deco-btn" data-deco="hexagono" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polygon points="12,2 20.5,7 20.5,17 12,22 3.5,17 3.5,7"/></svg>Hexágono
+          </button>
+          <button class="deco-btn" data-deco="triangulo" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polygon points="12,3 22,20 2,20"/></svg>Triângulo
+          </button>
+          <button class="deco-btn" data-deco="ondas" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2,12 Q6,8 10,12 Q14,16 18,12 Q20,10 22,12"/></svg>Ondas
+          </button>
+          <button class="deco-btn" data-deco="sparkle" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>Sparkle
+          </button>
+          <button class="deco-btn" data-deco="grade" onclick="toggleDeco(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="8" y1="2" x2="8" y2="22"/><line x1="16" y1="2" x2="16" y2="22"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="2" y1="16" x2="22" y2="16"/></svg>Grade
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Imagem decorativa</label>
+        <div class="img-source-tabs">
+          <div class="img-tab active" id="img-tab-url" onclick="switchImgTab('url')">🔗 URL</div>
+          <div class="img-tab" id="img-tab-upload" onclick="switchImgTab('upload')">📁 Upload</div>
+        </div>
+        <div id="img-url-panel">
+          <input type="text" id="input-img" value="" oninput="updatePreview()" placeholder="Cole uma URL de imagem aqui...">
+        </div>
+        <div id="img-upload-panel" style="display:none">
+          <label class="upload-btn" for="upload-img-file">📂 Escolher imagem do dispositivo</label>
+          <input type="file" id="upload-img-file" accept="image/*" onchange="handleImgUpload(this)">
+          <img id="upload-img-preview" class="img-upload-preview" alt="preview">
+        </div>
+      </div>
+      <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="toggle-row"><label>Cor original da imagem</label><label class="toggle"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+    </div>
+  </div>
+
+  <div class="section open" id="sec-formato">
+    <div class="section-header" onclick="toggleSection('sec-formato')">
+      <div class="section-title">📐 Formato</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="format-grid">
+        <button class="format-btn" data-fmt="quadrado" onclick="setFormat(this)"><div class="format-icon" style="width:28px;height:28px;"></div>1:1</button>
+        <button class="format-btn active" data-fmt="retrato" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;"></div>4:5</button>
+        <button class="format-btn" data-fmt="stories" onclick="setFormat(this)"><div class="format-icon" style="width:16px;height:28px;"></div>9:16</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-hist">
+    <div class="section-header" onclick="toggleSection('sec-hist')">
+      <div class="section-title">🕓 Histórico</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div id="history-list" class="history-list"><div class="history-empty">Nenhum post salvo ainda.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="saveToHistory()">💾 Salvar</button>
+        <button class="btn secondary" onclick="clearHistory()">🗑</button>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
+  <button class="btn" onclick="openFullscreen()">🖥️ Abrir em tela cheia</button>
+  <button class="btn secondary" onclick="copyHTML()">📋 Copiar HTML</button>
+  <button class="btn secondary" onclick="resetAll()">↺ Resetar tudo</button>
+
+  <div class="section" id="sec-inst">
+    <div class="section-header" onclick="toggleSection('sec-inst')">
+      <div class="section-title">📸 Como gerar imagem</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body" style="gap:8px">
+      <div class="step"><div class="step-num">1</div><span>Clique em <strong style="color:var(--accent)">Abrir em tela cheia</strong></span></div>
+      <div class="step"><div class="step-num">2</div><span>Pressione <strong style="color:var(--accent)">F12</strong> → DevTools</span></div>
+      <div class="step"><div class="step-num">3</div><span><strong style="color:var(--accent)">Ctrl+Shift+M</strong> — modo responsivo</span></div>
+      <div class="step"><div class="step-num">4</div><span>Digite <strong style="color:var(--accent)">1080 × 1350</strong></span></div>
+      <div class="step"><div class="step-num">5</div><span><strong style="color:var(--accent)">⋯ → Capturar screenshot</strong></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="preview-wrap">
+  <div class="post" id="post" data-format="retrato">
+    <div class="deco-circle" id="deco-c1"></div>
+    <div class="deco-circle2" id="deco-c2"></div>
+    <svg id="deco-svg-layer" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 600 650" preserveAspectRatio="xMidYMid slice"></svg>
+    <div class="content">
+      <div id="preview-title">
+        <div id="title-line1">Seu título</div>
+        <div id="title-line2">aqui</div>
+      </div>
+      <div class="divider-post"></div>
+      <p id="preview-desc">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</p>
+      <ul id="preview-list"></ul>
+      <img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/>
+    </div>
+    <div class="tag-bottom-wrap">
+      <div class="tag-bottom" id="preview-tag1">👇 Leia a legenda</div>
+      <div class="tag-bottom" id="preview-tag2" style="display:none">👉 Arraste para o lado</div>
+    </div>
+    <div class="footer" id="footer">
+      <div class="footer-left">
+        <div class="handle" id="preview-handle">@seuhandle</div>
+        <div class="whatsapp-row" id="wa-row">
+          <svg class="wa-svg" viewBox="0 0 32 32"><path fill="#25D366" d="M16 3C9.373 3 4 8.373 4 15c0 2.385.668 4.61 1.832 6.5L4 29l7.695-1.813A12.94 12.94 0 0 0 16 28c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.96 9.96 0 0 1-5.03-1.357l-.36-.214-4.57 1.077 1.1-4.453-.234-.372A9.96 9.96 0 0 1 6 15c0-5.523 4.477-10 10-10zm-3.27 5c-.2 0-.524.075-.8.375-.275.3-1.05 1.025-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.1 3.2 5.125 4.375 2.525.975 3.025.775 3.575.725.55-.05 1.775-.725 2.025-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35-.3-.15-1.775-.875-2.05-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-.3-.15-1.265-.465-2.41-1.485-.89-.795-1.49-1.775-1.665-2.075-.175-.3-.018-.462.131-.61.134-.134.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.243-.583-.49-.5-.675-.51L12.73 10z"/></svg>
+          <span class="whatsapp-number" id="preview-wa">(00) 9 0000-0000</span>
+        </div>
+      </div>
+      <div class="icons" id="icons-row">
+        <div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="icon-label">CURTA</span></div>
+        <div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="icon-label">COMENTE</span></div>
+        <div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span class="icon-label">COMPARTILHE</span></div>
+        <div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span class="icon-label">SALVE</span></div>
+        <div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-5 0-8 2.5-8 4v1h16v-1c0-1.5-3-4-8-4z"/><line x1="19" y1="3" x2="19" y2="9"/><line x1="16" y1="6" x2="22" y2="6"/></svg><span class="icon-label">SIGA</span></div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+  const THEMES = {
+    verde:    { bg:'#1a3d1f', accent:'#7edb7e', dark:'#0d1f0f', g1:'rgba(100,200,100,0.3)',  g2:'rgba(60,140,70,0.35)',  footerBorder:'rgba(126,219,126,0.2)', titleColor:'#f0f5f0' },
+    azul:     { bg:'#0d2a3d', accent:'#7ec8db', dark:'#041520', g1:'rgba(60,160,200,0.3)',  g2:'rgba(30,100,150,0.35)', footerBorder:'rgba(126,200,219,0.2)', titleColor:'#f0f7ff' },
+    dourado:  { bg:'#2a1f0a', accent:'#dbb97e', dark:'#150e00', g1:'rgba(220,180,80,0.25)', g2:'rgba(160,120,40,0.3)',  footerBorder:'rgba(219,185,126,0.2)', titleColor:'#fff8e8' },
+    roxo:     { bg:'#1e0a2a', accent:'#c084f5', dark:'#0d0415', g1:'rgba(160,80,240,0.3)',  g2:'rgba(100,40,180,0.35)', footerBorder:'rgba(192,132,245,0.2)', titleColor:'#faf0ff' },
+    vermelho: { bg:'#2a0d0d', accent:'#f08080', dark:'#150404', g1:'rgba(220,70,70,0.25)',  g2:'rgba(160,30,30,0.3)',  footerBorder:'rgba(240,128,128,0.2)', titleColor:'#fff0f0' },
+    escuro:   { bg:'#111111', accent:'#e0e0e0', dark:'#000',    g1:'rgba(200,200,200,0.1)', g2:'rgba(150,150,150,0.12)',footerBorder:'rgba(200,200,200,0.15)',titleColor:'#ffffff'  },
+    claro:    { bg:'#eef5ee', accent:'#2a7a2a', dark:'#f0f5f0', g1:'rgba(60,160,60,0.15)', g2:'rgba(40,120,40,0.12)', footerBorder:'rgba(42,122,42,0.2)',   titleColor:'#1a3d1f', lightBg:true },
+    salmon:   { bg:'#2a0f08', accent:'#f0a080', dark:'#150604', g1:'rgba(240,110,60,0.25)',g2:'rgba(200,60,30,0.3)',  footerBorder:'rgba(240,160,128,0.2)', titleColor:'#fff5f0' },
+    petrol:   { bg:'#071c1c', accent:'#4ecdc4', dark:'#020d0d', g1:'rgba(78,205,196,0.25)',g2:'rgba(30,150,140,0.3)', footerBorder:'rgba(78,205,196,0.2)',  titleColor:'#e0faf8' },
+    rose:     { bg:'#280a18', accent:'#f472b6', dark:'#140008', g1:'rgba(244,114,182,0.25)',g2:'rgba(190,40,110,0.3)',footerBorder:'rgba(244,114,182,0.2)', titleColor:'#fff0f5' },
+    navy:     { bg:'#060d28', accent:'#93c5fd', dark:'#020818', g1:'rgba(100,140,240,0.25)',g2:'rgba(40,70,190,0.3)', footerBorder:'rgba(147,197,253,0.2)', titleColor:'#eef2ff' },
+    terra:    { bg:'#1e1208', accent:'#d4a26a', dark:'#0e0804', g1:'rgba(210,150,80,0.25)', g2:'rgba(150,90,30,0.3)', footerBorder:'rgba(212,162,106,0.2)', titleColor:'#fff5ec' },
+    oliva:    { bg:'#1a1e08', accent:'#bef264', dark:'#0c1003', g1:'rgba(180,230,60,0.25)',g2:'rgba(110,150,20,0.3)',footerBorder:'rgba(190,242,100,0.2)',  titleColor:'#f5f8e0' },
+    grafite:  { bg:'#1c1c1e', accent:'#f0c060', dark:'#0a0a0b', g1:'rgba(240,192,80,0.2)', g2:'rgba(170,130,40,0.25)',footerBorder:'rgba(240,192,96,0.2)', titleColor:'#faf6ec' },
+    ceu:      { bg:'#0a1628', accent:'#7dd3fc', dark:'#040b14', g1:'rgba(100,200,250,0.25)',g2:'rgba(40,110,210,0.3)',footerBorder:'rgba(125,211,252,0.2)', titleColor:'#eef8ff' },
+    beetroot: { bg:'#280a1a', accent:'#f472b6', dark:'#14040d', g1:'rgba(230,60,140,0.25)',g2:'rgba(170,20,80,0.3)', footerBorder:'rgba(244,114,182,0.2)', titleColor:'#ffe8f4' },
+    menta:    { bg:'#071a14', accent:'#6ee7b7', dark:'#030d09', g1:'rgba(100,230,180,0.25)',g2:'rgba(40,160,110,0.3)',footerBorder:'rgba(110,231,183,0.2)', titleColor:'#effffa' },
+    lavanda:  { bg:'#120a28', accent:'#c4b5fd', dark:'#08041a', g1:'rgba(180,160,250,0.25)',g2:'rgba(120,90,220,0.3)',footerBorder:'rgba(196,181,253,0.2)', titleColor:'#f5f0ff' },
+    branco:   { bg:'#f8fafc', accent:'#334155', dark:'#e2e8f0', g1:'rgba(100,120,160,0.12)',g2:'rgba(60,80,120,0.1)',footerBorder:'rgba(51,65,85,0.2)',     titleColor:'#0f172a', lightBg:true },
+    pôr:      { bg:'#1a0a14', accent:'#fb923c', dark:'#0d0508', g1:'rgba(251,146,60,0.3)',  g2:'rgba(220,60,30,0.3)', footerBorder:'rgba(251,146,60,0.2)',  titleColor:'#fff7ed' }
+  };
+  let currentTheme = 'verde';
+  let currentGradStyle = 'padrao';
+  const activeDecos = new Set(['circulos']);
+
+  function setTheme(el) {
+    document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    currentTheme = el.dataset.theme;
+    const t = THEMES[currentTheme];
+    document.getElementById('post').style.background = t.bg;
+    document.documentElement.style.setProperty('--accent', t.accent);
+    document.documentElement.style.setProperty('--accent-dark', t.dark);
+    document.documentElement.style.setProperty('--bg-post', t.bg);
+    document.documentElement.style.setProperty('--grad1', t.g1);
+    document.documentElement.style.setProperty('--grad2', t.g2);
+    document.getElementById('title-line1').style.color = t.titleColor;
+    document.getElementById('title-line2').style.color = t.accent;
+    applyPostGradient(t);
+    renderDecos();
+    document.getElementById('footer').style.borderTopColor = t.footerBorder;
+    // Adjust text colors for light background themes
+    const isLight = !!t.lightBg;
+    const descColor   = isLight ? 'rgba(20,40,20,0.85)'   : 'rgba(220,240,220,0.75)';
+    const listColor   = isLight ? 'rgba(20,40,20,0.9)'    : 'rgba(220,240,220,0.8)';
+    const waColor     = isLight ? 'rgba(20,40,20,0.75)'   : 'rgba(220,240,220,0.72)';
+    const iconStroke  = isLight ? 'rgba(20,40,20,0.65)'   : 'rgba(220,240,220,0.65)';
+    const iconLabel   = isLight ? 'rgba(20,40,20,0.5)'    : 'rgba(200,230,200,0.45)';
+    const footerBg    = isLight ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
+    document.getElementById('preview-desc').style.color = descColor;
+    const listEl = document.getElementById('preview-list');
+    listEl.style.color = listColor;
+    // Force color inheritance on all li elements
+    listEl.querySelectorAll('li').forEach(li => li.style.color = listColor);
+    document.getElementById('preview-wa').style.color   = waColor;
+    document.getElementById('footer').style.background  = footerBg;
+    document.querySelectorAll('.icon-btn svg.outline').forEach(s => s.style.stroke = iconStroke);
+    document.querySelectorAll('.icon-label').forEach(l => l.style.color = iconLabel);
+  }
+
+  function updateGrad(el) {
+    document.documentElement.style.setProperty('--grad-intensity', el.value / 100);
+    document.getElementById('grad-val').textContent = el.value + '%';
+    applyPostGradient(THEMES[currentTheme]);
+  }
+
+  function applyPostGradient(t) {
+    const intensity = document.getElementById('slider-grad').value / 100;
+    function sa(rgba, f) { return rgba.replace(/[\d.]+\)$/, function(m){ return (parseFloat(m)*f).toFixed(3)+')'; }); }
+    const g1 = sa(t.g1, intensity), g2 = sa(t.g2, intensity);
+    const map = {
+      padrao:   'radial-gradient(ellipse at 80% 10%,'+g1+' 0%,transparent 60%),radial-gradient(ellipse at 10% 90%,'+g2+' 0%,transparent 55%)',
+      diagonal: 'linear-gradient(135deg,'+t.bg+','+g1+')',
+      sunset:   'linear-gradient(180deg,'+t.bg+' 0%,rgba(251,146,60,'+(0.6*intensity).toFixed(2)+') 100%)',
+      aurora:   'linear-gradient(135deg,'+t.bg+' 0%,'+g1+' 45%,'+t.bg+' 100%)',
+      radial:   'radial-gradient(circle at 55% 38%,'+g1+' 0%,'+t.bg+' 65%)',
+      tricolor: 'linear-gradient(160deg,'+t.bg+' 0%,'+g1+' 50%,rgba(0,0,0,'+(0.4*intensity).toFixed(2)+') 100%)',
+      horiz:    'linear-gradient(90deg,'+t.bg+','+g1+')',
+      conic:    'conic-gradient(from 135deg at 60% 40%,'+t.bg+','+g1+','+t.bg+','+g2+','+t.bg+')',
+    };
+    const val = map[currentGradStyle] || map['padrao'];
+    let s = document.getElementById('_grad_style');
+    if (!s) { s = document.createElement('style'); s.id = '_grad_style'; document.head.appendChild(s); }
+    s.textContent = '#post::before{background:'+val+' !important;opacity:1 !important;}';
+  }
+
+  function setGrad(el) {
+    document.querySelectorAll('.grad-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    currentGradStyle = el.dataset.grad;
+    applyPostGradient(THEMES[currentTheme]);
+  }
+
+  function toggleDeco(el) {
+    const k = el.dataset.deco;
+    if (activeDecos.has(k)) { activeDecos.delete(k); el.classList.remove('active'); }
+    else { activeDecos.add(k); el.classList.add('active'); }
+    renderDecos();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+
+  function renderDecos() {
+    const t = THEMES[currentTheme];
+    const a = t.accent;
+    const svg = document.getElementById('deco-svg-layer');
+    svg.innerHTML = '';
+    const c1 = document.getElementById('deco-c1');
+    const c2 = document.getElementById('deco-c2');
+    c1.style.borderColor = hexToRgba(a, 0.18);
+    c2.style.borderColor = hexToRgba(a, 0.1);
+    c1.style.opacity = activeDecos.has('circulos') ? '1' : '0';
+    c2.style.opacity = activeDecos.has('circulos') ? '1' : '0';
+
+    function el(tag, attrs) {
+      const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+      return e;
+    }
+    function g(opacity) {
+      const ge = el('g', {opacity: opacity});
+      svg.appendChild(ge);
+      return ge;
+    }
+
+    if (activeDecos.has('estrelas')) {
+      const gr = g(0.22);
+      [[260,60,18],[480,200,12],[360,320,10],[160,380,8],[550,140,8]].forEach(([x,y,s]) => {
+        const star = el('polygon', { points: starPts(x,y,s), fill: a });
+        gr.appendChild(star);
+      });
+    }
+    if (activeDecos.has('pontos')) {
+      const gr = g(0.18);
+      for (let c=0; c<5; c++) for (let r=0; r<8; r++) {
+        const dot = el('circle', { cx: 460+c*18, cy: 80+r*50, r: '2.5', fill: a });
+        gr.appendChild(dot);
+      }
+    }
+    if (activeDecos.has('cruz')) {
+      const gr = g(0.16);
+      [[480,120,14],[300,300,10],[160,150,8],[520,350,12]].forEach(([x,y,s]) => {
+        gr.appendChild(el('line', { x1:x-s, y1:y, x2:x+s, y2:y, stroke:a, 'stroke-width':'1.5'}));
+        gr.appendChild(el('line', { x1:x, y1:y-s, x2:x, y2:y+s, stroke:a, 'stroke-width':'1.5'}));
+      });
+    }
+    if (activeDecos.has('diamante')) {
+      const gr = g(0.16);
+      [[480,80,22],[160,250,14],[520,300,18],[290,50,12]].forEach(([x,y,s]) => {
+        const pts = x+','+( y-s)+' '+(x+s)+','+y+' '+x+','+(y+s)+' '+(x-s)+','+y;
+        gr.appendChild(el('polygon', { points:pts, fill:'none', stroke:a, 'stroke-width':'1.2' }));
+      });
+    }
+    if (activeDecos.has('arco')) {
+      const gr = g(0.12);
+      [[-40,500,120],[200,400,80],[400,480,100]].forEach(([x,y,r]) => {
+        gr.appendChild(el('circle', { cx:x, cy:y, r:r, fill:'none', stroke:a, 'stroke-width':'1' }));
+      });
+    }
+    if (activeDecos.has('linhas')) {
+      const gr = g(0.1);
+      for (let i=0; i<6; i++) {
+        gr.appendChild(el('line', { x1: 340+i*18, y1: 0, x2: 340+i*18, y2: 520, stroke: a, 'stroke-width':'0.8' }));
+      }
+    }
+    if (activeDecos.has('hexagono')) {
+      const gr = g(0.14);
+      [[490,100,30],[160,180,20],[530,320,24],[300,420,16]].forEach(([x,y,r]) => {
+        const pts = Array.from({length:6},(_,i)=>{
+          const ang = Math.PI/180*(60*i-30);
+          return (x+r*Math.cos(ang)).toFixed(1)+','+(y+r*Math.sin(ang)).toFixed(1);
+        }).join(' ');
+        gr.appendChild(el('polygon', { points:pts, fill:'none', stroke:a, 'stroke-width':'1.2' }));
+      });
+    }
+    if (activeDecos.has('triangulo')) {
+      const gr = g(0.14);
+      [[490,60,24],[160,280,16],[530,400,20],[260,100,14]].forEach(([x,y,s]) => {
+        const pts = x+','+(y-s)+' '+(x+s)+','+(y+s)+' '+(x-s)+','+(y+s);
+        gr.appendChild(el('polygon', { points:pts, fill:'none', stroke:a, 'stroke-width':'1.2' }));
+      });
+    }
+    if (activeDecos.has('ondas')) {
+      const gr = g(0.12);
+      [120, 240, 360].forEach(y => {
+        gr.appendChild(el('path', { d:'M0,'+y+' Q80,'+(y-25)+' 160,'+y+' Q240,'+(y+25)+' 320,'+y+' Q400,'+(y-25)+' 480,'+y+' Q560,'+(y+25)+' 640,'+y, fill:'none', stroke:a, 'stroke-width':'1' }));
+      });
+    }
+    if (activeDecos.has('sparkle')) {
+      const gr = g(0.2);
+      [[480,80,16],[200,200,10],[540,260,12],[320,380,8],[150,420,10]].forEach(([x,y,s]) => {
+        const h = s*0.4;
+        ['0','45','90','135'].forEach(angle => {
+          const rad = angle*Math.PI/180;
+          const ln = el('line', { x1: x+h*Math.cos(rad), y1: y+h*Math.sin(rad), x2: x+s*Math.cos(rad), y2: y+s*Math.sin(rad), stroke:a, 'stroke-width':'1.2', 'stroke-linecap':'round' });
+          const ln2 = el('line', { x1: x-h*Math.cos(rad), y1: y-h*Math.sin(rad), x2: x-s*Math.cos(rad), y2: y-s*Math.sin(rad), stroke:a, 'stroke-width':'1.2', 'stroke-linecap':'round' });
+          gr.appendChild(ln); gr.appendChild(ln2);
+        });
+      });
+    }
+    if (activeDecos.has('grade')) {
+      const gr = g(0.07);
+      for (let x=320; x<=600; x+=30) gr.appendChild(el('line', {x1:x,y1:0,x2:x,y2:520,stroke:a,'stroke-width':'0.6'}));
+      for (let y=0; y<=520; y+=30) gr.appendChild(el('line', {x1:320,y1:y,x2:600,y2:y,stroke:a,'stroke-width':'0.6'}));
+    }
+  }
+
+  function starPts(cx, cy, r) {
+    return Array.from({length:10}, (_,i) => {
+      const angle = Math.PI/180*(36*i - 90);
+      const radius = i%2===0 ? r : r*0.45;
+      return (cx+radius*Math.cos(angle)).toFixed(1)+','+(cy+radius*Math.sin(angle)).toFixed(1);
+    }).join(' ');
+  }
+
+  function setFormat(el) {
+    document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('post').dataset.format = el.dataset.fmt;
+    requestAnimationFrame(fitTitleFonts);
+  }
+
+  function updatePreview() {
+    const line1  = document.getElementById('input-line1').value;
+    const line2  = document.getElementById('input-line2').value;
+    const desc   = document.getElementById('input-desc').value;
+    const tag1    = document.getElementById('input-tag1').value;
+    const tag2    = document.getElementById('input-tag2').value;
+    const showTag1 = document.getElementById('btn-tag1-toggle').classList.contains('active');
+    const showTag2 = document.getElementById('btn-tag2-toggle').classList.contains('active');
+    const handle = document.getElementById('input-handle').value;
+    const wa     = document.getElementById('input-wa').value;
+    const showWa  = document.getElementById('toggle-wa').checked;
+    const showIco = document.getElementById('toggle-icons').checked;
+    const showImg = document.getElementById('toggle-img').checked;
+    const imgColor = document.getElementById('toggle-img-color').checked;
+    const imgUrlInput = document.getElementById('input-img').value;
+    const uploadedSrc = window._uploadedImgSrc || '';
+    const imgUrl  = uploadedSrc || imgUrlInput;
+
+    document.getElementById('title-line1').textContent = line1;
+    document.getElementById('title-line2').textContent = line2;
+    document.getElementById('title-line2').style.color = THEMES[currentTheme].accent;
+    requestAnimationFrame(fitTitleFonts);
+    document.getElementById('preview-desc').textContent = desc;
+
+    // Lista
+    const listRaw = document.getElementById('input-list').value;
+    const listNum = document.getElementById('toggle-list-num').checked;
+    const listEl  = document.getElementById('preview-list');
+    const items   = listRaw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    listEl.innerHTML = items.map(i => '<li>' + i + '</li>').join('');
+    listEl.className = listNum ? 'numbered' : '';
+    const pt1 = document.getElementById('preview-tag1');
+    const pt2 = document.getElementById('preview-tag2');
+    pt1.textContent = tag1; pt1.style.display = showTag1 ? '' : 'none';
+    pt2.textContent = tag2; pt2.style.display = showTag2 ? '' : 'none';
+    document.getElementById('preview-handle').textContent = handle;
+    document.getElementById('preview-wa').textContent = wa;
+    document.getElementById('wa-row').style.display = showWa ? 'flex' : 'none';
+    document.getElementById('icons-row').style.display = showIco ? 'flex' : 'none';
+    const img = document.getElementById('pen-img');
+    const wrap = document.getElementById('img-center-wrap');
+    if (showImg && imgUrl) {
+      img.src = imgUrl;
+      img.style.display = 'block';
+      img.style.filter = imgColor ? 'none' : 'saturate(0) brightness(1.4)';
+      if (wrap) wrap.style.display = 'flex';
+    } else {
+      img.style.display = 'none';
+      img.src = '';
+      if (wrap) wrap.style.display = 'none';
+    }
+  }
+
+  function fitTitleFonts() {
+    const post = document.getElementById('post');
+    const fmt = post.dataset.format;
+    const isMobile = window.innerWidth <= 700;
+    // Base size proportional to actual post width
+    const postW = post.offsetWidth;
+    const base = isMobile ? Math.max(10, Math.round(postW * 0.13)) : ({ retrato: 52, quadrado: 44, stories: 26 }[fmt] || 52);
+
+    function shrink(el, maxLines, baseSize) {
+      let size = baseSize;
+      el.style.fontSize = size + 'px';
+      const lineH = parseFloat(getComputedStyle(el).lineHeight);
+      const maxH = lineH * maxLines;
+      while (size > 7 && el.scrollHeight > maxH + 2) {
+        size -= 1;
+        el.style.fontSize = size + 'px';
+      }
+    }
+
+    shrink(document.getElementById('title-line1'), 3, base);
+    shrink(document.getElementById('title-line2'), 2, base);
+  }
+
+  let _imgTab = 'url';
+
+  function switchImgTab(tab) {
+    _imgTab = tab;
+    document.getElementById('img-tab-url').classList.toggle('active', tab === 'url');
+    document.getElementById('img-tab-upload').classList.toggle('active', tab === 'upload');
+    document.getElementById('img-url-panel').style.display    = tab === 'url'    ? '' : 'none';
+    document.getElementById('img-upload-panel').style.display = tab === 'upload' ? '' : 'none';
+    if (tab === 'url') { window._uploadedImgSrc = ''; updatePreview(); }
+  }
+
+  function handleImgUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      window._uploadedImgSrc = e.target.result;
+      const prev = document.getElementById('upload-img-preview');
+      prev.src = e.target.result;
+      prev.style.display = 'block';
+      updatePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function setTagActive(n, active) {
+    const btn = document.getElementById('btn-tag'+n+'-toggle');
+    const field = document.getElementById('tag'+n+'-field');
+    if (active) { btn.classList.add('active'); field.style.display = ''; }
+    else { btn.classList.remove('active'); field.style.display = 'none'; }
+  }
+
+  function toggleTag(n) {
+    const btn = document.getElementById('btn-tag'+n+'-toggle');
+    setTagActive(n, !btn.classList.contains('active'));
+    updatePreview();
+  }
+
+  let appTheme = 'dark';
+  function toggleAppTheme() {
+    appTheme = appTheme === 'dark' ? 'light' : 'dark';
+    const btn = document.getElementById('app-theme-btn');
+    if (appTheme === 'light') {
+      document.body.classList.add('app-light');
+      btn.textContent = '☀️ Claro';
+    } else {
+      document.body.classList.remove('app-light');
+      btn.textContent = '🌙 Escuro';
+    }
+  }
+
+  function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
+
+  function getHistory() { try { return JSON.parse(localStorage.getItem('mpjnutri_hist') || '[]'); } catch(e) { return []; } }
+  function saveHistory(h) { localStorage.setItem('mpjnutri_hist', JSON.stringify(h)); }
+
+  function saveToHistory() {
+    const entry = {
+      id: Date.now(),
+      line1: document.getElementById('input-line1').value,
+      listItems: document.getElementById('input-list').value,
+      listNum: document.getElementById('toggle-list-num').checked,
+      line2: document.getElementById('input-line2').value,
+      desc:  document.getElementById('input-desc').value,
+      tag1: document.getElementById('input-tag1').value,
+      tag2: document.getElementById('input-tag2').value,
+      showTag1: document.getElementById('btn-tag1-toggle').classList.contains('active'),
+      showTag2: document.getElementById('btn-tag2-toggle').classList.contains('active'),
+      handle: document.getElementById('input-handle').value,
+      wa:    document.getElementById('input-wa').value,
+      theme: currentTheme,
+      date:  new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+    };
+    const h = getHistory(); h.unshift(entry); if (h.length > 20) h.pop();
+    saveHistory(h); renderHistory(); showToast('✅ Salvo!');
+  }
+
+  function loadFromHistory(id) {
+    const e = getHistory().find(x => x.id === id); if (!e) return;
+    document.getElementById('input-line1').value  = e.line1;
+    document.getElementById('input-line2').value  = e.line2;
+    document.getElementById('input-desc').value   = e.desc;
+    document.getElementById('input-tag1').value = e.tag1 || e.tag || '👇 Leia a legenda';
+    document.getElementById('input-tag2').value = e.tag2 || '👉 Arraste para o lado';
+    setTagActive(1, e.showTag1 !== false);
+    setTagActive(2, !!e.showTag2);
+    document.getElementById('input-list').value   = e.listItems || '';
+    document.getElementById('toggle-list-num').checked = e.listNum || false;
+    document.getElementById('input-handle').value = e.handle || '@seuhandle';
+    document.getElementById('input-wa').value     = e.wa || '(00) 9 0000-0000';
+    if (e.theme) { const sw = document.querySelector(`.theme-swatch[data-theme="${e.theme}"]`); if (sw) setTheme(sw); }
+    updatePreview(); showToast('📂 Carregado!');
+  }
+
+  function deleteFromHistory(id) { saveHistory(getHistory().filter(e => e.id !== id)); renderHistory(); }
+
+  function clearHistory() {
+    if (!confirm('Apagar todo o histórico?')) return;
+    localStorage.removeItem('mpjnutri_hist'); renderHistory(); showToast('🗑️ Apagado');
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    const h = getHistory();
+    if (!h.length) { list.innerHTML = '<div class="history-empty">Nenhum post salvo ainda.</div>'; return; }
+    list.innerHTML = h.map(e => `<div class="history-item" onclick="loadFromHistory(${e.id})"><div class="history-item-text"><div class="history-item-title">${e.line1} ${e.line2}</div><div class="history-item-date">${e.date}</div></div><button class="history-del" onclick="event.stopPropagation();deleteFromHistory(${e.id})">✕</button></div>`).join('');
+  }
+
+  function resetAll() {
+    if (!confirm('Resetar tudo?')) return;
+    document.getElementById('input-line1').value  = 'Seu título';
+    document.getElementById('input-line2').value  = 'aqui';
+    document.getElementById('input-desc').value   = 'Escreva aqui uma descrição curta e envolvente sobre o assunto do post.';
+    document.getElementById('input-tag1').value = '👇 Leia a legenda';
+    document.getElementById('input-tag2').value = '👉 Arraste para o lado';
+    setTagActive(1, true); setTagActive(2, false);
+    document.getElementById('input-handle').value = 'Seu @ aqui';
+    document.getElementById('input-wa').value     = '(00) 9 0000-0000';
+    document.getElementById('toggle-wa').checked  = true;
+    document.getElementById('toggle-icons').checked = true;
+    document.getElementById('toggle-img').checked = true;
+    document.getElementById('input-list').value   = 'Primeiro item da lista\nSegundo item da lista\nTerceiro item da lista';
+    document.getElementById('toggle-list-num').checked = false;
+    document.getElementById('toggle-img-color').checked = false;
+    document.getElementById('input-img').value = '';
+    window._uploadedImgSrc = '';
+    const prev = document.getElementById('upload-img-preview');
+    if (prev) { prev.src = ''; prev.style.display = 'none'; }
+    switchImgTab('url');
+    document.getElementById('slider-grad').value  = 100;
+    document.getElementById('grad-val').textContent = '100%';
+    document.documentElement.style.setProperty('--grad-intensity', 1);
+    currentGradStyle = 'padrao';
+    document.querySelectorAll('.grad-swatch').forEach(s => s.classList.remove('active'));
+    document.querySelector('.grad-swatch[data-grad="padrao"]').classList.add('active');
+    activeDecos.clear(); activeDecos.add('circulos');
+    document.querySelectorAll('.deco-btn').forEach(b => b.classList.toggle('active', b.dataset.deco === 'circulos'));
+    setTheme(document.querySelector('.theme-swatch[data-theme="verde"]'));
+    setFormat(document.querySelector('.format-btn[data-fmt="retrato"]'));
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+    updatePreview(); showToast('↺ Resetado!');
+  }
+
+  function saveImage() {
+    const btn = document.getElementById('btn-save-img');
+    btn.textContent = '⏳ Gerando...';
+    btn.disabled = true;
+    const post = document.getElementById('post');
+    const handle = document.getElementById('input-handle').value.replace('@','') || 'post';
+    const scale = 3; // 3x resolution for crisp export
+    html2canvas(post, {
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+      width: post.offsetWidth,
+      height: post.offsetHeight,
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'post-' + handle + '-' + Date.now() + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.textContent = '💾 Salvar como imagem';
+      btn.disabled = false;
+      showToast('✅ Imagem salva!');
+    }).catch(() => {
+      btn.textContent = '💾 Salvar como imagem';
+      btn.disabled = false;
+      showToast('❌ Erro ao gerar imagem');
+    });
+  }
+
+  function copyHTML() {
+    navigator.clipboard.writeText(buildFullHTML()).then(() => showToast('📋 HTML copiado!')).catch(() => showToast('❌ Erro'));
+  }
+
+  function openFullscreen() {
+    window.open(URL.createObjectURL(new Blob([buildFullHTML()], {type:'text/html'})), '_blank');
+  }
+
+  function buildFullHTML() {
+    const line1    = document.getElementById('input-line1').value;
+    const line2    = document.getElementById('input-line2').value;
+    const desc      = document.getElementById('input-desc').value;
+    const listRaw   = document.getElementById('input-list').value;
+    const listNum   = document.getElementById('toggle-list-num').checked;
+    const listItems = listRaw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    const tag1     = document.getElementById('input-tag1').value;
+    const tag2     = document.getElementById('input-tag2').value;
+    const showTag1 = document.getElementById('btn-tag1-toggle').classList.contains('active');
+    const showTag2 = document.getElementById('btn-tag2-toggle').classList.contains('active');
+    const tagHTML  = (showTag1 ? '<div class="tag-bottom">'+tag1+'</div>' : '') + (showTag2 ? '<div class="tag-bottom">'+tag2+'</div>' : '');
+    const handle   = document.getElementById('input-handle').value;
+    const wa       = document.getElementById('input-wa').value;
+    const showWa   = document.getElementById('toggle-wa').checked;
+    const showIco  = document.getElementById('toggle-icons').checked;
+    const showImg  = document.getElementById('toggle-img').checked;
+    const imgColor = document.getElementById('toggle-img-color').checked;
+    const imgUrl   = document.getElementById('input-img').value;
+    const gradInt  = document.getElementById('slider-grad').value / 100;
+    const t = THEMES[currentTheme];
+
+    const imgFilter = imgColor ? 'none' : 'saturate(0) brightness(1.4)';
+    const imgTag = showImg
+      ? '<div style="display:flex;justify-content:center;align-items:center;padding:4px 12px;flex-shrink:0;"><img style="display:block;object-fit:cover;border-radius:10px;max-width:86%;max-height:140px;filter:' + imgFilter + '" src="' + imgUrl + '" alt="" onerror="this.style.display=\'none\'"/></div>'
+      : '';
+    const waTag = showWa
+      ? '<div class="whatsapp-row"><svg class="wa-svg" viewBox="0 0 32 32"><path fill="#25D366" d="M16 3C9.373 3 4 8.373 4 15c0 2.385.668 4.61 1.832 6.5L4 29l7.695-1.813A12.94 12.94 0 0 0 16 28c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.96 9.96 0 0 1-5.03-1.357l-.36-.214-4.57 1.077 1.1-4.453-.234-.372A9.96 9.96 0 0 1 6 15c0-5.523 4.477-10 10-10zm-3.27 5c-.2 0-.524.075-.8.375-.275.3-1.05 1.025-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.1 3.2 5.125 4.375 2.525.975 3.025.775 3.575.725.55-.05 1.775-.725 2.025-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35-.3-.15-1.775-.875-2.05-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-.3-.15-1.265-.465-2.41-1.485-.89-.795-1.49-1.775-1.665-2.075-.175-.3-.018-.462.131-.61.134-.134.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.243-.583-.49-.5-.675-.51L12.73 10z"/></svg><span class="whatsapp-number">' + wa + '</span></div>'
+      : '';
+    const icoTag = showIco
+      ? '<div class="icons"><div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="icon-label">CURTA</span></div><div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="icon-label">COMENTE</span></div><div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span class="icon-label">COMPARTILHE</span></div><div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span class="icon-label">SALVE</span></div><div class="icon-btn"><svg class="outline" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-5 0-8 2.5-8 4v1h16v-1c0-1.5-3-4-8-4z"/><line x1="19" y1="3" x2="19" y2="9"/><line x1="16" y1="6" x2="22" y2="6"/></svg><span class="icon-label">SIGA</span></div></div>'
+      : '';
+
+    const css = '*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;font-family:\'DM Sans\',sans-serif;}.post{width:100vw;height:100vh;position:relative;overflow:hidden;background:' + t.bg + ';display:flex;flex-direction:column;justify-content:space-between;}.post::before{content:\'\';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 10%,' + t.g1 + ' 0%,transparent 60%),radial-gradient(ellipse at 10% 90%,' + t.g2 + ' 0%,transparent 55%);z-index:0;opacity:' + gradInt + ';}.deco-circle{position:absolute;width:35vw;height:35vw;border-radius:50%;border:1px solid rgba(126,219,126,0.08);top:-10vw;right:-10vw;z-index:1;}.deco-circle2{position:absolute;width:18vw;height:18vw;border-radius:50%;border:1px solid rgba(126,219,126,0.06);top:3vw;right:3vw;z-index:1;}.pen-img{display:block;width:100%;flex:1;min-height:0;object-fit:cover;object-position:center;opacity:0.9;pointer-events:none;border-radius:1.5vw;margin:clamp(10px,2vw,24px) 0 0;}.content{position:relative;z-index:2;padding:clamp(8px,2vw,20px) clamp(24px,6vw,60px) 0;flex:1;display:flex;flex-direction:column;justify-content:flex-start;}.title-wrap{font-family:\'Playfair Display\',serif;font-weight:900;letter-spacing:-1px;max-width:90%;margin-bottom:clamp(14px,2.5vw,28px);}.title-l1{font-size:clamp(36px,8vw,90px);color:' + t.titleColor + ';line-height:1.1;overflow:hidden;word-break:break-word;}.title-l2{font-size:clamp(36px,8vw,90px);color:' + t.accent + ';font-style:italic;line-height:1.1;overflow:hidden;word-break:break-word;}.divider{width:clamp(40px,7vw,80px);height:3px;background:linear-gradient(90deg,' + t.accent + ',transparent);margin-bottom:clamp(14px,2.5vw,28px);border-radius:2px;}.description{font-size:clamp(18px,3vw,32px);color:rgba(220,240,220,0.75);line-height:1.7;font-weight:300;max-width:76%;}.post-list{list-style:none;margin:clamp(8px,1.2vw,16px) 0 0;padding:0;max-width:82%;}.post-list li{display:flex;align-items:flex-start;gap:0.6vw;font-size:clamp(14px,2.2vw,26px);color:rgba(220,240,220,0.8);line-height:1.5;font-weight:300;margin-bottom:0.4vw;}.post-list li::before{content:"•";color:' + t.accent + ';font-size:clamp(16px,2.5vw,30px);line-height:1.2;flex-shrink:0;}.post-list.numbered{counter-reset:lc;}.post-list.numbered li{counter-increment:lc;}.post-list.numbered li::before{content:counter(lc) ".";font-size:clamp(14px,2.2vw,26px);font-weight:600;color:' + t.accent + ';line-height:1.5;min-width:2vw;}.tag-bottom-wrap{position:relative;z-index:2;display:flex;justify-content:center;padding-bottom:clamp(10px,1.8vw,20px);}.tag-bottom{display:inline-block;background:rgba(100,200,100,0.15);border:1px solid rgba(100,200,100,0.35);color:' + t.accent + ';font-size:clamp(18px,3.2vw,38px);font-weight:600;padding:clamp(8px,1.2vw,16px) clamp(16px,2.5vw,30px);border-radius:20px;}.footer{position:relative;z-index:2;background:rgba(0,0,0,0.5);border-top:1px solid ' + t.footerBorder + ';padding:clamp(14px,2.8vw,32px) clamp(24px,6vw,60px);display:flex;align-items:center;justify-content:space-between;}.footer-left{display:flex;flex-direction:column;gap:clamp(4px,0.6vw,8px);}.handle{font-family:\'Playfair Display\',serif;font-size:clamp(20px,3.2vw,36px);font-weight:700;color:' + t.accent + ';}.whatsapp-row{display:flex;align-items:center;gap:clamp(5px,0.8vw,10px);}.wa-svg{width:clamp(24px,3.6vw,42px);height:clamp(24px,3.6vw,42px);}.whatsapp-number{font-size:clamp(20px,3.2vw,38px);color:rgba(220,240,220,0.72);}.icons{display:flex;align-items:center;gap:clamp(20px,4vw,50px);}.icon-btn{display:flex;flex-direction:column;align-items:center;gap:0.5vw;}.icon-btn svg.outline{width:clamp(48px,7.5vw,80px);height:clamp(48px,7.5vw,80px);fill:none;stroke:rgba(220,240,220,0.65);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}.icon-label{font-size:clamp(10px,1.4vw,16px);color:rgba(200,230,200,0.45);text-transform:uppercase;}';
+
+    const shrinkJS = 'function shrink(el,n){var s=parseFloat(getComputedStyle(el).fontSize),lh=parseFloat(getComputedStyle(el).lineHeight);while(s>8&&el.scrollHeight>lh*n+2){s--;el.style.fontSize=s+"px";}}window.onload=function(){shrink(document.querySelector(".title-l1"),3);shrink(document.querySelector(".title-l2"),2);};';
+
+    return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Post ' + handle + '</title>'
+      + '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">'
+      + '<style>' + css + '</style></head><body>'
+      + '<div class="post"><div class="deco-circle"></div><div class="deco-circle2"></div>'
+      + '<div class="content"><div class="title-wrap"><div class="title-l1">' + line1 + '</div><div class="title-l2">' + line2 + '</div></div>'
+      + '<div class="divider"></div><p class="description">' + desc + '</p>'
+      + (listItems.length ? '<ul class="post-list' + (listNum ? ' numbered' : '') + '">' + listItems.map(function(i){ return '<li>' + i + '</li>'; }).join('') + '</ul>' : '')
+      + imgTag + '</div>'
+      + '<div class="tag-bottom-wrap">' + tagHTML + '</div>'
+      + '<div class="footer"><div class="footer-left"><div class="handle">' + handle + '</div>' + waTag + '</div>' + icoTag + '</div>'
+      + '</div><script>' + shrinkJS + '<\/script></body></html>';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── AUTO-SAVE: salva rascunho automaticamente a cada mudança ──
+  const DRAFT_KEY = 'mpjnutri_draft';
+
+  function autoSaveDraft() {
+    try {
+      const draft = {
+        line1:    document.getElementById('input-line1').value,
+        line2:    document.getElementById('input-line2').value,
+        desc:     document.getElementById('input-desc').value,
+        list:     document.getElementById('input-list').value,
+        listNum:  document.getElementById('toggle-list-num').checked,
+        tag1:     document.getElementById('input-tag1').value,
+        tag2:     document.getElementById('input-tag2').value,
+        showTag1: document.getElementById('btn-tag1-toggle').classList.contains('active'),
+        showTag2: document.getElementById('btn-tag2-toggle').classList.contains('active'),
+        handle:   document.getElementById('input-handle').value,
+        wa:       document.getElementById('input-wa').value,
+        showWa:   document.getElementById('toggle-wa').checked,
+        showIco:  document.getElementById('toggle-icons').checked,
+        showImg:  document.getElementById('toggle-img').checked,
+        imgUrl:   document.getElementById('input-img').value,
+        imgColor: document.getElementById('toggle-img-color').checked,
+        gradVal:  document.getElementById('slider-grad').value,
+        theme:    currentTheme,
+        gradStyle: currentGradStyle,
+        decos:    Array.from(activeDecos),
+        appTheme: appTheme,
+        format:   document.getElementById('post').dataset.format || 'retrato',
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch(e) {}
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (d.line1  !== undefined) document.getElementById('input-line1').value  = d.line1;
+      if (d.line2  !== undefined) document.getElementById('input-line2').value  = d.line2;
+      if (d.desc   !== undefined) document.getElementById('input-desc').value   = d.desc;
+      if (d.list   !== undefined) document.getElementById('input-list').value   = d.list;
+      if (d.listNum !== undefined) document.getElementById('toggle-list-num').checked = d.listNum;
+      if (d.tag1   !== undefined) document.getElementById('input-tag1').value   = d.tag1;
+      if (d.tag2   !== undefined) document.getElementById('input-tag2').value   = d.tag2;
+      if (d.showTag1 !== undefined) setTagActive(1, d.showTag1);
+      if (d.showTag2 !== undefined) setTagActive(2, d.showTag2);
+      if (d.handle !== undefined) document.getElementById('input-handle').value = d.handle;
+      if (d.wa     !== undefined) document.getElementById('input-wa').value     = d.wa;
+      if (d.showWa !== undefined) document.getElementById('toggle-wa').checked  = d.showWa;
+      if (d.showIco !== undefined) document.getElementById('toggle-icons').checked = d.showIco;
+      if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
+      if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
+      if (d.imgColor !== undefined) document.getElementById('toggle-img-color').checked = d.imgColor;
+      if (d.gradVal !== undefined) {
+        document.getElementById('slider-grad').value = d.gradVal;
+        document.getElementById('grad-val').textContent = d.gradVal + '%';
+        document.documentElement.style.setProperty('--grad-intensity', d.gradVal / 100);
+      }
+      if (d.theme) {
+        const sw = document.querySelector(`.theme-swatch[data-theme="${d.theme}"]`);
+        if (sw) setTheme(sw);
+      }
+      if (d.gradStyle) {
+        currentGradStyle = d.gradStyle;
+        const gs = document.querySelector(`.grad-swatch[data-grad="${d.gradStyle}"]`);
+        if (gs) { document.querySelectorAll('.grad-swatch').forEach(s => s.classList.remove('active')); gs.classList.add('active'); }
+      }
+      if (d.decos) {
+        activeDecos.clear();
+        d.decos.forEach(k => activeDecos.add(k));
+        document.querySelectorAll('.deco-btn').forEach(b => b.classList.toggle('active', activeDecos.has(b.dataset.deco)));
+      }
+      if (d.appTheme && d.appTheme !== appTheme) toggleAppTheme();
+      if (d.format) {
+        const fb = document.querySelector(`.format-btn[data-fmt="${d.format}"]`);
+        if (fb) setFormat(fb);
+      }
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // Attach auto-save to all inputs & toggles
+  document.querySelectorAll('#input-line1,#input-line2,#input-desc,#input-list,#input-tag1,#input-tag2,#input-handle,#input-wa,#input-img').forEach(el => {
+    el.addEventListener('input', autoSaveDraft);
+  });
+  document.querySelectorAll('#toggle-list-num,#toggle-wa,#toggle-icons,#toggle-img,#toggle-img-color').forEach(el => {
+    el.addEventListener('change', autoSaveDraft);
+  });
+  document.getElementById('slider-grad').addEventListener('input', autoSaveDraft);
+  document.querySelectorAll('.theme-swatch').forEach(el => el.addEventListener('click', autoSaveDraft));
+  document.querySelectorAll('.grad-swatch').forEach(el => el.addEventListener('click', autoSaveDraft));
+  document.querySelectorAll('.deco-btn').forEach(el => el.addEventListener('click', autoSaveDraft));
+  document.querySelectorAll('.format-btn').forEach(el => el.addEventListener('click', autoSaveDraft));
+  document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
+
+  renderHistory();
+  const draftLoaded = loadDraft();
+  updatePreview();
+  renderDecos();
+  applyPostGradient(THEMES[currentTheme]);
+  if (draftLoaded) showToast('💾 Rascunho restaurado!');
+  window.addEventListener('resize', () => { requestAnimationFrame(fitTitleFonts); });
+</script>
+</body>
+</html>
