@@ -426,11 +426,71 @@
   .post[data-format="stories"] .icon-btn svg.outline { width: 15px; height: 15px; }
   .icon-label { font-size: 8px; color: rgba(200,230,200,0.45); text-transform: uppercase; letter-spacing: 0.4px; }
   .post[data-format="stories"] .icon-label { font-size: 5px; }
+
+  .settings-open-btn{border:1px solid var(--app-btn-border);background:var(--app-btn-bg);color:var(--app-text);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px}
+  .settings-overlay.open{display:flex}
+  .settings-dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--app-panel-bg);color:var(--app-text);border:1px solid var(--app-section-border);border-radius:14px;padding:20px;box-shadow:0 18px 60px #0008}
+  .settings-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+  .settings-top h2{font-size:19px;margin:0}
+  .settings-close{border:0;background:transparent;color:var(--app-text);font-size:24px;cursor:pointer}
+  .settings-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+  .settings-tab{border:1px solid var(--app-btn-border);background:var(--app-btn-bg);color:var(--app-text);padding:9px 12px;border-radius:8px;cursor:pointer}
+  .settings-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .settings-pane{display:none}.settings-pane.active{display:block}
+  .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .settings-grid .field{min-width:0}.settings-grid input,.settings-grid select{width:100%;box-sizing:border-box}
+  .settings-note{font-size:11px;line-height:1.5;color:var(--app-sub);background:var(--app-btn-bg);border-radius:8px;padding:10px;margin:10px 0}
+  .settings-status{font-size:12px;padding:9px;border-radius:7px;background:var(--app-btn-bg);margin-top:10px;white-space:pre-wrap}
+  @media(max-width:560px){.app-header{align-items:flex-start;flex-wrap:wrap}.settings-open-btn{margin-left:auto}.settings-dialog{padding:14px}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+<div class="settings-overlay" id="settings-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-dialog">
+    <div class="settings-top"><h2 id="settings-title">⚙️ Configurações</h2><button class="settings-close" onclick="closeSettings()" aria-label="Fechar">×</button></div>
+    <div class="settings-tabs">
+      <button class="settings-tab active" data-pane="profile" onclick="switchSettingsTab('profile')">👤 Perfil</button>
+      <button class="settings-tab" data-pane="ai" onclick="switchSettingsTab('ai')">🤖 Inteligência artificial</button>
+    </div>
+    <section class="settings-pane active" id="settings-pane-profile">
+      <p class="settings-note">Os dados do perfil ficam somente neste navegador. Eles não serão aplicados automaticamente: você decide quando carregar a identidade em uma postagem.</p>
+      <div class="settings-grid">
+        <div class="field"><label for="profile-name">Nome / marca</label><input id="profile-name" placeholder="Nome profissional ou marca"></div>
+        <div class="field"><label for="profile-role">Profissão / descrição</label><input id="profile-role" placeholder="Ex.: Nutricionista"></div>
+        <div class="field"><label for="profile-instagram">Instagram</label><input id="profile-instagram" placeholder="@seuperfil"></div>
+        <div class="field"><label for="profile-whatsapp">WhatsApp</label><input id="profile-whatsapp" placeholder="DDD + número"></div>
+        <div class="field"><label for="profile-email">E-mail</label><input id="profile-email" type="email" placeholder="contato@exemplo.com"></div>
+        <div class="field"><label for="profile-site">Site / link</label><input id="profile-site" placeholder="https://..."></div>
+      </div>
+      <div class="btn-row"><button class="btn" onclick="saveSettingsProfile()">💾 Salvar perfil</button><button class="btn secondary" onclick="applySettingsProfile()">Aplicar identidade na postagem</button></div>
+    </section>
+    <section class="settings-pane" id="settings-pane-ai">
+      <div class="field"><label for="ai-mode">Modo de IA</label><select id="ai-mode" onchange="updateAISettingsVisibility()"><option value="none">Não utilizar IA</option><option value="api">IA externa por API</option><option value="ollama">IA local — Ollama</option></select></div>
+      <div id="ai-api-settings">
+        <h3>IA externa compatível com API OpenAI</h3>
+        <div class="field"><label for="ai-provider">Provedor</label><select id="ai-provider" onchange="applyAIProviderPreset()"><option value="custom">Personalizado / OpenAI-compatible</option><option value="openai">OpenAI</option><option value="openrouter">OpenRouter</option><option value="groq">Groq</option></select></div>
+        <div class="field"><label for="ai-api-url">Endpoint base</label><input id="ai-api-url" placeholder="https://api.openai.com/v1"></div>
+        <div class="settings-grid">
+          <div class="field"><label for="ai-api-model">Modelo</label><input id="ai-api-model" placeholder="Nome exato do modelo"></div>
+          <div class="field"><label for="ai-api-key">Chave da API</label><input id="ai-api-key" type="password" autocomplete="off" placeholder="Cole sua chave para esta sessão"></div>
+        </div>
+        <div class="settings-note">A chave fica apenas na memória desta aba (sessionStorage), não é gravada no perfil nem no projeto. Como o site é estático, chamadas diretas do navegador expõem a chave ao próprio navegador e não oferecem proteção de servidor. Para uso público ou profissional contínuo, o ideal é um backend/proxy privado.</div>
+      </div>
+      <div id="ai-ollama-settings" style="display:none">
+        <h3>Ollama local</h3>
+        <div class="field"><label for="ollama-url">Endereço do Ollama</label><input id="ollama-url" placeholder="http://localhost:11434"></div>
+        <div class="field"><label for="ollama-model">Modelo instalado</label><input id="ollama-model" placeholder="Ex.: llama3.2, qwen2.5"></div>
+        <div class="settings-note">O Ollama precisa estar instalado e em execução no computador que abre o gerador. Para acesso pelo navegador, talvez seja necessário habilitar CORS com OLLAMA_ORIGINS. Não exponha a porta do Ollama diretamente à internet.</div>
+      </div>
+      <div class="btn-row"><button class="btn" onclick="saveAISettings()">💾 Salvar configuração de IA</button><button class="btn secondary" onclick="testAIConnection()">Testar conexão</button></div>
+      <div id="ai-connection-status" class="settings-status" aria-live="polite">Configure um provedor e teste a conexão.</div>
+    </section>
+  </div>
+</div>
+
 
 <!-- CABEÇALHO -->
 <header class="app-header">
@@ -442,6 +502,7 @@
       <span class="panel-sub" style="font-size:12px;">Desenvolvido por <a href="https://instagram.com/mpjnutri" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600;">@mpjnutri</a> — uso, edição e distribuição livres</span>
     </div>
   </div>
+  <button type="button" class="settings-open-btn" onclick="openSettings()" aria-label="Abrir configurações">⚙️ Configurações</button>
 </header>
 
 <!-- PAINEL -->
@@ -982,7 +1043,7 @@ Terceiro item da lista</textarea></div>
     catch(e){ return null; }
   }
   function saveBrandProfile() {
-    const p={handle:document.getElementById('input-handle').value.trim(),wa:document.getElementById('input-wa').value.trim(),showWa:document.getElementById('toggle-wa').checked,showIcons:document.getElementById('toggle-icons').checked,theme:currentTheme};
+    const prior=getBrandProfile()||{};const p={...prior,handle:document.getElementById('input-handle').value.trim(),wa:document.getElementById('input-wa').value.trim(),showWa:document.getElementById('toggle-wa').checked,showIcons:document.getElementById('toggle-icons').checked,theme:currentTheme};
     try { localStorage.setItem(BRAND_PROFILE_KEY,JSON.stringify(p)); showToast('💾 Identidade salva somente neste navegador!'); }
     catch(e){ showToast('Não foi possível salvar as configurações.'); }
   }
@@ -995,6 +1056,64 @@ Terceiro item da lista</textarea></div>
     const sw=document.querySelector('.theme-swatch[data-theme="'+(p.theme||'verde')+'"]'); if(sw)setTheme(sw);
     updatePreview(); showToast('Configurações carregadas.');
   }
+
+
+  const SETTINGS_PROFILE_KEY='mpjnutri_settings_profile_v1';
+  const AI_SETTINGS_KEY='mpjnutri_ai_settings_v1';
+  const AI_SESSION_KEY='mpjnutri_ai_api_key_session';
+  function openSettings(){
+    const p=(()=>{try{return JSON.parse(localStorage.getItem(SETTINGS_PROFILE_KEY)||'null')||getBrandProfile()||{};}catch(e){return getBrandProfile()||{};}})();
+    ['name','role','instagram','whatsapp','email','site'].forEach(k=>{const el=document.getElementById('profile-'+k);if(el)el.value=p[k]|| (k==='instagram'?p.handle||'':k==='whatsapp'?p.wa||'':'');});
+    let a={};try{a=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');}catch(e){}
+    document.getElementById('ai-mode').value=a.mode||'none';document.getElementById('ai-provider').value=a.provider||'custom';document.getElementById('ai-api-url').value=a.apiUrl||'https://api.openai.com/v1';document.getElementById('ai-api-model').value=a.model||'';document.getElementById('ollama-url').value=a.ollamaUrl||'http://localhost:11434';document.getElementById('ollama-model').value=a.ollamaModel||'';document.getElementById('ai-api-key').value=sessionStorage.getItem(AI_SESSION_KEY)||'';
+    updateAISettingsVisibility();document.getElementById('settings-overlay').classList.add('open');document.body.style.overflow='hidden';
+  }
+  function closeSettings(){document.getElementById('settings-overlay').classList.remove('open');document.body.style.overflow='';}
+  function switchSettingsTab(tab){document.querySelectorAll('.settings-tab').forEach(b=>b.classList.toggle('active',b.dataset.pane===tab));document.querySelectorAll('.settings-pane').forEach(p=>p.classList.toggle('active',p.id==='settings-pane-'+tab));}
+  function saveSettingsProfile(){
+    const p={};['name','role','instagram','whatsapp','email','site'].forEach(k=>p[k]=document.getElementById('profile-'+k).value.trim());
+    try{localStorage.setItem(SETTINGS_PROFILE_KEY,JSON.stringify(p));const old=getBrandProfile()||{};localStorage.setItem(BRAND_PROFILE_KEY,JSON.stringify({...old,handle:p.instagram,wa:p.whatsapp}));showToast('Perfil salvo somente neste navegador.');}
+    catch(e){showToast('Não foi possível salvar o perfil neste navegador.');}
+  }
+  function applySettingsProfile(){
+    let p={};try{p=JSON.parse(localStorage.getItem(SETTINGS_PROFILE_KEY)||'{}');}catch(e){}
+    if(!p.instagram&&!p.whatsapp){showToast('Salve ou preencha Instagram/WhatsApp primeiro.');return;}
+    document.getElementById('input-handle').value=p.instagram||'';document.getElementById('input-wa').value=p.whatsapp||'';document.getElementById('toggle-wa').checked=!!p.whatsapp;updatePreview();autoSaveDraft();showToast('Identidade aplicada à postagem atual.');closeSettings();
+  }
+  function updateAISettingsVisibility(){
+    const mode=document.getElementById('ai-mode').value;document.getElementById('ai-api-settings').style.display=mode==='api'?'block':'none';document.getElementById('ai-ollama-settings').style.display=mode==='ollama'?'block':'none';
+  }
+  function applyAIProviderPreset(){
+    const presets={openai:'https://api.openai.com/v1',openrouter:'https://openrouter.ai/api/v1',groq:'https://api.groq.com/openai/v1'};
+    const p=document.getElementById('ai-provider').value;if(presets[p])document.getElementById('ai-api-url').value=presets[p];
+  }
+  function getAISettings(){
+    return {mode:document.getElementById('ai-mode').value,provider:document.getElementById('ai-provider').value,apiUrl:document.getElementById('ai-api-url').value.trim().replace(/\/$/,''),model:document.getElementById('ai-api-model').value.trim(),ollamaUrl:document.getElementById('ollama-url').value.trim().replace(/\/$/,''),ollamaModel:document.getElementById('ollama-model').value.trim()};
+  }
+  function saveAISettings(){
+    const a=getAISettings();try{localStorage.setItem(AI_SETTINGS_KEY,JSON.stringify(a));const key=document.getElementById('ai-api-key').value.trim();if(key)sessionStorage.setItem(AI_SESSION_KEY,key);else sessionStorage.removeItem(AI_SESSION_KEY);showToast('Configuração de IA salva. Chave válida somente nesta sessão.');}
+    catch(e){showToast('Não foi possível salvar a configuração de IA.');}
+  }
+  async function testAIConnection(){
+    const a=getAISettings(),status=document.getElementById('ai-connection-status');status.textContent='Testando conexão...';
+    try{
+      if(a.mode==='none')throw new Error('Selecione um modo de IA antes de testar.');
+      if(a.mode==='ollama'){
+        if(!a.ollamaUrl)throw new Error('Informe o endereço do Ollama.');
+        const response=await fetch(a.ollamaUrl+'/api/tags');if(!response.ok)throw new Error('Ollama respondeu HTTP '+response.status);
+        const data=await response.json();const models=(data.models||[]).map(x=>x.name).filter(Boolean);
+        status.textContent='Conexão com Ollama estabelecida. Modelos encontrados: '+(models.join(', ')||'nenhum modelo instalado')+(a.ollamaModel?'\nModelo configurado: '+a.ollamaModel:'');
+      }else{
+        if(!a.apiUrl||!a.model)throw new Error('Informe endpoint e modelo.');
+        const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
+        if(!key)throw new Error('Informe a chave da API.');
+        const response=await fetch(a.apiUrl+'/models',{headers:{Authorization:'Bearer '+key}});
+        if(!response.ok)throw new Error('API respondeu HTTP '+response.status+'. Confira endpoint, chave e permissões.');
+        const data=await response.json();status.textContent='Conexão com a API estabelecida. Modelos disponíveis: '+((data.data||[]).map(x=>x.id).slice(0,12).join(', ')||'endpoint respondeu corretamente')+'\nModelo selecionado: '+a.model;
+      }
+    }catch(e){status.textContent='Não foi possível conectar: '+(e.message||'erro desconhecido')+'. Verifique se o serviço está ativo, URL, chave e permissões CORS.';}
+  }
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('settings-overlay')?.classList.contains('open'))closeSettings();});
 
   function setTheme(el) {
     document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
