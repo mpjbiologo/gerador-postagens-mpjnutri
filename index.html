@@ -290,6 +290,13 @@
   .history-del { background: none; border: none; color: #444; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
   .history-del:hover { color: #e05555; }
   .history-empty { font-size: 11px; color: #444; text-align: center; padding: 10px 0; }
+  .project-search { width:100%; box-sizing:border-box; margin:0 0 9px; padding:9px 10px; border:1px solid #383838; border-radius:7px; background:#202020; color:#eee; font:inherit; font-size:12px; }
+  .history-item { cursor:default; align-items:flex-start; }
+  .history-item-text { cursor:pointer; min-width:0; }
+  .history-item-actions { display:flex; gap:3px; flex-shrink:0; }
+  .history-action { background:#303030; border:1px solid #414141; color:#bbb; cursor:pointer; font-size:10px; padding:5px 6px; border-radius:5px; }
+  .history-action:hover { color:#fff; border-color:var(--accent); }
+  .history-item-title { white-space:normal; overflow-wrap:anywhere; }
 
   .step { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: #777; line-height: 1.5; }
   .step-num { background: var(--accent); color: var(--accent-dark); font-weight: 700; font-size: 9px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
@@ -470,16 +477,15 @@ Terceiro item da lista</textarea></div>
       <div class="section-arrow">▼</div>
     </div>
     <div class="section-body">
-      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="@mpjnutri" oninput="updatePreview()"></div>
-      <div class="brand-profile-note">Identidade padrão do projeto: <strong>@mpjnutri</strong> · tema verde. Configure o WhatsApp se quiser exibi-lo nas artes.</div>
+      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
       <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
       <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="btn-row" style="margin-top:10px">
-        <button class="btn" type="button" onclick="saveBrandProfile()">⭐ Salvar identidade padrão</button>
-        <button class="btn secondary" type="button" onclick="applyBrandProfile()">↺ Aplicar padrão</button>
+        <button class="btn" type="button" onclick="saveBrandProfile()">💾 Salvar nas configurações</button>
+        <button class="btn secondary" type="button" onclick="applyBrandProfile()">↺ Carregar configuração</button>
       </div>
-      <div class="template-hint">A identidade padrão fica salva neste navegador e pode ser aplicada às próximas artes.</div>
-      <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="template-hint">A identidade fica salva somente neste navegador. Ela não é aplicada automaticamente a novas postagens.</div>
     </div>
   </div>
 
@@ -608,14 +614,15 @@ Terceiro item da lista</textarea></div>
 
   <div class="section" id="sec-hist">
     <div class="section-header" onclick="toggleSection('sec-hist')">
-      <div class="section-title">🕓 Histórico</div>
+      <div class="section-title">🗂️ Projetos</div>
       <div class="section-arrow">▼</div>
     </div>
     <div class="section-body">
-      <div id="history-list" class="history-list"><div class="history-empty">Nenhum post salvo ainda.</div></div>
+      <input type="search" id="project-search" class="project-search" placeholder="Buscar projeto pelo nome..." oninput="renderHistory()">
+      <div id="history-list" class="history-list"><div class="history-empty">Nenhum projeto salvo ainda.</div></div>
       <div class="btn-row">
-        <button class="btn" onclick="saveToHistory()">💾 Salvar</button>
-        <button class="btn secondary" onclick="clearHistory()">🗑</button>
+        <button class="btn" onclick="saveToHistory()">💾 Salvar projeto</button>
+        <button class="btn secondary" onclick="clearHistory()">🗑 Limpar tudo</button>
       </div>
     </div>
   </div>
@@ -816,52 +823,23 @@ Terceiro item da lista</textarea></div>
   }
 
   const BRAND_PROFILE_KEY = 'mpjnutri_brand_profile';
-  const DEFAULT_BRAND_PROFILE = {
-    handle: '@mpjnutri',
-    wa: '',
-    showWa: false,
-    showIcons: true,
-    theme: 'verde'
-  };
-
   function getBrandProfile() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(BRAND_PROFILE_KEY) || 'null');
-      return saved && typeof saved === 'object'
-        ? { ...DEFAULT_BRAND_PROFILE, ...saved }
-        : { ...DEFAULT_BRAND_PROFILE };
-    } catch(e) {
-      return { ...DEFAULT_BRAND_PROFILE };
-    }
+    try { const p=JSON.parse(localStorage.getItem(BRAND_PROFILE_KEY)||'null'); return p&&typeof p==='object'?p:null; }
+    catch(e){ return null; }
   }
-
   function saveBrandProfile() {
-    const profile = {
-      handle: document.getElementById('input-handle').value.trim() || '@mpjnutri',
-      wa: document.getElementById('input-wa').value.trim(),
-      showWa: document.getElementById('toggle-wa').checked,
-      showIcons: document.getElementById('toggle-icons').checked,
-      theme: currentTheme
-    };
-    try {
-      localStorage.setItem(BRAND_PROFILE_KEY, JSON.stringify(profile));
-      showToast('⭐ Identidade padrão salva neste navegador!');
-    } catch(e) {
-      showToast('Não foi possível salvar a identidade.');
-    }
+    const p={handle:document.getElementById('input-handle').value.trim(),wa:document.getElementById('input-wa').value.trim(),showWa:document.getElementById('toggle-wa').checked,showIcons:document.getElementById('toggle-icons').checked,theme:currentTheme};
+    try { localStorage.setItem(BRAND_PROFILE_KEY,JSON.stringify(p)); showToast('💾 Identidade salva somente neste navegador!'); }
+    catch(e){ showToast('Não foi possível salvar as configurações.'); }
   }
-
   function applyBrandProfile() {
-    const profile = getBrandProfile();
-    document.getElementById('input-handle').value = profile.handle;
-    document.getElementById('input-wa').value = profile.wa;
-    document.getElementById('toggle-wa').checked = !!profile.showWa && !!profile.wa;
-    document.getElementById('toggle-icons').checked = profile.showIcons !== false;
-    const swatch = document.querySelector('.theme-swatch[data-theme="' + profile.theme + '"]');
-    if (swatch) setTheme(swatch);
-    updatePreview();
-    autoSaveDraft();
-    showToast('Identidade padrão aplicada!');
+    const p=getBrandProfile(); if(!p){showToast('Nenhuma identidade salva neste navegador.');return;}
+    document.getElementById('input-handle').value=p.handle||'';
+    document.getElementById('input-wa').value=p.wa||'';
+    document.getElementById('toggle-wa').checked=!!p.showWa&&!!p.wa;
+    document.getElementById('toggle-icons').checked=!!p.showIcons;
+    const sw=document.querySelector('.theme-swatch[data-theme="'+(p.theme||'verde')+'"]'); if(sw)setTheme(sw);
+    updatePreview(); showToast('Configurações carregadas.');
   }
 
   function setTheme(el) {
@@ -1193,59 +1171,50 @@ Terceiro item da lista</textarea></div>
 
   function toggleSection(id) { document.getElementById(id).classList.toggle('open'); }
 
-  function getHistory() { try { return JSON.parse(localStorage.getItem('mpjnutri_hist') || '[]'); } catch(e) { return []; } }
-  function saveHistory(h) { localStorage.setItem('mpjnutri_hist', JSON.stringify(h)); }
-
-  function saveToHistory() {
-    const entry = {
-      id: Date.now(),
-      line1: document.getElementById('input-line1').value,
-      listItems: document.getElementById('input-list').value,
-      listNum: document.getElementById('toggle-list-num').checked,
-      line2: document.getElementById('input-line2').value,
-      desc:  document.getElementById('input-desc').value,
-      tag1: document.getElementById('input-tag1').value,
-      tag2: document.getElementById('input-tag2').value,
-      showTag1: document.getElementById('btn-tag1-toggle').classList.contains('active'),
-      showTag2: document.getElementById('btn-tag2-toggle').classList.contains('active'),
-      handle: document.getElementById('input-handle').value,
-      wa:    document.getElementById('input-wa').value,
-      theme: currentTheme,
-      date:  new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
-    };
-    const h = getHistory(); h.unshift(entry); if (h.length > 20) h.pop();
-    saveHistory(h); renderHistory(); showToast('✅ Salvo!');
+  function getHistory() {
+    try { const a=JSON.parse(localStorage.getItem('mpjnutri_hist')||'[]'); return Array.isArray(a)?a.map((e,i)=>({...e,name:e.name||[e.line1,e.line2].filter(Boolean).join(' ').trim()||'Projeto sem título',id:e.id||Date.now()+i})):[]; }
+    catch(e){return [];}
   }
-
-  function loadFromHistory(id) {
-    const e = getHistory().find(x => x.id === id); if (!e) return;
-    document.getElementById('input-line1').value  = e.line1;
-    document.getElementById('input-line2').value  = e.line2;
-    document.getElementById('input-desc').value   = e.desc;
-    document.getElementById('input-tag1').value = e.tag1 || e.tag || '👇 Leia a legenda';
-    document.getElementById('input-tag2').value = e.tag2 || '👉 Arraste para o lado';
-    setTagActive(1, e.showTag1 !== false);
-    setTagActive(2, !!e.showTag2);
-    document.getElementById('input-list').value   = e.listItems || '';
-    document.getElementById('toggle-list-num').checked = e.listNum || false;
-    document.getElementById('input-handle').value = e.handle || '@seuhandle';
-    document.getElementById('input-wa').value     = e.wa || '(00) 9 0000-0000';
-    if (e.theme) { const sw = document.querySelector(`.theme-swatch[data-theme="${e.theme}"]`); if (sw) setTheme(sw); }
-    updatePreview(); showToast('📂 Carregado!');
+  function saveHistory(h){localStorage.setItem('mpjnutri_hist',JSON.stringify(h));}
+  function saveToHistory(){
+    const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
+    const name=prompt('Nome deste projeto:',title); if(name===null)return;
+    const snap={line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.format||'retrato'};
+    const e={id:Date.now(),name:name.trim()||title,snapshot:snap,line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    const h=getHistory();h.unshift(e);saveHistory(h);renderHistory();showToast('✅ Projeto salvo!');
   }
-
-  function deleteFromHistory(id) { saveHistory(getHistory().filter(e => e.id !== id)); renderHistory(); }
-
-  function clearHistory() {
-    if (!confirm('Apagar todo o histórico?')) return;
-    localStorage.removeItem('mpjnutri_hist'); renderHistory(); showToast('🗑️ Apagado');
+  function loadFromHistory(id){
+    const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;
+    if(e.snapshot){try{localStorage.setItem(DRAFT_KEY,JSON.stringify(e.snapshot));loadDraft();}catch(err){showToast('Falha ao carregar projeto.');return;}}
+    else{
+      document.getElementById('input-line1').value=e.line1||'';document.getElementById('input-line2').value=e.line2||'';document.getElementById('input-desc').value=e.desc||'';
+      document.getElementById('input-tag1').value=e.tag1||e.tag||'';document.getElementById('input-tag2').value=e.tag2||'';
+      setTagActive(1,e.showTag1!==false);setTagActive(2,!!e.showTag2);document.getElementById('input-list').value=e.listItems||'';
+      document.getElementById('toggle-list-num').checked=!!e.listNum;document.getElementById('input-handle').value=e.handle||'';document.getElementById('input-wa').value=e.wa||'';
+      if(e.theme){const sw=document.querySelector('.theme-swatch[data-theme="'+e.theme+'"]');if(sw)setTheme(sw);}
+    }
+    updatePreview();showToast('📂 Projeto carregado!');
   }
-
-  function renderHistory() {
-    const list = document.getElementById('history-list');
-    const h = getHistory();
-    if (!h.length) { list.innerHTML = '<div class="history-empty">Nenhum post salvo ainda.</div>'; return; }
-    list.innerHTML = h.map(e => `<div class="history-item" onclick="loadFromHistory(${e.id})"><div class="history-item-text"><div class="history-item-title">${e.line1} ${e.line2}</div><div class="history-item-date">${e.date}</div></div><button class="history-del" onclick="event.stopPropagation();deleteFromHistory(${e.id})">✕</button></div>`).join('');
+  function renameProject(id){
+    const h=getHistory(),e=h.find(x=>String(x.id)===String(id));if(!e)return;
+    const n=prompt('Novo nome do projeto:',e.name||'Projeto');if(n===null)return;
+    if(!n.trim()){showToast('O nome não pode ficar vazio.');return;}e.name=n.trim();saveHistory(h);renderHistory();showToast('Nome atualizado!');
+  }
+  function duplicateProject(id){
+    const h=getHistory(),e=h.find(x=>String(x.id)===String(id));if(!e)return;
+    const c=JSON.parse(JSON.stringify(e));c.id=Date.now();c.name='Cópia de '+(e.name||'Projeto');c.date=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    h.unshift(c);saveHistory(h);renderHistory();showToast('Projeto duplicado!');
+  }
+  function deleteFromHistory(id){
+    if(!confirm('Excluir este projeto?'))return;saveHistory(getHistory().filter(e=>String(e.id)!==String(id)));renderHistory();showToast('Projeto excluído.');
+  }
+  function clearHistory(){if(!confirm('Apagar todos os projetos salvos?'))return;localStorage.removeItem('mpjnutri_hist');renderHistory();showToast('🗑️ Projetos apagados.');}
+  function escapeProjectText(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function renderHistory(){
+    const el=document.getElementById('history-list'),q=(document.getElementById('project-search')?.value||'').trim().toLocaleLowerCase('pt-BR'),all=getHistory(),items=all.filter(e=>(e.name||'').toLocaleLowerCase('pt-BR').includes(q));
+    if(!items.length){el.innerHTML='<div class="history-empty">'+(all.length?'Nenhum projeto encontrado.':'Nenhum projeto salvo ainda.')+'</div>';return;}
+    el.innerHTML=items.map(e=>{const id=Number(e.id),name=escapeProjectText(e.name),date=escapeProjectText(e.date||'');return '<div class="history-item"><div class="history-item-text" role="button" tabindex="0" onclick="loadFromHistory('+id+')" onkeydown="if(event.key===\'Enter\')loadFromHistory('+id+')"><div class="history-item-title">'+name+'</div><div class="history-item-date">'+date+'</div></div><div class="history-item-actions"><button class="history-action" title="Renomear" onclick="renameProject('+id+')">✏️</button><button class="history-action" title="Duplicar" onclick="duplicateProject('+id+')">⧉</button><button class="history-action" title="Excluir" onclick="deleteFromHistory('+id+')">✕</button></div></div>';}).join('');
+    if(all.some(e=>!e.name))saveHistory(all);
   }
 
   function resetAll() {
@@ -1475,15 +1444,7 @@ Terceiro item da lista</textarea></div>
 
   renderHistory();
   const draftLoaded = loadDraft();
-  if (!draftLoaded) {
-    const initialBrand = getBrandProfile();
-    document.getElementById('input-handle').value = initialBrand.handle;
-    document.getElementById('input-wa').value = initialBrand.wa;
-    document.getElementById('toggle-wa').checked = !!initialBrand.showWa && !!initialBrand.wa;
-    document.getElementById('toggle-icons').checked = initialBrand.showIcons !== false;
-    const initialTheme = document.querySelector('.theme-swatch[data-theme="' + initialBrand.theme + '"]');
-    if (initialTheme) setTheme(initialTheme);
-  }
+  // Identidade salva só é carregada quando o usuário solicitar nas configurações.
   updatePreview();
   renderDecos();
   applyPostGradient(THEMES[currentTheme]);
