@@ -268,6 +268,8 @@
 
   .divider { border: none; border-top: 1px solid #222; }
 
+  .brand-profile-note { font-size:10px; line-height:1.5; color:var(--app-sub); padding:8px 9px; border-radius:7px; background:var(--app-btn-bg); border:1px solid var(--app-btn-border); margin-bottom:8px; }
+  .brand-profile-note strong { color:var(--accent); }
   .template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .template-card { position: relative; min-height: 112px; padding: 10px; border: 1px solid var(--app-btn-border); border-radius: 9px; background: var(--app-btn-bg); color: var(--app-text); text-align: left; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color .18s, transform .18s, background .18s; }
   .template-card:hover, .template-card:focus-visible { border-color: var(--accent); transform: translateY(-2px); outline: none; }
@@ -468,9 +470,15 @@ Terceiro item da lista</textarea></div>
       <div class="section-arrow">▼</div>
     </div>
     <div class="section-body">
-      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="Seu @ aqui" oninput="updatePreview()"></div>
-      <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="(00) 9 0000-0000" oninput="updatePreview()"></div>
-      <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="@mpjnutri" oninput="updatePreview()"></div>
+      <div class="brand-profile-note">Identidade padrão do projeto: <strong>@mpjnutri</strong> · tema verde. Configure o WhatsApp se quiser exibi-lo nas artes.</div>
+      <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
+      <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" type="button" onclick="saveBrandProfile()">⭐ Salvar identidade padrão</button>
+        <button class="btn secondary" type="button" onclick="applyBrandProfile()">↺ Aplicar padrão</button>
+      </div>
+      <div class="template-hint">A identidade padrão fica salva neste navegador e pode ser aplicada às próximas artes.</div>
       <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
     </div>
   </div>
@@ -805,6 +813,55 @@ Terceiro item da lista</textarea></div>
     autoSaveDraft();
     showToast('🧩 Modelo carregado! Personalize o conteúdo.');
     document.getElementById('sec-texto').classList.add('open');
+  }
+
+  const BRAND_PROFILE_KEY = 'mpjnutri_brand_profile';
+  const DEFAULT_BRAND_PROFILE = {
+    handle: '@mpjnutri',
+    wa: '',
+    showWa: false,
+    showIcons: true,
+    theme: 'verde'
+  };
+
+  function getBrandProfile() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(BRAND_PROFILE_KEY) || 'null');
+      return saved && typeof saved === 'object'
+        ? { ...DEFAULT_BRAND_PROFILE, ...saved }
+        : { ...DEFAULT_BRAND_PROFILE };
+    } catch(e) {
+      return { ...DEFAULT_BRAND_PROFILE };
+    }
+  }
+
+  function saveBrandProfile() {
+    const profile = {
+      handle: document.getElementById('input-handle').value.trim() || '@mpjnutri',
+      wa: document.getElementById('input-wa').value.trim(),
+      showWa: document.getElementById('toggle-wa').checked,
+      showIcons: document.getElementById('toggle-icons').checked,
+      theme: currentTheme
+    };
+    try {
+      localStorage.setItem(BRAND_PROFILE_KEY, JSON.stringify(profile));
+      showToast('⭐ Identidade padrão salva neste navegador!');
+    } catch(e) {
+      showToast('Não foi possível salvar a identidade.');
+    }
+  }
+
+  function applyBrandProfile() {
+    const profile = getBrandProfile();
+    document.getElementById('input-handle').value = profile.handle;
+    document.getElementById('input-wa').value = profile.wa;
+    document.getElementById('toggle-wa').checked = !!profile.showWa && !!profile.wa;
+    document.getElementById('toggle-icons').checked = profile.showIcons !== false;
+    const swatch = document.querySelector('.theme-swatch[data-theme="' + profile.theme + '"]');
+    if (swatch) setTheme(swatch);
+    updatePreview();
+    autoSaveDraft();
+    showToast('Identidade padrão aplicada!');
   }
 
   function setTheme(el) {
@@ -1418,6 +1475,15 @@ Terceiro item da lista</textarea></div>
 
   renderHistory();
   const draftLoaded = loadDraft();
+  if (!draftLoaded) {
+    const initialBrand = getBrandProfile();
+    document.getElementById('input-handle').value = initialBrand.handle;
+    document.getElementById('input-wa').value = initialBrand.wa;
+    document.getElementById('toggle-wa').checked = !!initialBrand.showWa && !!initialBrand.wa;
+    document.getElementById('toggle-icons').checked = initialBrand.showIcons !== false;
+    const initialTheme = document.querySelector('.theme-swatch[data-theme="' + initialBrand.theme + '"]');
+    if (initialTheme) setTheme(initialTheme);
+  }
   updatePreview();
   renderDecos();
   applyPostGradient(THEMES[currentTheme]);
