@@ -733,6 +733,8 @@ Terceiro item da lista</textarea></div>
       <p class="template-hint">A estrutura é um ponto de partida editorial, não uma validação científica nem uma recomendação clínica. Revise as afirmações e inclua fontes confiáveis.</p>
       <div class="field"><label for="research-notes">Referências científicas e observações</label><textarea id="research-notes" rows="5" placeholder="Cole DOI, PMID, título, autores, link ou observações da revisão..."></textarea></div>
       <button class="btn secondary" type="button" onclick="saveResearchNotes()">💾 Salvar referências neste navegador</button>
+      <button class="btn secondary" type="button" onclick="auditScientificDraft()">🔎 Checklist de revisão científica</button>
+      <div id="scientific-audit" class="template-hint" aria-live="polite"></div>
       <div class="field"><label for="caption-output">Legenda e hashtags</label><textarea id="caption-output" rows="5" placeholder="A legenda será montada a partir do conteúdo atual..."></textarea></div>
       <div class="btn-row"><button class="btn secondary" type="button" onclick="buildCaption()">Gerar legenda</button><button class="btn secondary" type="button" onclick="copyCaption()">Copiar</button></div>
     </div>
@@ -1277,7 +1279,9 @@ Terceiro item da lista</textarea></div>
     updateBackground();
     if(document.getElementById('post').dataset.mode==='carrossel'){
       saveCurrentCarouselSlide();const p=document.getElementById('post');p.classList.add('is-carousel');
-      p.classList.toggle('carousel-cover',activeCarouselSlide===0);p.classList.toggle('carousel-content',activeCarouselSlide!==0);
+      const slideType=carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content');
+      p.classList.toggle('carousel-cover',slideType==='cover');p.classList.toggle('carousel-content',slideType!=='cover');
+      ['list','comparison','tip','closing'].forEach(t=>p.classList.toggle('carousel-type-'+t,slideType===t));
       document.getElementById('carousel-counter').textContent=(activeCarouselSlide+1)+' / '+carouselSlides.length;
     }
 
@@ -1450,7 +1454,7 @@ Terceiro item da lista</textarea></div>
   function saveToHistory(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
     const name=prompt('Nome deste projeto:',title); if(name===null)return;
-    const snap={backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide};
+    const snap={researchNotes:document.getElementById('research-notes')?.value||'',backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide};
     const e={id:Date.now(),name:name.trim()||title,snapshot:snap,versions:[],line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
     const h=getHistory();h.unshift(e);saveHistory(h);currentProjectId=e.id;renderHistory();renderProjectVersions();showToast('✅ Projeto salvo!');
   }
@@ -1512,6 +1516,17 @@ Terceiro item da lista</textarea></div>
     if(!topic){showToast('Informe o tema primeiro.');return;}
     const prompt='Crie um roteiro de carrossel educativo sobre: '+topic+'. Público: '+aud+'. Objetivo: '+goal+'. Escreva em português brasileiro, com linguagem clara e rigor científico. Não invente estudos, números, referências ou consensos. Diferencie evidência de hipótese, aponte limites e sinalize afirmações que exigem fonte. Estruture em capa, conceito, relevância, aplicação geral, ressalvas e encerramento. Sugira fontes científicas verificáveis (DOI/PMID/link) sem fabricar referências.';
     navigator.clipboard.writeText(prompt).then(()=>showToast('Briefing copiado.')).catch(()=>showToast('Não foi possível copiar.'));
+  }
+
+  function auditScientificDraft(){
+    const textContent=[document.getElementById('input-line1').value,document.getElementById('input-line2').value,document.getElementById('input-desc').value,document.getElementById('input-list').value].join(' ');
+    const refs=document.getElementById('research-notes').value.trim(),flags=[];
+    if(/\b(cura|garantido|sempre|nunca|comprovado|detox|milagroso|elimina|previne)\b/i.test(textContent))flags.push('Revise termos absolutos ou promessas de resultado.');
+    if(/\d+(?:[,.]\d+)?\s?%|\b\d+(?:[,.]\d+)?\s?(?:mg|g|kg|kcal|anos|dias)\b/i.test(textContent))flags.push('Confira números, unidades, população e fonte primária.');
+    if(!refs)flags.push('Adicione referências verificáveis para afirmações científicas.');
+    if(textContent.length>500)flags.push('Confira se o conteúdo está claro, contextualizado e sem extrapolações.');
+    if(!flags.length)flags.push('Nenhum alerta automático identificado. Isso não comprova a exatidão científica do conteúdo.');
+    document.getElementById('scientific-audit').innerHTML='<strong>Checklist preliminar (heurístico):</strong><ul>'+flags.map(x=>'<li>'+editorialEscape(x)+'</li>').join('')+'</ul><small>Esta ferramenta não consulta bases científicas nem substitui revisão profissional.</small>';
   }
   function saveResearchNotes(){try{localStorage.setItem(RESEARCH_KEY,document.getElementById('research-notes').value);showToast('Referências salvas neste navegador.');}catch(e){showToast('Não foi possível salvar as referências.');}}
   function buildCaption(){
