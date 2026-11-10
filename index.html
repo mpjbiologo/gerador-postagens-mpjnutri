@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerador de Postagens - @mpjnutri</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -328,6 +330,14 @@
   .carousel-actions { display:flex;gap:6px;flex-wrap:wrap;margin:8px 0; }
   .carousel-actions .btn { flex:1;min-width:90px; }
   .carousel-note { color:var(--app-label);font-size:10px;line-height:1.4;margin:6px 0; }
+  .post.carousel-type-list .content{justify-content:center}
+  .post.carousel-type-comparison .content{border-left:5px solid var(--accent);padding-left:28px}
+  .post.carousel-type-tip .content{justify-content:center}
+  .post.carousel-type-tip #preview-desc{background:rgba(255,255,255,.09);padding:18px;border-radius:12px}
+  .post.carousel-type-closing .content{justify-content:center;text-align:center;align-items:center}
+  .post.carousel-type-closing #preview-title{ text-align:center;max-width:100%}
+  .post.carousel-type-closing .divider-post{margin-left:auto;margin-right:auto}
+
   .carousel-thumb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0;max-height:260px;overflow:auto}
   .carousel-thumb{position:relative;min-height:92px;padding:8px;border:1px solid var(--app-btn-border);border-radius:8px;background:var(--app-btn-bg);color:var(--app-text);text-align:left;cursor:grab;overflow:hidden}
   .carousel-thumb.active{border:2px solid var(--accent);padding:7px}
@@ -470,6 +480,11 @@
           <span class="template-preview" style="background:linear-gradient(135deg,#3b1827,#a54869)"><span></span></span>
           <span class="template-name">Chamada / CTA</span><span class="template-desc">Convite para interagir</span>
         </button>
+        <button class="template-card" onclick="applyTemplate('clinica')" type="button"><span class="template-preview" style="background:linear-gradient(135deg,#17434a,#398b83)"><span></span></span><span class="template-name">Nutrição clínica</span><span class="template-desc">Educação e cuidado individualizado</span></button>
+        <button class="template-card" onclick="applyTemplate('esportiva')" type="button"><span class="template-preview" style="background:linear-gradient(135deg,#292a45,#5868a8)"><span></span></span><span class="template-name">Nutrição esportiva</span><span class="template-desc">Treino, recuperação e desempenho</span></button>
+        <button class="template-card" onclick="applyTemplate('idoso')" type="button"><span class="template-preview" style="background:linear-gradient(135deg,#4a3824,#a88a5d)"><span></span></span><span class="template-name">Saúde do idoso</span><span class="template-desc">Massa muscular e autonomia</span></button>
+        <button class="template-card" onclick="applyTemplate('microbiota')" type="button"><span class="template-preview" style="background:linear-gradient(135deg,#253b2b,#6a9a67)"><span></span></span><span class="template-name">Microbiota intestinal</span><span class="template-desc">Microbiota, fibras e saúde digestiva</span></button>
+
       </div>
       <div class="template-hint">Escolher um modelo substitui os textos e o estilo visual do post atual. Sua identificação, WhatsApp e imagem permanecem preservados.</div>
     </div>
@@ -662,6 +677,7 @@ Terceiro item da lista</textarea></div>
       </div>
       <div class="carousel-tools" id="carousel-tools">
         <label>Slides do carrossel</label>
+        <div class="field"><label for="slide-type">Tipo do slide selecionado</label><select id="slide-type" onchange="setCarouselSlideType(this.value)" style="width:100%;padding:8px;border-radius:7px;background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border)"><option value="cover">Capa</option><option value="content">Conteúdo</option><option value="list">Lista</option><option value="comparison">Comparação</option><option value="tip">Dica</option><option value="closing">Encerramento</option></select></div>
         <div class="carousel-slide-list" id="carousel-slide-list"></div>
         <div class="carousel-thumb-grid" id="carousel-thumb-grid" aria-label="Miniaturas dos slides"></div>
         <div class="carousel-actions">
@@ -704,6 +720,8 @@ Terceiro item da lista</textarea></div>
   <hr class="divider">
 
   <button class="btn" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
+  <button class="btn secondary" id="btn-export-zip" onclick="exportCarouselZip()">📦 Exportar carrossel em ZIP</button>
+  <button class="btn secondary" id="btn-export-pdf" onclick="exportCarouselPDF()">📄 Exportar em PDF</button>
   <button class="btn" onclick="openFullscreen()">🖥️ Abrir em tela cheia</button>
   <button class="btn secondary" onclick="copyHTML()">📋 Copiar HTML</button>
   <button class="btn secondary" onclick="resetAll()">↺ Resetar tudo</button>
@@ -882,7 +900,11 @@ Terceiro item da lista</textarea></div>
     "showTag2": false,
     "theme": "rose",
     "grad": "tricolor"
-  }
+  },
+  "clinica": {"line1":"Nutrição clínica","line2":"é individual","desc":"A conduta nutricional considera história, exames, sintomas, rotina e objetivos. Não existe uma estratégia única para todas as pessoas.","list":"Avaliação individualizada\nEvidências científicas\nAcompanhamento contínuo","listNum":false,"tag1":"👇 Salve esta informação","tag2":"👉 Compartilhe","showTag1":true,"showTag2":false,"theme":"petrol","grad":"padrao"},
+  "esportiva": {"line1":"Treino e alimentação","line2":"trabalham juntos","desc":"Desempenho e recuperação dependem de uma estratégia compatível com modalidade, volume de treino e necessidades individuais.","list":"Energia suficiente\nProteínas distribuídas\nHidratação e recuperação","listNum":false,"tag1":"👇 Salve para consultar","tag2":"👉 Compartilhe com seu parceiro de treino","showTag1":true,"showTag2":false,"theme":"azul","grad":"diagonal"},
+  "idoso": {"line1":"Envelhecer com","line2":"autonomia","desc":"Alimentação adequada, atividade física e acompanhamento podem contribuir para preservar força, funcionalidade e qualidade de vida.","list":"Atenção à ingestão proteica\nEstímulo à força muscular\nAvaliação individualizada","listNum":false,"tag1":"👇 Compartilhe com a família","tag2":"👉 Salve","showTag1":true,"showTag2":false,"theme":"terra","grad":"sunset"},
+  "microbiota": {"line1":"Sua microbiota","line2":"também importa","desc":"A comunidade de microrganismos intestinais interage com a alimentação e o ambiente. Diversidade alimentar pode favorecer um ecossistema intestinal saudável.","list":"Variedade de vegetais\nFibras conforme tolerância\nMudanças graduais e individualizadas","listNum":false,"tag1":"👇 Salve este conteúdo","tag2":"👉 Envie para alguém","showTag1":true,"showTag2":false,"theme":"oliva","grad":"radial"}
 };
 
   function applyTemplate(key) {
@@ -1127,7 +1149,7 @@ Terceiro item da lista</textarea></div>
   let carouselSlides=[];
   let activeCarouselSlide=0;
   function readCarouselFields(){
-    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked};
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content')};
   }
   function saveCurrentCarouselSlide(){
     if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
@@ -1153,9 +1175,14 @@ Terceiro item da lista</textarea></div>
     if(thumbs)thumbs.innerHTML=carouselSlides.map((d,i)=>'<button type="button" draggable="true" data-slide-index="'+i+'" class="carousel-thumb '+(i===activeCarouselSlide?'active':'')+'" onclick="selectCarouselSlide('+i+')" ondragstart="dragCarouselSlide(event,'+i+')" ondragover="event.preventDefault();this.classList.add(\'drop-target\')" ondragleave="this.classList.remove(\'drop-target\')" ondrop="dropCarouselSlide(event,'+i+')"><strong>'+(i===0?'CAPA':'SLIDE '+(i+1))+'</strong><span>'+escapeProjectText([d.line1,d.line2,d.desc,d.list].filter(Boolean).join(' · '))+'</span></button>').join('');
     document.getElementById('carousel-counter').textContent=(activeCarouselSlide+1)+' / '+(carouselSlides.length||1);
     const p=document.getElementById('post');p.classList.toggle('is-carousel',p.dataset.mode==='carrossel');
-    p.classList.toggle('carousel-cover',p.dataset.mode==='carrossel'&&activeCarouselSlide===0);
-    p.classList.toggle('carousel-content',p.dataset.mode==='carrossel'&&activeCarouselSlide!==0);
+    const typ=carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content');
+    p.classList.toggle('carousel-cover',p.dataset.mode==='carrossel'&&typ==='cover');
+    p.classList.toggle('carousel-content',p.dataset.mode==='carrossel'&&typ!=='cover');
+    ['list','comparison','tip','closing'].forEach(t=>p.classList.toggle('carousel-type-'+t,p.dataset.mode==='carrossel'&&typ===t));
+    const sel=document.getElementById('slide-type');if(sel)sel.value=typ;
   }
+  function setCarouselSlideType(type){if(!carouselSlides.length)return;saveCurrentCarouselSlide();carouselSlides[activeCarouselSlide].slideType=type;renderCarouselTools();updatePreview();autoSaveDraft();}
+
   let draggedCarouselSlide=-1;
   function dragCarouselSlide(ev,i){draggedCarouselSlide=i;ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',String(i));}
   function dropCarouselSlide(ev,to){ev.preventDefault();document.querySelectorAll('.carousel-thumb').forEach(x=>x.classList.remove('drop-target'));const from=draggedCarouselSlide>=0?draggedCarouselSlide:Number(ev.dataTransfer.getData('text/plain'));draggedCarouselSlide=-1;if(from<0||from>=carouselSlides.length||to<0||to>=carouselSlides.length||from===to)return;saveCurrentCarouselSlide();const moved=carouselSlides.splice(from,1)[0];carouselSlides.splice(to,0,moved);activeCarouselSlide=to;applyCarouselSlide(to);autoSaveDraft();}
@@ -1509,6 +1536,27 @@ Terceiro item da lista</textarea></div>
       showToast('✅ '+carouselSlides.length+' slides exportados individualmente!');
     }catch(e){showToast('❌ Erro ao exportar o carrossel.');}
     finally{applyCarouselSlide(original);btn.disabled=false;btn.textContent='💾 Salvar como imagem';}
+  }
+
+
+  async function renderCarouselCanvases(){
+    if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)throw new Error('Ative o modo Carrossel primeiro.');
+    saveCurrentCarouselSlide();const original=activeCarouselSlide,canvases=[];
+    try{for(let i=0;i<carouselSlides.length;i++){applyCarouselSlide(i);await new Promise(r=>setTimeout(r,160));canvases.push(await html2canvas(document.getElementById('post'),{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false}));}}
+    finally{applyCarouselSlide(original);}
+    return canvases;
+  }
+  async function exportCarouselZip(){
+    if(!window.JSZip){showToast('Biblioteca ZIP indisponível.');return;}
+    const btn=document.getElementById('btn-export-zip');btn.disabled=true;btn.textContent='⏳ Preparando ZIP...';
+    try{const canvases=await renderCarouselCanvases(),zip=new JSZip(),handle=document.getElementById('input-handle').value.replace('@','')||'post';canvases.forEach((c,i)=>zip.file('carrossel-'+handle+'-slide-'+String(i+1).padStart(2,'0')+'.png',c.toDataURL('image/png').split(',')[1],{base64:true}));const blob=await zip.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carrossel-'+handle+'.zip';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);showToast('ZIP com '+canvases.length+' slides criado.');}
+    catch(e){showToast('Falha ao criar ZIP: '+(e.message||'erro'));}finally{btn.disabled=false;btn.textContent='📦 Exportar carrossel em ZIP';}
+  }
+  async function exportCarouselPDF(){
+    if(!window.jspdf?.jsPDF){showToast('Biblioteca PDF indisponível.');return;}
+    const btn=document.getElementById('btn-export-pdf');btn.disabled=true;btn.textContent='⏳ Gerando PDF...';
+    try{const canvases=await renderCarouselCanvases(),pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'px',format:[1080,1350],hotfixes:['px_scaling']});canvases.forEach((c,i)=>{if(i)pdf.addPage([1080,1350],'portrait');pdf.addImage(c.toDataURL('image/jpeg',.94),'JPEG',0,0,1080,1350);});const handle=document.getElementById('input-handle').value.replace('@','')||'post';pdf.save('carrossel-'+handle+'.pdf');showToast('PDF criado com '+canvases.length+' páginas.');}
+    catch(e){showToast('Falha ao criar PDF: '+(e.message||'erro'));}finally{btn.disabled=false;btn.textContent='📄 Exportar em PDF';}
   }
 
   function copyHTML() {
