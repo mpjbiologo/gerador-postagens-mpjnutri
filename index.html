@@ -1235,7 +1235,7 @@ Terceiro item da lista</textarea></div>
   function pasteSlideStyle(){if(!copiedSlideStyle){showToast('Copie o estilo de um slide primeiro.');return;}if(copiedSlideStyle.theme){const b=document.querySelector('.theme-swatch[data-theme="'+copiedSlideStyle.theme+'"]');if(b)setTheme(b);}if(copiedSlideStyle.gradStyle){const b=document.querySelector('.grad-swatch[data-grad="'+copiedSlideStyle.gradStyle+'"]');if(b)setGrad(b);}activeDecos.clear();copiedSlideStyle.decos.forEach(x=>activeDecos.add(x));document.querySelectorAll('.deco-btn').forEach(b=>b.classList.toggle('active',activeDecos.has(b.dataset.deco)));document.getElementById('font-family').value=copiedSlideStyle.fontFamily;document.getElementById('title-size').value=copiedSlideStyle.titleSize;document.getElementById('body-size').value=copiedSlideStyle.bodySize;applyTypography();updatePreview();autoSaveDraft();}
   function selectCarouselSlide(i){if(i<0||i>=carouselSlides.length)return;saveCurrentCarouselSlide();applyCarouselSlide(i);}
   function addCarouselSlide(){
-    saveCurrentCarouselSlide();carouselSlides.push({...readCarouselFields(),line1:'Novo slide',line2:'',desc:'Escreva o conteúdo deste slide.',list:'',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false});
+    saveCurrentCarouselSlide();carouselSlides.push({...readCarouselFields(),line1:'Novo slide',line2:'',desc:'Escreva o conteúdo deste slide.',list:'',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'content'});
     applyCarouselSlide(carouselSlides.length-1);autoSaveDraft();
   }
   function removeCarouselSlide(){
@@ -1390,6 +1390,9 @@ Terceiro item da lista</textarea></div>
 
     shrink(document.getElementById('title-line1'), 3, base);
     shrink(document.getElementById('title-line2'), 2, base);
+    const desc=document.getElementById('preview-desc'),list=document.getElementById('preview-list');
+    if(desc){let fs=parseFloat(getComputedStyle(desc).fontSize)||16;const limit=Math.max(70,post.offsetHeight*.30);while(fs>10&&desc.scrollHeight>limit){fs-=1;desc.style.fontSize=fs+'px';}}
+    if(list){list.querySelectorAll('li').forEach(li=>{let fs=parseFloat(getComputedStyle(li).fontSize)||13;while(fs>9&&li.scrollWidth>li.clientWidth+2){fs-=1;li.style.fontSize=fs+'px';}});}
   }
 
   let _imgTab = 'url';
