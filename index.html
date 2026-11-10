@@ -88,20 +88,36 @@
   .app-header-left { display: flex; flex-direction: column; gap: 3px; align-items: center; width: 100%; }
   .app-header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
-  /* PAINEL — rola junto com a página */
+  /* PAINEL — identidade no topo e controles em duas colunas */
   .panel {
-    width: 320px;
-    min-width: 320px;
+    width: 660px;
+    min-width: 660px;
     flex-shrink: 0;
     background: var(--app-panel);
     border-right: 1px solid var(--app-panel-border);
-    padding: 20px 18px 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 13px;
+    padding: 16px 16px 40px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: start;
+    align-items: start;
+    gap: 10px;
     transition: background 0.3s, border-color 0.3s;
   }
-
+  .panel > #app-theme-btn,
+  .panel > #sec-ident {
+    grid-column: 1 / -1;
+  }
+  .panel > #sec-ident { order: -1; }
+  .panel > #sec-modelos,
+  .panel > #sec-texto,
+  .panel > #sec-formato,
+  .panel > #sec-hist,
+  .panel > .divider,
+  .panel > #btn-save-img,
+  .panel > #btn-save-img ~ .btn,
+  .panel > #sec-inst { grid-column: 1; }
+  .panel > #sec-visual { grid-column: 2; grid-row: 3 / span 4; }
+  .panel > .divider { margin: 2px 0; }
   /* PREVIEW — sticky: fica fixo enquanto o painel rola */
   .preview-wrap {
     position: sticky;
@@ -130,11 +146,25 @@
       width: 100%;
       min-width: unset;
       max-width: unset;
+      display: flex;
+      flex-direction: column;
       border-right: none;
       border-bottom: 1px solid var(--app-panel-border);
       padding: 16px 14px 24px;
       order: 2;
     }
+    .panel > #app-theme-btn,
+    .panel > #sec-ident,
+    .panel > #sec-modelos,
+    .panel > #sec-texto,
+    .panel > #sec-formato,
+    .panel > #sec-hist,
+    .panel > .divider,
+    .panel > #btn-save-img,
+    .panel > #btn-save-img ~ .btn,
+    .panel > #sec-inst,
+    .panel > #sec-visual { grid-column: auto; grid-row: auto; }
+    .panel > #sec-ident { order: -1; }
 
     .preview-wrap {
       position: relative;
@@ -406,6 +436,30 @@
 
   <button class="theme-app-toggle" id="app-theme-btn" onclick="toggleAppTheme()" style="width:100%">🌙 Escuro</button>
 
+  <div class="section open" id="sec-ident">
+    <div class="section-header" onclick="toggleSection('sec-ident')">
+      <div class="section-title">👤 Identidade</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
+      <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
+      <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
+        <label>Tipografia da postagem</label>
+        <div class="field"><label>Estilo da fonte</label><select id="font-family" onchange="applyTypography();autoSaveDraft()"><option value="'Playfair Display', Georgia, serif">Clássica (serifada)</option><option value="'DM Sans', Arial, sans-serif">Moderna (sem serifa)</option><option value="Georgia, serif">Editorial (Georgia)</option><option value="Arial, sans-serif">Simples (Arial)</option><option value="Impact, sans-serif">Impacto (Impact)</option></select></div>
+        <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
+        <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
+      </div>
+      <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn" type="button" onclick="saveBrandProfile()">💾 Salvar nas configurações</button>
+        <button class="btn secondary" type="button" onclick="applyBrandProfile()">↺ Carregar configuração</button>
+      </div>
+      <div class="template-hint">A identidade fica salva somente neste navegador. Ela não é aplicada automaticamente a novas postagens.</div>
+    </div>
+  </div>
+
   <div class="section open" id="sec-modelos">
     <div class="section-header" onclick="toggleSection('sec-modelos')">
       <div class="section-title">🧩 Biblioteca de modelos</div>
@@ -478,29 +532,7 @@ Terceiro item da lista</textarea></div>
     </div>
   </div>
 
-  <div class="section open" id="sec-ident">
-    <div class="section-header" onclick="toggleSection('sec-ident')">
-      <div class="section-title">👤 Identidade</div>
-      <div class="section-arrow">▼</div>
-    </div>
-    <div class="section-body">
-      <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
-      <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
-      <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
-      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
-        <label>Tipografia da postagem</label>
-        <div class="field"><label>Estilo da fonte</label><select id="font-family" onchange="applyTypography();autoSaveDraft()"><option value="'Playfair Display', Georgia, serif">Clássica (serifada)</option><option value="'DM Sans', Arial, sans-serif">Moderna (sem serifa)</option><option value="Georgia, serif">Editorial (Georgia)</option><option value="Arial, sans-serif">Simples (Arial)</option><option value="Impact, sans-serif">Impacto (Impact)</option></select></div>
-        <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
-        <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
-      </div>
-      <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
-      <div class="btn-row" style="margin-top:10px">
-        <button class="btn" type="button" onclick="saveBrandProfile()">💾 Salvar nas configurações</button>
-        <button class="btn secondary" type="button" onclick="applyBrandProfile()">↺ Carregar configuração</button>
-      </div>
-      <div class="template-hint">A identidade fica salva somente neste navegador. Ela não é aplicada automaticamente a novas postagens.</div>
-    </div>
-  </div>
+
 
   <div class="section open" id="sec-visual">
     <div class="section-header" onclick="toggleSection('sec-visual')">
