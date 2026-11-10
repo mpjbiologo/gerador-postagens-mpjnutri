@@ -347,6 +347,10 @@
   .field-counter{display:flex;justify-content:space-between;font-size:9px;color:var(--app-sub);margin-top:4px}
   .field-counter.over{color:#ef8b70}.history-controls{display:flex;gap:6px;margin:8px 0}.history-controls .btn{padding:8px;font-size:11px}
   .carousel-actions .btn.small{min-width:0;padding:8px 6px;font-size:10px}
+  .editorial-plan-item{background:var(--app-btn-bg);border:1px solid var(--app-btn-border);border-radius:7px;padding:8px;font-size:11px;display:flex;justify-content:space-between;gap:8px}
+  .editorial-plan-item small{display:block;color:var(--app-sub);margin-top:3px}
+  .editorial-plan-item button{background:none;border:0;color:#e08b80;cursor:pointer}
+
 
 
   .post-background { position:absolute; inset:0; z-index:0; background-position:center; background-size:cover; background-repeat:no-repeat; pointer-events:none; }
@@ -714,6 +718,43 @@ Terceiro item da lista</textarea></div>
         <button class="btn" onclick="saveToHistory()">💾 Salvar projeto</button>
         <button class="btn secondary" onclick="clearHistory()">🗑 Limpar tudo</button>
       </div>
+    </div>
+  </div>
+
+
+  <div class="section" id="sec-assistente">
+    <div class="section-header" onclick="toggleSection('sec-assistente')"><div class="section-title">✍️ Assistente editorial</div><div class="section-arrow">▼</div></div>
+    <div class="section-body">
+      <div class="field"><label for="editor-topic">Tema da publicação</label><input id="editor-topic" placeholder="Ex.: fibras alimentares e microbiota"/></div>
+      <div class="field"><label for="editor-audience">Público</label><input id="editor-audience" placeholder="Ex.: adultos, atletas, pessoas idosas"/></div>
+      <div class="field"><label for="editor-goal">Objetivo</label><select id="editor-goal"><option value="educar">Educar</option><option value="orientar">Orientar</option><option value="desmistificar">Desmistificar um mito</option><option value="engajar">Gerar conversa</option></select></div>
+      <button class="btn" type="button" onclick="generateEditorialCarousel()">✨ Criar estrutura de carrossel</button>
+      <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">📋 Copiar briefing para IA</button>
+      <p class="template-hint">A estrutura é um ponto de partida editorial, não uma validação científica nem uma recomendação clínica. Revise as afirmações e inclua fontes confiáveis.</p>
+      <div class="field"><label for="research-notes">Referências científicas e observações</label><textarea id="research-notes" rows="5" placeholder="Cole DOI, PMID, título, autores, link ou observações da revisão..."></textarea></div>
+      <button class="btn secondary" type="button" onclick="saveResearchNotes()">💾 Salvar referências neste navegador</button>
+      <div class="field"><label for="caption-output">Legenda e hashtags</label><textarea id="caption-output" rows="5" placeholder="A legenda será montada a partir do conteúdo atual..."></textarea></div>
+      <div class="btn-row"><button class="btn secondary" type="button" onclick="buildCaption()">Gerar legenda</button><button class="btn secondary" type="button" onclick="copyCaption()">Copiar</button></div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-calendario">
+    <div class="section-header" onclick="toggleSection('sec-calendario')"><div class="section-title">🗓️ Planejamento editorial</div><div class="section-arrow">▼</div></div>
+    <div class="section-body">
+      <div class="field"><label for="calendar-date">Data prevista</label><input type="date" id="calendar-date"/></div>
+      <div class="field"><label for="calendar-title">Tema / título</label><input id="calendar-title" placeholder="Tema da próxima publicação"/></div>
+      <div class="field"><label for="calendar-status">Status</label><select id="calendar-status"><option>Ideia</option><option>Em produção</option><option>Em revisão</option><option>Agendado</option><option>Publicado</option></select></div>
+      <button class="btn" type="button" onclick="addEditorialPlan()">＋ Adicionar ao calendário</button>
+      <div id="editorial-plan-list" class="history-list"></div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-versoes">
+    <div class="section-header" onclick="toggleSection('sec-versoes')"><div class="section-title">🧬 Versões do projeto</div><div class="section-arrow">▼</div></div>
+    <div class="section-body">
+      <p class="template-hint">Salve marcos de edição dentro de um projeto existente. Tudo permanece no armazenamento local deste navegador.</p>
+      <button class="btn secondary" type="button" onclick="saveProjectVersion()">＋ Salvar nova versão do projeto carregado</button>
+      <div id="project-versions" class="history-list"></div>
     </div>
   </div>
 
@@ -1410,11 +1451,11 @@ Terceiro item da lista</textarea></div>
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
     const name=prompt('Nome deste projeto:',title); if(name===null)return;
     const snap={backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide};
-    const e={id:Date.now(),name:name.trim()||title,snapshot:snap,line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
-    const h=getHistory();h.unshift(e);saveHistory(h);renderHistory();showToast('✅ Projeto salvo!');
+    const e={id:Date.now(),name:name.trim()||title,snapshot:snap,versions:[],line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    const h=getHistory();h.unshift(e);saveHistory(h);currentProjectId=e.id;renderHistory();renderProjectVersions();showToast('✅ Projeto salvo!');
   }
   function loadFromHistory(id){
-    const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;
+    const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;currentProjectId=e.id;renderProjectVersions();
     if(e.snapshot){try{localStorage.setItem(DRAFT_KEY,JSON.stringify(e.snapshot));loadDraft();}catch(err){showToast('Falha ao carregar projeto.');return;}}
     else{
       document.getElementById('input-line1').value=e.line1||'';document.getElementById('input-line2').value=e.line2||'';document.getElementById('input-desc').value=e.desc||'';
@@ -1446,6 +1487,54 @@ Terceiro item da lista</textarea></div>
     el.innerHTML=items.map(e=>{const id=Number(e.id),name=escapeProjectText(e.name),date=escapeProjectText(e.date||'');return '<div class="history-item"><div class="history-item-text" role="button" tabindex="0" onclick="loadFromHistory('+id+')" onkeydown="if(event.key===\'Enter\')loadFromHistory('+id+')"><div class="history-item-title">'+name+'</div><div class="history-item-date">'+date+'</div></div><div class="history-item-actions"><button class="history-action" title="Renomear" onclick="renameProject('+id+')">✏️</button><button class="history-action" title="Duplicar" onclick="duplicateProject('+id+')">⧉</button><button class="history-action" title="Excluir" onclick="deleteFromHistory('+id+')">✕</button></div></div>';}).join('');
     if(all.some(e=>!e.name))saveHistory(all);
   }
+
+
+  const EDITORIAL_PLAN_KEY='mpjnutri_editorial_plan';
+  const RESEARCH_KEY='mpjnutri_research_notes';
+  let currentProjectId=null;
+  function editorialEscape(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function generateEditorialCarousel(){
+    const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value;
+    if(!topic){showToast('Informe o tema da publicação.');return;}
+    const goalText={educar:'explicar com clareza',orientar:'apresentar caminhos gerais e seguros',desmistificar:'analisar criticamente uma afirmação',engajar:'estimular reflexão e diálogo'}[goal];
+    carouselSlides=[
+      {line1:topic,line2:'o que você precisa saber',desc:'Um guia para '+aud+'.',list:'',listNum:false,tag1:'Deslize para continuar',tag2:'',showTag1:true,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'cover'},
+      {line1:'Vamos entender',line2:'o conceito',desc:'Comece definindo '+topic+' em linguagem simples. Apresente o conceito central e explique por que ele merece atenção.',list:'Definição clara\nContexto importante',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'content'},
+      {line1:'Por que isso',line2:'importa?',desc:'Relacione o tema com situações reais do cotidiano de '+aud+'. Evite generalizações e diferencie evidência, hipótese e opinião.',list:'O que já sabemos\nO que ainda está em estudo',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'comparison'},
+      {line1:'O que considerar',line2:'na prática',desc:'Apresente informações aplicáveis e compatíveis com o contexto individual. Não transforme orientações gerais em prescrição individual.',list:'Observe o contexto\nConsidere necessidades individuais\nProcure orientação quando necessário',listNum:true,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'list'},
+      {line1:'Atenção aos',line2:'detalhes',desc:'Inclua limites da evidência, possíveis exceções, contraindicações relevantes e situações em que a avaliação profissional é importante.',list:'Não prometa resultados\nNão extrapole estudos\nConfira a qualidade das fontes',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'tip'},
+      {line1:'Informação boa',line2'é informação revisada',desc:'Revise as afirmações, acrescente referências científicas e adapte o conteúdo à realidade do público. Salve e compartilhe se foi útil.',list:'',listNum:false,tag1:'Salve e compartilhe',tag2:'@mpjnutri',showTag1:true,showTag2:true,imgUrl:'',image:'',showImg:false,slideType:'closing'}
+    ];
+    activeCarouselSlide=0;const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b)setFormat(b);applyCarouselSlide(0);autoSaveDraft();showToast('Estrutura criada. Revise e personalize cada slide.');
+  }
+  function copyEditorialPrompt(){
+    const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value;
+    if(!topic){showToast('Informe o tema primeiro.');return;}
+    const prompt='Crie um roteiro de carrossel educativo sobre: '+topic+'. Público: '+aud+'. Objetivo: '+goal+'. Escreva em português brasileiro, com linguagem clara e rigor científico. Não invente estudos, números, referências ou consensos. Diferencie evidência de hipótese, aponte limites e sinalize afirmações que exigem fonte. Estruture em capa, conceito, relevância, aplicação geral, ressalvas e encerramento. Sugira fontes científicas verificáveis (DOI/PMID/link) sem fabricar referências.';
+    navigator.clipboard.writeText(prompt).then(()=>showToast('Briefing copiado.')).catch(()=>showToast('Não foi possível copiar.'));
+  }
+  function saveResearchNotes(){try{localStorage.setItem(RESEARCH_KEY,document.getElementById('research-notes').value);showToast('Referências salvas neste navegador.');}catch(e){showToast('Não foi possível salvar as referências.');}}
+  function buildCaption(){
+    const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim(),desc=document.getElementById('input-desc').value.trim(),list=document.getElementById('input-list').value.split('\n').map(x=>x.trim()).filter(Boolean);
+    const topic=(document.getElementById('editor-topic').value||title).trim();
+    const tags=['#Nutrição','#NutriçãoComCiência','#Saúde','#AlimentaçãoSaudável'];
+    const caption=[title,desc,list.length?'\n'+list.map(x=>'• '+x).join('\n'):'','\nInformação de qualidade faz diferença. Salve este conteúdo e compartilhe com quem pode se beneficiar.','\nConteúdo educativo. A orientação nutricional deve considerar a individualidade.','\n'+tags.join(' ')].filter(Boolean).join('\n\n');
+    document.getElementById('caption-output').value=caption;showToast('Legenda montada; revise antes de publicar.');
+  }
+  function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
+  function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+  function renderEditorialPlan(){const el=document.getElementById('editorial-plan-list');if(!el)return;const items=getEditorialPlan().sort((a,b)=>(a.date||'').localeCompare(b.date||''));el.innerHTML=items.length?items.map((x,i)=>'<div class="editorial-plan-item"><div><strong>'+editorialEscape(x.title)+'</strong><small>'+editorialEscape(x.date)+' · '+editorialEscape(x.status)+'</small></div><button onclick="deleteEditorialPlan('+i+')" title="Excluir">✕</button></div>').join(''):'<div class="history-empty">Nenhuma publicação planejada.</div>';}
+  function addEditorialPlan(){const title=document.getElementById('calendar-title').value.trim(),date=document.getElementById('calendar-date').value,status=document.getElementById('calendar-status').value;if(!title||!date){showToast('Informe tema e data.');return;}const a=getEditorialPlan();a.push({title,date,status});localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));document.getElementById('calendar-title').value='';renderEditorialPlan();showToast('Publicação adicionada ao planejamento.');}
+  function deleteEditorialPlan(index){const a=getEditorialPlan();a.splice(index,1);localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));renderEditorialPlan();}
+  function saveProjectVersion(){
+    if(!currentProjectId){showToast('Carregue ou salve um projeto antes de criar versões.');return;}
+    const h=getHistory(),e=h.find(x=>String(x.id)===String(currentProjectId));if(!e)return;
+    const snap=buildCurrentSnapshot(),label=prompt('Nome desta versão:', 'Versão '+((e.versions||[]).length+1));if(label===null)return;
+    e.versions=e.versions||[];e.versions.unshift({name:label.trim()||'Versão',date:new Date().toLocaleString('pt-BR'),snapshot:snap});saveHistory(h);renderProjectVersions();showToast('Versão salva localmente.');
+  }
+  function buildCurrentSnapshot(){return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),format:document.getElementById('post').dataset.mode||'retrato',carouselSlides:carouselSlides,activeCarouselSlide:activeCarouselSlide,researchNotes:document.getElementById('research-notes').value};}
+  function renderProjectVersions(){const el=document.getElementById('project-versions');if(!el)return;const e=getHistory().find(x=>String(x.id)===String(currentProjectId));const v=e?.versions||[];el.innerHTML=v.length?v.map((x,i)=>'<div class="history-item"><div class="history-item-text"><div class="history-item-title">'+editorialEscape(x.name)+'</div><div class="history-item-date">'+editorialEscape(x.date)+'</div></div><button class="history-action" onclick="loadProjectVersion('+i+')">Restaurar</button></div>').join(''):'<div class="history-empty">Nenhuma versão salva.</div>';}
+  function loadProjectVersion(i){const e=getHistory().find(x=>String(x.id)===String(currentProjectId)),v=e?.versions?.[i];if(!v)return;localStorage.setItem(DRAFT_KEY,JSON.stringify(v.snapshot));loadDraft();showToast('Versão restaurada.');}
 
   function resetAll() {
     if (!confirm('Resetar tudo?')) return;
@@ -1658,6 +1747,7 @@ Terceiro item da lista</textarea></div>
         format:   document.getElementById('post').dataset.mode || document.getElementById('post').dataset.format || 'retrato',
         carouselSlides: document.getElementById('post').dataset.mode==='carrossel' ? (saveCurrentCarouselSlide(),carouselSlides) : [],
         activeCarouselSlide: activeCarouselSlide,
+        researchNotes: document.getElementById('research-notes')?.value || '',
       };
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch(e) {}
@@ -1668,6 +1758,7 @@ Terceiro item da lista</textarea></div>
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return false;
       const d = JSON.parse(raw);
+      if(d.researchNotes!==undefined&&document.getElementById('research-notes'))document.getElementById('research-notes').value=d.researchNotes;
       if (d.line1  !== undefined) document.getElementById('input-line1').value  = d.line1;
       if (d.line2  !== undefined) document.getElementById('input-line2').value  = d.line2;
       if (d.desc   !== undefined) document.getElementById('input-desc').value   = d.desc;
@@ -1753,6 +1844,8 @@ Terceiro item da lista</textarea></div>
   document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
 
   renderHistory();
+  if(document.getElementById('research-notes'))document.getElementById('research-notes').value=localStorage.getItem(RESEARCH_KEY)||'';
+  renderEditorialPlan();
   setupTextCounters();
   const draftLoaded = loadDraft(false);
   recordEditorState();
