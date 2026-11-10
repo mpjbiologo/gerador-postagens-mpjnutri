@@ -1541,7 +1541,7 @@ Terceiro item da lista</textarea></div>
   }
   function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
   function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
-  function renderEditorialPlan(){const el=document.getElementById('editorial-plan-list');if(!el)return;const items=getEditorialPlan().sort((a,b)=>(a.date||'').localeCompare(b.date||''));el.innerHTML=items.length?items.map((x,i)=>'<div class="editorial-plan-item"><div><strong>'+editorialEscape(x.title)+'</strong><small>'+editorialEscape(x.date)+' · '+editorialEscape(x.status)+'</small></div><button onclick="deleteEditorialPlan('+i+')" title="Excluir">✕</button></div>').join(''):'<div class="history-empty">Nenhuma publicação planejada.</div>';}
+  function renderEditorialPlan(){const el=document.getElementById('editorial-plan-list');if(!el)return;const items=getEditorialPlan();el.innerHTML=items.length?items.map((x,i)=>'<div class="editorial-plan-item"><div><strong>'+editorialEscape(x.title)+'</strong><small>'+editorialEscape(x.date)+' · '+editorialEscape(x.status)+'</small></div><button onclick="deleteEditorialPlan('+i+')" title="Excluir">✕</button></div>').join(''):'<div class="history-empty">Nenhuma publicação planejada.</div>';}
   function addEditorialPlan(){const title=document.getElementById('calendar-title').value.trim(),date=document.getElementById('calendar-date').value,status=document.getElementById('calendar-status').value;if(!title||!date){showToast('Informe tema e data.');return;}const a=getEditorialPlan();a.push({title,date,status});localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));document.getElementById('calendar-title').value='';renderEditorialPlan();showToast('Publicação adicionada ao planejamento.');}
   function deleteEditorialPlan(index){const a=getEditorialPlan();a.splice(index,1);localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));renderEditorialPlan();}
   function saveProjectVersion(){
@@ -1865,6 +1865,7 @@ Terceiro item da lista</textarea></div>
   if(document.getElementById('research-notes'))document.getElementById('research-notes').value=localStorage.getItem(RESEARCH_KEY)||'';
   renderEditorialPlan();
   setupTextCounters();
+  document.getElementById('research-notes')?.addEventListener('input',autoSaveDraft);
   const draftLoaded = loadDraft(false);
   recordEditorState();
   // Identidade salva só é carregada quando o usuário solicitar nas configurações.
