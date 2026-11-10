@@ -1312,6 +1312,7 @@ Terceiro item da lista</textarea></div>
       prev.src = e.target.result;
       prev.style.display = 'block';
       updatePreview();
+      autoSaveDraft();
     };
     reader.readAsDataURL(file);
   }
