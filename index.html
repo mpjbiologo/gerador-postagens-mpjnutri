@@ -1379,7 +1379,7 @@ Terceiro item da lista</textarea></div>
     } catch(e) {}
   }
 
-  function loadDraft() {
+  function loadDraft(restoreIdentity = true) {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return false;
@@ -1393,10 +1393,12 @@ Terceiro item da lista</textarea></div>
       if (d.tag2   !== undefined) document.getElementById('input-tag2').value   = d.tag2;
       if (d.showTag1 !== undefined) setTagActive(1, d.showTag1);
       if (d.showTag2 !== undefined) setTagActive(2, d.showTag2);
-      if (d.handle !== undefined) document.getElementById('input-handle').value = d.handle;
-      if (d.wa     !== undefined) document.getElementById('input-wa').value     = d.wa;
-      if (d.showWa !== undefined) document.getElementById('toggle-wa').checked  = d.showWa;
-      if (d.showIco !== undefined) document.getElementById('toggle-icons').checked = d.showIco;
+      if (restoreIdentity) {
+        if (d.handle !== undefined) document.getElementById('input-handle').value = d.handle;
+        if (d.wa     !== undefined) document.getElementById('input-wa').value     = d.wa;
+        if (d.showWa !== undefined) document.getElementById('toggle-wa').checked  = d.showWa;
+        if (d.showIco !== undefined) document.getElementById('toggle-icons').checked = d.showIco;
+      }
       if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
       if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
       if (d.imgColor !== undefined) document.getElementById('toggle-img-color').checked = d.imgColor;
@@ -1443,7 +1445,7 @@ Terceiro item da lista</textarea></div>
   document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
 
   renderHistory();
-  const draftLoaded = loadDraft();
+  const draftLoaded = loadDraft(false);
   // Identidade salva só é carregada quando o usuário solicitar nas configurações.
   updatePreview();
   renderDecos();
