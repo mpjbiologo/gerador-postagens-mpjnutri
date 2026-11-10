@@ -268,6 +268,15 @@
 
   .divider { border: none; border-top: 1px solid #222; }
 
+  .template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .template-card { position: relative; min-height: 112px; padding: 10px; border: 1px solid var(--app-btn-border); border-radius: 9px; background: var(--app-btn-bg); color: var(--app-text); text-align: left; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color .18s, transform .18s, background .18s; }
+  .template-card:hover, .template-card:focus-visible { border-color: var(--accent); transform: translateY(-2px); outline: none; }
+  .template-preview { height: 38px; border-radius: 5px; margin-bottom: 8px; display: flex; align-items: flex-end; padding: 5px; overflow: hidden; }
+  .template-preview span { display: block; width: 65%; height: 4px; border-radius: 4px; background: rgba(255,255,255,.8); box-shadow: 0 7px 0 rgba(255,255,255,.35); }
+  .template-name { display: block; font-size: 11px; font-weight: 700; line-height: 1.3; }
+  .template-desc { display: block; margin-top: 3px; font-size: 9px; color: var(--app-sub); line-height: 1.35; }
+  .template-hint { font-size: 10px; color: var(--app-sub); line-height: 1.5; }
+
   .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
   .history-list::-webkit-scrollbar { width: 3px; }
   .history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
@@ -384,6 +393,42 @@
 <div class="panel">
 
   <button class="theme-app-toggle" id="app-theme-btn" onclick="toggleAppTheme()" style="width:100%">🌙 Escuro</button>
+
+  <div class="section open" id="sec-modelos">
+    <div class="section-header" onclick="toggleSection('sec-modelos')">
+      <div class="section-title">🧩 Biblioteca de modelos</div>
+      <div class="section-arrow">▼</div>
+    </div>
+    <div class="section-body">
+      <div class="template-grid">
+        <button class="template-card" onclick="applyTemplate('dicas')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#12351d,#39804a)"><span></span></span>
+          <span class="template-name">Dicas práticas</span><span class="template-desc">Conteúdo direto e aplicável</span>
+        </button>
+        <button class="template-card" onclick="applyTemplate('mitos')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#17243c,#426a9b)"><span></span></span>
+          <span class="template-name">Mitos e verdades</span><span class="template-desc">Desmistifique informações</span>
+        </button>
+        <button class="template-card" onclick="applyTemplate('receita')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#3b2110,#a45c2a)"><span></span></span>
+          <span class="template-name">Receita saudável</span><span class="template-desc">Ingredientes e preparo</span>
+        </button>
+        <button class="template-card" onclick="applyTemplate('checklist')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#25300d,#728b32)"><span></span></span>
+          <span class="template-name">Checklist</span><span class="template-desc">Lista organizada e numerada</span>
+        </button>
+        <button class="template-card" onclick="applyTemplate('educativo')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#24123c,#7952a8)"><span></span></span>
+          <span class="template-name">Explicativo</span><span class="template-desc">Conceito em linguagem simples</span>
+        </button>
+        <button class="template-card" onclick="applyTemplate('chamada')" type="button">
+          <span class="template-preview" style="background:linear-gradient(135deg,#3b1827,#a54869)"><span></span></span>
+          <span class="template-name">Chamada / CTA</span><span class="template-desc">Convite para interagir</span>
+        </button>
+      </div>
+      <div class="template-hint">Escolher um modelo substitui os textos e o estilo visual do post atual. Sua identificação, WhatsApp e imagem permanecem preservados.</div>
+    </div>
+  </div>
 
   <div class="section open" id="sec-texto">
     <div class="section-header" onclick="toggleSection('sec-texto')">
@@ -654,6 +699,113 @@ Terceiro item da lista</textarea></div>
   let currentTheme = 'verde';
   let currentGradStyle = 'padrao';
   const activeDecos = new Set(['circulos']);
+
+  const POST_TEMPLATES = {
+  "dicas": {
+    "line1": "Pequenas mudanças",
+    "line2": "grandes resultados",
+    "desc": "Hábitos simples podem fazer diferença na sua rotina. Comece pelo que é possível manter.",
+    "list": "Planeje suas refeições\\nInclua alimentos variados\\nMantenha uma boa hidratação",
+    "listNum": false,
+    "tag1": "👇 Salve para consultar",
+    "tag2": "👉 Compartilhe",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "verde",
+    "grad": "padrao"
+  },
+  "mitos": {
+    "line1": "Mito ou",
+    "line2": "verdade?",
+    "desc": "Nem toda informação sobre alimentação que circula nas redes sociais tem fundamento científico.",
+    "list": "Observe a fonte da informação\\nDesconfie de promessas milagrosas\\nBusque evidências e contexto",
+    "listNum": false,
+    "tag1": "👇 Qual você já ouviu?",
+    "tag2": "👉 Envie para alguém",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "azul",
+    "grad": "diagonal"
+  },
+  "receita": {
+    "line1": "Receita prática",
+    "line2": "para o dia a dia",
+    "desc": "Uma ideia simples para variar o cardápio. Ajuste os ingredientes às suas preferências e necessidades.",
+    "list": "Ingredientes acessíveis\\nPreparo simples\\nCombine com uma refeição equilibrada",
+    "listNum": true,
+    "tag1": "👇 Salve esta receita",
+    "tag2": "👉 Arraste para o lado",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "terra",
+    "grad": "sunset"
+  },
+  "checklist": {
+    "line1": "Seu checklist",
+    "line2": "de hábitos",
+    "desc": "Use esta lista como ponto de partida para observar sua rotina alimentar, sem buscar perfeição.",
+    "list": "Variedade no prato\\nFrutas e vegetais\\nÁgua ao longo do dia\\nRegularidade nas refeições",
+    "listNum": true,
+    "tag1": "👇 Marque o que já faz",
+    "tag2": "👉 Compartilhe",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "oliva",
+    "grad": "radial"
+  },
+  "educativo": {
+    "line1": "Você sabe o que é",
+    "line2": "nutrição?",
+    "desc": "Nutrição vai além de calorias. Envolve alimentos, nutrientes, comportamento, contexto e saúde ao longo da vida.",
+    "list": "Individualidade importa\\nO contexto faz diferença\\nCiência orienta as escolhas",
+    "listNum": false,
+    "tag1": "👇 Aprenda mais na legenda",
+    "tag2": "👉 Arraste para o lado",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "roxo",
+    "grad": "aurora"
+  },
+  "chamada": {
+    "line1": "Cuide da sua saúde",
+    "line2": "com informação",
+    "desc": "Faça escolhas conscientes, respeite sua individualidade e conte com orientação profissional quando precisar.",
+    "list": "Informação de qualidade\\nPlanejamento possível\\nAcompanhamento individualizado",
+    "listNum": false,
+    "tag1": "👇 Fale comigo",
+    "tag2": "👉 Compartilhe",
+    "showTag1": true,
+    "showTag2": false,
+    "theme": "rose",
+    "grad": "tricolor"
+  }
+};
+
+  function applyTemplate(key) {
+    const model = POST_TEMPLATES[key];
+    if (!model) return;
+    document.getElementById('input-line1').value = model.line1;
+    document.getElementById('input-line2').value = model.line2;
+    document.getElementById('input-desc').value = model.desc;
+    document.getElementById('input-list').value = model.list;
+    document.getElementById('toggle-list-num').checked = model.listNum;
+    document.getElementById('input-tag1').value = model.tag1;
+    document.getElementById('input-tag2').value = model.tag2;
+    setTagActive(1, model.showTag1);
+    setTagActive(2, model.showTag2);
+
+    const themeButton = document.querySelector('.theme-swatch[data-theme="' + model.theme + '"]');
+    if (themeButton) setTheme(themeButton);
+    const gradientButton = document.querySelector('.grad-swatch[data-grad="' + model.grad + '"]');
+    if (gradientButton) setGrad(gradientButton);
+    const portraitButton = document.querySelector('.format-btn[data-fmt="retrato"]');
+    if (portraitButton) setFormat(portraitButton);
+
+    updatePreview();
+    autoSaveDraft();
+    showToast('🧩 Modelo carregado! Personalize o conteúdo.');
+    document.getElementById('sec-texto').classList.add('open');
+  }
 
   function setTheme(el) {
     document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
