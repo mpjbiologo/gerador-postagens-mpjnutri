@@ -427,10 +427,10 @@
   .icon-label { font-size: 8px; color: rgba(200,230,200,0.45); text-transform: uppercase; letter-spacing: 0.4px; }
   .post[data-format="stories"] .icon-label { font-size: 5px; }
 
-  .settings-open-btn{border:1px solid var(--app-btn-border);background:var(--app-btn-bg);color:var(--app-text);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .settings-open-btn{position:absolute;right:24px;top:7px;border:1px solid var(--app-btn-border);background:var(--app-btn-bg);color:var(--app-text);border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:12px}
   .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:none;align-items:center;justify-content:center;padding:16px}
   .settings-overlay.open{display:flex}
-  .settings-dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--app-panel-bg);color:var(--app-text);border:1px solid var(--app-section-border);border-radius:14px;padding:20px;box-shadow:0 18px 60px #0008}
+  .settings-dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--app-panel);color:var(--app-text);border:1px solid var(--app-section-border);border-radius:14px;padding:20px;box-shadow:0 18px 60px #0008}
   .settings-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
   .settings-top h2{font-size:19px;margin:0}
   .settings-close{border:0;background:transparent;color:var(--app-text);font-size:24px;cursor:pointer}
@@ -442,7 +442,7 @@
   .settings-grid .field{min-width:0}.settings-grid input,.settings-grid select{width:100%;box-sizing:border-box}
   .settings-note{font-size:11px;line-height:1.5;color:var(--app-sub);background:var(--app-btn-bg);border-radius:8px;padding:10px;margin:10px 0}
   .settings-status{font-size:12px;padding:9px;border-radius:7px;background:var(--app-btn-bg);margin-top:10px;white-space:pre-wrap}
-  @media(max-width:560px){.app-header{align-items:flex-start;flex-wrap:wrap}.settings-open-btn{margin-left:auto}.settings-dialog{padding:14px}.settings-grid{grid-template-columns:1fr}}
+  @media(max-width:560px){.settings-open-btn{right:8px;top:8px;padding:7px 9px;font-size:10px}.app-header-left{padding-right:112px}.settings-dialog{padding:14px}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
