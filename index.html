@@ -2167,7 +2167,33 @@ Terceiro item da lista</textarea></div>
 
     return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Post ' + handle + '</title>'
       + '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">'
-      + '<style>' + css + '</style></head><body>'
+      + '<style>' + css + '
+  /* Rebalanceamento desktop: editor amplo e prévia com largura preservada */
+  body{min-width:0}
+  .panel{width:min(1280px,calc(100vw - 390px))!important;min-width:620px!important;max-width:none!important;flex:0 0 auto!important;padding:16px 20px 64px!important;gap:11px!important}
+  .preview-wrap{flex:1 1 390px!important;min-width:350px!important;width:auto!important}
+  .editorial-workspace{width:100%;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr)!important;gap:12px!important;padding:12px!important}
+  .editorial-card{padding:12px!important;gap:9px!important;border-radius:10px}
+  .editorial-card-head{padding-bottom:7px}
+  .editorial-card-head h3{font-size:14px}
+  .editorial-card-head p{font-size:10px}
+  .editorial-fields-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+  .editorial-fields-grid .field input,.editorial-fields-grid .field select{min-width:0;font-size:12px;padding:8px}
+  .editorial-card .field textarea{min-height:62px;padding:8px 10px}
+  .editorial-card #caption-output{min-height:190px;max-height:34vh;line-height:1.55}
+  .editorial-action-row{gap:7px}
+  .editorial-action-row>.btn{min-width:0;padding:9px 10px;font-size:11px}
+  .editorial-side-stack{gap:10px}
+  .editorial-card-icon{width:30px;height:30px;flex-basis:30px}
+  .editorial-card .btn{padding:9px 10px}
+  .editorial-card .settings-status{font-size:10px;padding:6px 8px}
+  .editorial-workspace .field label{font-size:9px;margin-bottom:4px}
+  @media(min-width:1500px){.panel{width:min(1360px,calc(100vw - 440px))!important}.editorial-workspace{grid-template-columns:minmax(0,1.45fr) minmax(340px,.8fr)!important}.editorial-card #caption-output{min-height:230px}}
+  @media(max-width:1100px) and (min-width:701px){.panel{width:calc(100vw - 340px)!important;min-width:560px!important;padding:14px 12px 48px!important}.preview-wrap{min-width:320px!important}.editorial-workspace{grid-template-columns:minmax(0,1fr)!important}.editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+  @media(max-width:700px){.panel{width:100%!important;min-width:0!important;padding:12px 10px 32px!important}.preview-wrap{min-width:0!important;width:100%!important}.editorial-workspace{padding:9px!important}.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.editorial-card #caption-output{max-height:none;min-height:170px}}
+  @media(max-width:420px){.editorial-fields-grid{grid-template-columns:1fr!important}}
+
+</style></head><body>'
       + '<div class="post"><div class="deco-circle"></div><div class="deco-circle2"></div>'
       + '<div class="content"><div class="title-wrap"><div class="title-l1">' + line1 + '</div><div class="title-l2">' + line2 + '</div></div>'
       + '<div class="divider"></div><p class="description">' + desc + '</p>'
