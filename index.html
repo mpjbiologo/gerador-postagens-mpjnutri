@@ -1832,7 +1832,7 @@ Terceiro item da lista</textarea></div>
     document.getElementById('img-tab-upload').classList.toggle('active', tab === 'upload');
     document.getElementById('img-url-panel').style.display    = tab === 'url'    ? '' : 'none';
     document.getElementById('img-upload-panel').style.display = tab === 'upload' ? '' : 'none';
-    if (tab === 'url') { window._uploadedImgSrc = ''; updatePreview(); }
+    if (tab === 'url') { imageEditState.originalSrc='';updateBackgroundRemovalControls();window._uploadedImgSrc = ''; updatePreview(); }
   }
 
   let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,originalSrc:''};
@@ -1933,6 +1933,7 @@ Terceiro item da lista</textarea></div>
     syncImageEditControls();autoSaveDraft();showToast('Imagem apagada.');
   }
   function setImageSource(dataUrl){
+    imageEditState.originalSrc='';updateBackgroundRemovalControls();
     window._uploadedImgSrc=dataUrl;
     const input=document.getElementById('input-img');if(input)input.value='';
     const prev=document.getElementById('upload-img-preview');if(prev){prev.src=dataUrl;prev.style.display='block';}
@@ -1985,6 +1986,7 @@ Terceiro item da lista</textarea></div>
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
+      imageEditState.originalSrc='';updateBackgroundRemovalControls();
       window._uploadedImgSrc = e.target.result;
       const prev = document.getElementById('upload-img-preview');
       prev.src = e.target.result;
