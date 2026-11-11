@@ -922,6 +922,26 @@ Terceiro item da lista</textarea></div>
       </div>
       <div class="btn-row" style="margin-top:8px"><button type="button" class="btn secondary" onclick="resetImageEdit()">↺ Redefinir ajustes</button><button type="button" class="btn secondary" style="color:#ef8b80" onclick="deleteImage()">✕ Apagar imagem</button></div>
       <div class="template-hint">Dica: arraste a imagem livremente pela prévia. As linhas-guia aparecem ao alinhar o centro horizontal ou vertical. Use Delete para apagar a imagem selecionada. Ctrl+V cola uma imagem quando o foco não está em um campo de texto.</div>
+
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:12px">
+        <label>Vídeo decorativo / clipe</label>
+        <label class="upload-btn" for="video-file">🎬 Enviar vídeo do dispositivo</label>
+        <input type="file" id="video-file" accept="video/mp4,video/webm,video/ogg,video/quicktime" onchange="handleVideoUpload(this)">
+        <div id="video-upload-status">Envie um vídeo MP4, WebM ou MOV. O arquivo fica armazenado neste navegador.</div>
+        <div class="btn-row" style="margin-top:8px"><button type="button" class="btn secondary" onclick="toggleVideoPlayback()">▶ / ❚❚ Reproduzir</button><button type="button" class="btn secondary" style="color:#ef8b80" onclick="deleteVideo()">✕ Apagar vídeo</button></div>
+        <div class="video-edit-tools">
+          <div class="field"><label for="video-fit">Enquadramento</label><select id="video-fit" onchange="updateVideoEditFromControls()"><option value="cover">Preencher / cortar</option><option value="contain">Vídeo inteiro</option></select></div>
+          <div class="field"><label>Zoom <output id="video-zoom-out">100%</output></label><div class="btn-row"><button type="button" class="btn secondary" onclick="setVideoZoom(-10)">−</button><button type="button" class="btn secondary" onclick="setVideoZoom(10)">＋</button></div></div>
+          <div class="field"><label for="video-width">Largura <output id="video-width-out">80%</output></label><input id="video-width" type="range" min="15" max="100" value="80" oninput="updateVideoEditFromControls()"></div>
+          <div class="field"><label for="video-height">Altura <output id="video-height-out">240 px</output></label><input id="video-height" type="range" min="60" max="500" value="240" oninput="updateVideoEditFromControls()"></div>
+          <div class="field"><label for="video-opacity">Transparência <output id="video-opacity-out">100%</output></label><input id="video-opacity" type="range" min="0" max="100" value="100" oninput="updateVideoEditFromControls()"></div>
+          <div class="field"><label for="video-brightness">Brilho <output id="video-brightness-out">100%</output></label><input id="video-brightness" type="range" min="0" max="200" value="100" oninput="updateVideoEditFromControls()"></div>
+          <div class="field"><label for="video-saturation">Saturação <output id="video-saturation-out">100%</output></label><input id="video-saturation" type="range" min="0" max="200" value="100" oninput="updateVideoEditFromControls()"></div>
+          <div class="field"><label for="video-contrast">Contraste <output id="video-contrast-out">100%</output></label><input id="video-contrast" type="range" min="0" max="200" value="100" oninput="updateVideoEditFromControls()"></div>
+        </div>
+        <button type="button" class="btn secondary" style="margin-top:8px" onclick="resetVideoEdit()">↺ Redefinir ajustes do vídeo</button>
+        <div class="template-hint">Arraste o vídeo na prévia para posicionar e use a alça para redimensionar. O vídeo é salvo neste navegador. A exportação atual em PNG/PDF não gera um arquivo de vídeo.</div>
+      </div>
       <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
         <label>Plano de fundo da postagem</label>
         <label class="upload-btn" for="background-upload">🖼️ Enviar imagem de fundo</label>
