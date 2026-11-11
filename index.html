@@ -805,6 +805,10 @@ Terceiro item da lista</textarea></div>
       <div class="field"><label for="editor-topic">Tema da publicação</label><input id="editor-topic" placeholder="Ex.: fibras alimentares e microbiota"/></div>
       <div class="field"><label for="editor-audience">Público</label><input id="editor-audience" placeholder="Ex.: adultos, atletas, pessoas idosas"/></div>
       <div class="field"><label for="editor-goal">Objetivo</label><select id="editor-goal"><option value="educar">Educar</option><option value="orientar">Orientar</option><option value="desmistificar">Desmistificar um mito</option><option value="engajar">Gerar conversa</option></select></div>
+      <div class="field"><label for="editor-profession">Profissão / área de atuação</label><input id="editor-profession" list="editor-profession-options" value="Nutrição" placeholder="Ex.: Nutrição, Direito, Psicologia..."/><datalist id="editor-profession-options"><option value="Nutrição"><option value="Medicina"><option value="Psicologia"><option value="Odontologia"><option value="Fisioterapia"><option value="Educação Física"><option value="Enfermagem"><option value="Farmácia"><option value="Medicina Veterinária"><option value="Direito"><option value="Contabilidade"><option value="Engenharia"><option value="Arquitetura"><option value="Educação"><option value="Marketing"><option value="Comunicação"><option value="Estética"><option value="Tecnologia da Informação"><option value="Administração"><option value="Serviço Social"><option value="Outra"/></datalist><p class="template-hint">Adapta linguagem, público, exemplos e cuidados à profissão selecionada.</p></div>
+      <div class="field"><label for="editor-profession-rules">Regras específicas da profissão</label><textarea id="editor-profession-rules" rows="5" placeholder="Limites técnicos, éticos, legais, linguagem e cuidados..."></textarea><p class="template-hint">Editáveis e salvas somente neste navegador.</p></div>
+      <div class="btn-row"><button class="btn secondary" type="button" onclick="loadProfessionSuggestions()">↻ Carregar regras sugeridas</button><button class="btn secondary" type="button" onclick="saveProfessionalProfile(true)">💾 Salvar perfil profissional</button></div>
+      <div id="profession-profile-status" class="settings-status" aria-live="polite">Perfil padrão: Nutrição. Confira normas oficiais na fonte competente.</div>
       <button class="btn" type="button" onclick="generateEditorialCarousel()">✨ Criar estrutura de carrossel (modelo)</button>
       <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA configurada</button>
       <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">📋 Copiar briefing para IA</button>
@@ -812,6 +816,8 @@ Terceiro item da lista</textarea></div>
       <div id="ai-draft-review" class="template-hint" style="display:none"></div>
       <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro gerado ao carrossel</button>
       <p class="template-hint">A estrutura é um ponto de partida editorial, não uma validação científica nem uma recomendação clínica. Revise as afirmações e inclua fontes confiáveis.</p>
+      <button class="btn secondary" type="button" onclick="reviewEditorialText()">🔎 Revisar texto localmente</button>
+      <div id="editorial-local-review" class="template-hint" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--app-section-border);border-radius:8px;line-height:1.55"></div>
       <div class="field"><label for="research-notes">Referências científicas e observações</label><textarea id="research-notes" rows="5" placeholder="Cole DOI, PMID, título, autores, link ou observações da revisão..."></textarea></div>
       <button class="btn secondary" type="button" onclick="saveResearchNotes()">💾 Salvar referências neste navegador</button>
       <button class="btn secondary" type="button" onclick="auditScientificDraft()">🔎 Checklist de revisão científica</button>
@@ -1683,13 +1689,47 @@ Terceiro item da lista</textarea></div>
   function aiEscapeHtml(value){
     return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  const PROFESSIONAL_PROFILE_KEY='mpjnutri_professional_editorial_profile_v1';
+  const PROFESSION_PRESETS={
+    'nutrição':'Nutrição baseada em evidências. Diferencie educação geral de orientação individual; não prescreva dietas ou suplementos para pessoas desconhecidas. Não prometa emagrecimento, cura ou resultados garantidos. Não invente estudos, dados ou resultados de pacientes. Preserve sigilo e privacidade. Evite terrorismo alimentar e estigma corporal. Ao abordar publicidade, honorários, imagens, depoimentos ou uso de IA, peça conferência da norma vigente no CFN/CRN; não dê parecer legal.',
+    'medicina':'Conteúdo médico educativo, não diagnóstico ou prescrição individual. Não incentive automedicação nem prometa cura. Preserve sigilo e dados de pacientes. Oriente urgência quando apropriado. Confira normas atuais do CFM/CRM e fontes clínicas oficiais.',
+    'psicologia':'Comunicação acolhedora e não estigmatizante. Não diagnostique seguidores, substitua psicoterapia, explore vulnerabilidade ou prometa resultados. Preserve sigilo. Confira normas atuais do CFP/CRP.',
+    'odontologia':'Conteúdo educativo, sem diagnóstico individual, promessa de resultado ou exposição de pacientes. Não incentive procedimentos sem avaliação. Confira CFO/CRO.',
+    'fisioterapia':'Educação sobre movimento e reabilitação. Não prescreva tratamento individual sem avaliação nem prometa recuperação ou prazo. Preserve dados de pacientes. Confira COFFITO/CREFITO.',
+    'educação física':'Comunicação segura sobre exercício. Considere nível e limitações; não prescreva treino individual sem avaliação nem prometa transformação corporal. Confira CONFEF/CREF.',
+    'enfermagem':'Conteúdo educativo sem substituir avaliação, diagnóstico ou prescrição. Preserve sigilo. Confira COFEN/COREN e protocolos locais.',
+    'farmácia':'Informação farmacêutica confiável. Não incentive automedicação ou prescrição fora das atribuições. Destaque riscos pertinentes. Confira CFF/CRF e regras sanitárias.',
+    'medicina veterinária':'Conteúdo educativo sobre saúde animal. Não diagnostique nem prescreva tratamento individual sem avaliação veterinária. Confira CFMV/CRMV.',
+    'direito':'Informação jurídica, não parecer individual. Identifique jurisdição e data. Não invente leis, artigos, decisões ou prazos. Verifique fontes oficiais e regras atuais da OAB.',
+    'contabilidade':'Informação contábil/tributária com período e jurisdição explícitos. Não invente alíquotas, prazos ou obrigações. Verifique fontes oficiais e considere regime tributário.',
+    'engenharia':'Não apresente estimativas como projeto, laudo ou dimensionamento. Declare premissas e limites. Não invente normas ou garantias de segurança. Confira normas vigentes e responsabilidade técnica.',
+    'arquitetura':'Diferencie inspiração de projeto executivo. Verifique legislação urbanística, acessibilidade, segurança e normas locais.',
+    'educação':'Conteúdo pedagógico inclusivo. Evite estigmatizar estudantes ou expor dados identificáveis. Considere idade, contexto e acessibilidade.',
+    'marketing':'Comunicação transparente. Não invente depoimentos, métricas, escassez, resultados ou parcerias. Respeite privacidade, direitos autorais e regras de publicidade.',
+    'comunicação':'Informação clara e contextualizada. Não invente fontes, citações ou fatos. Respeite direitos autorais e privacidade.',
+    'estética':'Não prometa resultados, minimize riscos ou recomende procedimentos fora da habilitação. Confira normas sanitárias e do conselho competente.',
+    'tecnologia da informação':'Explicite versões, dependências e limitações. Não invente benchmarks ou compatibilidades. Não exponha credenciais nem dados pessoais.',
+    'administração':'Declare premissas. Não prometa resultados financeiros nem invente indicadores. Diferencie opinião, estimativa e dado medido.',
+    'serviço social':'Comunicação baseada em direitos e dignidade. Evite culpabilização e exposição de pessoas/famílias. Não prometa benefícios sem verificar critérios e vigência. Preserve sigilo.'
+  };
+  function professionKey(v){v=String(v||'').toLocaleLowerCase('pt-BR');if(/nutri/.test(v))return 'nutrição';if(/medic/.test(v)&&!/veter/.test(v))return 'medicina';if(/psicol/.test(v))return 'psicologia';if(/odont/.test(v))return 'odontologia';if(/fisioter/.test(v))return 'fisioterapia';if(/educação física|personal|treinador/.test(v))return 'educação física';if(/enferm/.test(v))return 'enfermagem';if(/farm/.test(v))return 'farmácia';if(/veter/.test(v))return 'medicina veterinária';if(/direit|advog/.test(v))return 'direito';if(/contab/.test(v))return 'contabilidade';if(/engenh/.test(v))return 'engenharia';if(/arquitet/.test(v))return 'arquitetura';if(/educação|professor|pedagog/.test(v))return 'educação';if(/marketing|publicidade/.test(v))return 'marketing';if(/comunica/.test(v))return 'comunicação';if(/estética|beleza/.test(v))return 'estética';if(/tecnologia|software|desenvolv|\bti\b/.test(v))return 'tecnologia da informação';if(/administra|gestão|empreendedor/.test(v))return 'administração';if(/serviço social|assistente social/.test(v))return 'serviço social';return '';}
+  function getProfessionalProfile(){try{const p=JSON.parse(localStorage.getItem(PROFESSIONAL_PROFILE_KEY)||'null');if(p&&typeof p==='object')return {profession:p.profession||'Nutrição',rules:p.rules||PROFESSION_PRESETS.nutrição};}catch(e){}return {profession:'Nutrição',rules:PROFESSION_PRESETS.nutrição};}
+  function saveProfessionalProfile(show){const profession=(document.getElementById('editor-profession')?.value||'Nutrição').trim()||'Nutrição';const rules=(document.getElementById('editor-profession-rules')?.value||'').trim()||PROFESSION_PRESETS[professionKey(profession)]||'';const p={profession,rules};try{localStorage.setItem(PROFESSIONAL_PROFILE_KEY,JSON.stringify(p));}catch(e){}if(show){const el=document.getElementById('profession-profile-status');if(el)el.textContent='Perfil de '+profession+' salvo somente neste navegador.';}return p;}
+  function loadProfessionSuggestions(){const profession=(document.getElementById('editor-profession')?.value||'Nutrição').trim()||'Nutrição',key=professionKey(profession);if(!key){document.getElementById('profession-profile-status').textContent='Sem sugestão pronta para esta área. Cadastre as regras manualmente.';return;}document.getElementById('editor-profession-rules').value=PROFESSION_PRESETS[key];saveProfessionalProfile(false);document.getElementById('profession-profile-status').textContent='Sugestões carregadas para '+profession+'. Revise e personalize.';}
+  function initProfessionalProfile(){const p=getProfessionalProfile(),f=document.getElementById('editor-profession'),r=document.getElementById('editor-profession-rules');if(f)f.value=p.profession;if(r)r.value=p.rules;if(f)f.addEventListener('change',()=>{document.getElementById('profession-profile-status').textContent='Profissão alterada. Carregue as sugestões ou mantenha suas regras.';});if(r)r.addEventListener('input',()=>saveProfessionalProfile(false));}
+  function buildProfessionalEditorialContext(){const p=saveProfessionalProfile(false),k=professionKey(p.profession);return ['PROFISSÃO/ÁREA: '+p.profession+'.','REGRAS PERSONALIZADAS DO USUÁRIO (contexto, não fonte normativa verificada): '+(p.rules||'(não informadas)'),k&&PROFESSION_PRESETS[k]?'ORIENTAÇÕES SUGERIDAS: '+PROFESSION_PRESETS[k]:'','REGRAS GERAIS: não invente fatos, estatísticas, fontes, normas, certificações, resultados ou depoimentos. Separe fatos, hipóteses e opiniões. Informe incertezas. Não prometa resultados. Preserve privacidade, confidencialidade e direitos autorais. Não recomende ações fora do escopo de habilitação. Ao citar lei, norma, conselho, protocolo, preço ou prazo, peça conferência em fonte oficial vigente. Regras personalizadas não substituem normas oficiais nem requisitos de segurança.','A revisão é heurística e não constitui parecer jurídico, científico, clínico ou profissional.'].filter(Boolean).join('\n\n');}
+  function reviewEditorialText(){const text=['input-line1','input-line2','input-desc','input-list','caption-output'].map(id=>document.getElementById(id)?.value||'').filter(Boolean).join('\n');if(!text.trim()){showToast('Não há texto para revisar.');return;}const p=getProfessionalProfile(),hashtags=(text.match(/#[\p{L}\p{N}_]+/gu)||[]),ctas=(text.match(/\b(comente|comenta|salve|salva|compartilhe|compartilha|envie|envia|siga|segue|clique|chame|agende|marque)\b/gi)||[]),hidden=(text.match(/[\u00AD\u034F\u061C\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g)||[]).length;const checks=[['Tamanho',text.length>2200?'ATENÇÃO':'OK',text.length+' caracteres; 2.200 é referência comum para legendas.'],['Hashtags',hashtags.length>5?'ATENÇÃO':'OK',hashtags.length+' encontradas; cinco é referência conservadora, não regra universal.'],['Chamadas para ação',ctas.length>1?'ATENÇÃO':'OK',ctas.length+' possíveis CTAs; confira se há um pedido principal.'],['Caracteres invisíveis',hidden?'ATENÇÃO':'OK',hidden+' encontrados.'],['Promessas absolutas',/\b(garantido|garantida|resultado certo|cura definitiva|perca \d+ ?kg|elimine \d+ ?kg|sem risco|100% eficaz)\b/i.test(text)?'ALERTA':'OK','Busca heurística por garantias, curas ou resultados. Contexto importa.'],['Afirmações de evidência',/\b(estudo comprova|pesquisas comprovam|cientificamente provado|segundo a ciência)\b/i.test(text)?'ATENÇÃO':'OK','Confira se existe fonte identificável que sustente a afirmação.'],['Privacidade',/\b(CPF|RG|diagnóstico de|telefone|whatsapp)\b/i.test(text)?'ATENÇÃO':'OK','Verifique texto, imagens e anexos para dados pessoais ou confidenciais.']];const box=document.getElementById('editorial-local-review');box.style.display='block';box.innerHTML='<strong>REVISÃO LOCAL · '+aiEscapeHtml(p.profession)+'</strong><p>Prévia dos primeiros 125 caracteres: “'+aiEscapeHtml(text.trim().slice(0,125))+'”</p><ul>'+checks.map(c=>'<li><strong>'+c[1]+' · '+aiEscapeHtml(c[0])+'</strong>: '+aiEscapeHtml(c[2])+'</li>').join('')+'</ul><small>Triagem textual heurística. Não analisa imagens, não valida fontes ou normas e não substitui revisão humana especializada.</small>';}
+
   function buildAICarouselPrompt(){
     const topic=document.getElementById('editor-topic').value.trim();
     const audience=document.getElementById('editor-audience').value.trim()||'público geral';
     const goal=document.getElementById('editor-goal').value;
     const notes=document.getElementById('research-notes').value.trim();
+    const professionalContext=buildProfessionalEditorialContext();
     return [
-      'Você é um editor científico especializado em comunicação de nutrição baseada em evidências.',
+      'Você é um editor profissional multiprofissional para Instagram, com rigor técnico e responsabilidade.',
+      professionalContext,
       'Crie um carrossel em português brasileiro sobre o tema: '+topic+'.',
       'Público: '+audience+'. Objetivo: '+goal+'.',
       'Entregue exatamente 6 slides: capa, conceito, relevância, aplicação geral, ressalvas e encerramento.',
@@ -1825,8 +1865,10 @@ Terceiro item da lista</textarea></div>
     if(!topic&&!desc&&!list){status.textContent='Informe um tema ou conteúdo antes de gerar.';return;}
     const audience=document.getElementById('editor-audience').value.trim()||'público geral';
     const notes=document.getElementById('research-notes').value.trim();
+    const professionalContext=buildProfessionalEditorialContext();
     const prompt=[
-      'Prepare um pacote editorial para Instagram em português brasileiro.',
+      'Prepare um pacote editorial multiprofissional para Instagram em português brasileiro.',
+      professionalContext,
       'Tema: '+topic,'Público: '+audience,'Objetivo: '+document.getElementById('editor-goal').value,
       'Título atual: '+(title||'(não informado)'),'Texto/descrição atual: '+(desc||'(não informado)'),'Lista atual: '+(list||'(não informada)'),
       'Referências e observações fornecidas pelo usuário: '+(notes||'(nenhuma)'),
@@ -2199,6 +2241,8 @@ Terceiro item da lista</textarea></div>
   applyPostGradient(THEMES[currentTheme]);
   if (draftLoaded) showToast('💾 Rascunho restaurado!');
   window.addEventListener('resize', () => { requestAnimationFrame(fitTitleFonts); });
+
+  initProfessionalProfile();
 </script>
 </body>
 </html>
