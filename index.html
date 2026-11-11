@@ -297,6 +297,10 @@
   .fullscreen-preview-post .image-edit-handle,.fullscreen-preview-post .video-edit-handle,.fullscreen-preview-post .image-center-guide,.fullscreen-preview-post .video-center-guide{display:none!important}
   .fullscreen-preview-play{position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;font-size:28px;cursor:pointer;display:none;box-shadow:0 4px 22px rgba(0,0,0,.4)}
   .fullscreen-preview-play.visible{display:block}.fullscreen-preview-play.playing{opacity:.18}.fullscreen-preview-play.playing:hover{opacity:1}
+  .fullscreen-preview-nav{position:absolute;z-index:30;top:50%;transform:translateY(-50%);width:48px;height:64px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(0,0,0,.62);color:#fff;font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center}
+  .fullscreen-preview-nav.visible{display:flex}.fullscreen-preview-nav:disabled{opacity:.25;cursor:default}.fullscreen-preview-prev{left:18px}.fullscreen-preview-next{right:18px}
+  .fullscreen-preview-counter{position:absolute;z-index:30;bottom:14px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.65);padding:7px 13px;border-radius:20px;font-size:13px;display:none}.fullscreen-preview-counter.visible{display:block}
+  @media(max-width:600px){.fullscreen-preview-nav{width:38px;height:52px}.fullscreen-preview-prev{left:5px}.fullscreen-preview-next{right:5px}}
   @media(max-width:600px){.fullscreen-preview-modal{padding:54px 8px 12px}.fullscreen-preview-post{max-width:96vw;max-height:88vh}}
 
   .video-edit-wrap{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:visible;display:none}
@@ -637,7 +641,10 @@ body:not(.carousel-mode) .carousel-only{display:none}
 
 <div id="fullscreen-preview-modal" class="fullscreen-preview-modal" role="dialog" aria-modal="true" aria-label="Prévia em tela cheia">
   <button type="button" class="fullscreen-preview-close" onclick="closeFullscreenPreview()">✕ Fechar</button>
+  <button type="button" id="fullscreen-preview-prev" class="fullscreen-preview-nav fullscreen-preview-prev" onclick="stepFullscreenPreview(-1)" aria-label="Slide anterior">‹</button>
   <div class="fullscreen-preview-frame" id="fullscreen-preview-frame"></div>
+  <button type="button" id="fullscreen-preview-next" class="fullscreen-preview-nav fullscreen-preview-next" onclick="stepFullscreenPreview(1)" aria-label="Próximo slide">›</button>
+  <div id="fullscreen-preview-counter" class="fullscreen-preview-counter"></div>
   <button type="button" id="fullscreen-preview-play" class="fullscreen-preview-play" onclick="toggleFullscreenPreviewVideo()" aria-label="Reproduzir vídeo">▶</button>
 </div>
 <div class="toast" id="toast"></div>
@@ -2721,36 +2728,61 @@ Terceiro item da lista</textarea></div>
   }
 
   let fullscreenPreviewVideo=null;
-  function openInlinePreview(){
-    const modal=document.getElementById('fullscreen-preview-modal'),frame=document.getElementById('fullscreen-preview-frame'),source=document.getElementById('post');
-    if(!modal||!frame||!source)return;
+  let fullscreenPreviewOriginalSlide=null;
+  let fullscreenPreviewIsCarousel=false;
+  function renderFullscreenPreviewSlide(){
+    const frame=document.getElementById('fullscreen-preview-frame'),source=document.getElementById('post');
+    if(!frame||!source)return;
+    if(fullscreenPreviewVideo){fullscreenPreviewVideo.pause();fullscreenPreviewVideo=null;}
     frame.innerHTML='';
     const clone=source.cloneNode(true);clone.id='fullscreen-preview-post';clone.classList.remove('selected');
     clone.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));
     clone.querySelectorAll('.image-edit-handle,.video-edit-handle,.image-center-guide,.video-center-guide').forEach(el=>el.remove());
-    // Mantém os IDs internos: o CSS do post usa seletores por ID para renderizar textos e elementos.
     clone.style.transform='none';
     const fmt=source.dataset.format||'retrato',ratio=fmt==='quadrado'?1:(fmt==='stories'?366/650:4/5);
     clone.classList.add('fullscreen-preview-post');clone.style.setProperty('--preview-ratio',String(ratio));
     clone.style.width='min(92vw, calc(88vh * '+ratio+'))';clone.style.height='auto';
     const sourceVideo=source.querySelector('#post-video'),sourceVideoWrap=source.querySelector('#video-edit-wrap');
-    const hasVideo=!!(sourceVideo&&sourceVideoWrap&&
-      getComputedStyle(sourceVideoWrap).display!=='none'&&
-      (sourceVideo.currentSrc||sourceVideo.src));
+    const hasVideo=!!(sourceVideo&&sourceVideoWrap&&getComputedStyle(sourceVideoWrap).display!=='none'&&(sourceVideo.currentSrc||sourceVideo.src));
     const video=hasVideo?clone.querySelector('#post-video'):null;
     const play=document.getElementById('fullscreen-preview-play');
     fullscreenPreviewVideo=video||null;
     if(video){video.controls=false;video.muted=false;video.loop=false;video.pause();video.style.pointerEvents='none';play.classList.add('visible');play.classList.remove('playing');play.textContent='▶';}
     else{play.classList.remove('visible','playing');play.textContent='▶';}
-    frame.appendChild(clone);modal.classList.add('open');document.body.style.overflow='hidden';document.addEventListener('keydown',handleFullscreenPreviewKey);
+    frame.appendChild(clone);
+    const prev=document.getElementById('fullscreen-preview-prev'),next=document.getElementById('fullscreen-preview-next'),counter=document.getElementById('fullscreen-preview-counter');
+    const total=carouselSlides.length,idx=activeCarouselSlide;
+    [prev,next].forEach(b=>b?.classList.toggle('visible',fullscreenPreviewIsCarousel&&total>1));
+    if(prev)prev.disabled=idx<=0;if(next)next.disabled=idx>=total-1;
+    if(counter){counter.textContent=(idx+1)+' / '+total;counter.classList.toggle('visible',fullscreenPreviewIsCarousel&&total>1);}
+  }
+  function openInlinePreview(){
+    const modal=document.getElementById('fullscreen-preview-modal'),source=document.getElementById('post');
+    if(!modal||!source)return;
+    fullscreenPreviewIsCarousel=source.dataset.mode==='carrossel'&&carouselSlides.length>1;
+    if(source.dataset.mode==='carrossel'&&carouselSlides.length)saveCurrentCarouselSlide();
+    fullscreenPreviewOriginalSlide=activeCarouselSlide;
+    renderFullscreenPreviewSlide();
+    modal.classList.add('open');document.body.style.overflow='hidden';document.addEventListener('keydown',handleFullscreenPreviewKey);
+  }
+  function stepFullscreenPreview(direction){
+    if(!fullscreenPreviewIsCarousel)return;
+    const target=activeCarouselSlide+direction;
+    if(target<0||target>=carouselSlides.length)return;
+    if(fullscreenPreviewVideo){fullscreenPreviewVideo.pause();fullscreenPreviewVideo=null;}
+    applyCarouselSlide(target);
+    renderFullscreenPreviewSlide();
   }
   function closeFullscreenPreview(){
     const modal=document.getElementById('fullscreen-preview-modal');
     if(fullscreenPreviewVideo){fullscreenPreviewVideo.pause();fullscreenPreviewVideo=null;}
     modal?.classList.remove('open');document.getElementById('fullscreen-preview-frame').innerHTML='';
+    if(fullscreenPreviewIsCarousel&&fullscreenPreviewOriginalSlide!==null&&carouselSlides[fullscreenPreviewOriginalSlide])applyCarouselSlide(fullscreenPreviewOriginalSlide);
+    fullscreenPreviewOriginalSlide=null;fullscreenPreviewIsCarousel=false;
+    document.getElementById('fullscreen-preview-prev')?.classList.remove('visible');document.getElementById('fullscreen-preview-next')?.classList.remove('visible');document.getElementById('fullscreen-preview-counter')?.classList.remove('visible');
     document.body.style.overflow='';document.removeEventListener('keydown',handleFullscreenPreviewKey);
   }
-  function handleFullscreenPreviewKey(e){if(e.key==='Escape')closeFullscreenPreview();}
+  function handleFullscreenPreviewKey(e){if(e.key==='Escape')closeFullscreenPreview();else if(e.key==='ArrowLeft')stepFullscreenPreview(-1);else if(e.key==='ArrowRight')stepFullscreenPreview(1);}
   async function toggleFullscreenPreviewVideo(){
     const v=fullscreenPreviewVideo;if(!v)return;const btn=document.getElementById('fullscreen-preview-play');
     if(v.paused){try{v.muted=false;await v.play();btn.textContent='Ⅱ';btn.classList.add('playing');}catch(e){showToast('Não foi possível reproduzir o vídeo nesta prévia.');}}
