@@ -2193,6 +2193,15 @@ Terceiro item da lista</textarea></div>
   @media(max-width:700px){.panel{width:100%!important;min-width:0!important;padding:12px 10px 32px!important}.preview-wrap{min-width:0!important;width:100%!important}.editorial-workspace{padding:9px!important}.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.editorial-card #caption-output{max-height:none;min-height:170px}}
   @media(max-width:420px){.editorial-fields-grid{grid-template-columns:1fr!important}}
 
+
+  @media(max-width:900px) and (min-width:701px){
+    body{flex-direction:column;overflow-x:hidden}
+    .panel{width:100%!important;min-width:0!important;max-width:none!important;order:1;padding:14px 16px 36px!important}
+    .preview-wrap{position:relative;top:0;height:auto;min-height:620px;width:100%!important;min-width:0!important;order:2;padding:24px}
+    .editorial-workspace{grid-template-columns:minmax(0,1fr)!important}
+    .editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}
+  }
 </style></head><body>'
       + '<div class="post"><div class="deco-circle"></div><div class="deco-circle2"></div>'
       + '<div class="content"><div class="title-wrap"><div class="title-l1">' + line1 + '</div><div class="title-l2">' + line2 + '</div></div>'
