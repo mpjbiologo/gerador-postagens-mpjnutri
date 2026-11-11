@@ -789,8 +789,12 @@ Terceiro item da lista</textarea></div>
       <div class="field"><label for="editor-topic">Tema da publicação</label><input id="editor-topic" placeholder="Ex.: fibras alimentares e microbiota"/></div>
       <div class="field"><label for="editor-audience">Público</label><input id="editor-audience" placeholder="Ex.: adultos, atletas, pessoas idosas"/></div>
       <div class="field"><label for="editor-goal">Objetivo</label><select id="editor-goal"><option value="educar">Educar</option><option value="orientar">Orientar</option><option value="desmistificar">Desmistificar um mito</option><option value="engajar">Gerar conversa</option></select></div>
-      <button class="btn" type="button" onclick="generateEditorialCarousel()">✨ Criar estrutura de carrossel</button>
+      <button class="btn" type="button" onclick="generateEditorialCarousel()">✨ Criar estrutura de carrossel (modelo)</button>
+      <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA configurada</button>
       <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">📋 Copiar briefing para IA</button>
+      <div id="ai-generation-status" class="settings-status" aria-live="polite">A IA utilizará o provedor escolhido em Configurações.</div>
+      <div id="ai-draft-review" class="template-hint" style="display:none"></div>
+      <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro gerado ao carrossel</button>
       <p class="template-hint">A estrutura é um ponto de partida editorial, não uma validação científica nem uma recomendação clínica. Revise as afirmações e inclua fontes confiáveis.</p>
       <div class="field"><label for="research-notes">Referências científicas e observações</label><textarea id="research-notes" rows="5" placeholder="Cole DOI, PMID, título, autores, link ou observações da revisão..."></textarea></div>
       <button class="btn secondary" type="button" onclick="saveResearchNotes()">💾 Salvar referências neste navegador</button>
@@ -1619,6 +1623,88 @@ Terceiro item da lista</textarea></div>
   const RESEARCH_KEY='mpjnutri_research_notes';
   let currentProjectId=null;
   function editorialEscape(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  let stagedAISlides=null;
+  function aiEscapeHtml(value){
+    return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function buildAICarouselPrompt(){
+    const topic=document.getElementById('editor-topic').value.trim();
+    const audience=document.getElementById('editor-audience').value.trim()||'público geral';
+    const goal=document.getElementById('editor-goal').value;
+    const notes=document.getElementById('research-notes').value.trim();
+    return [
+      'Você é um editor científico especializado em comunicação de nutrição baseada em evidências.',
+      'Crie um carrossel em português brasileiro sobre o tema: '+topic+'.',
+      'Público: '+audience+'. Objetivo: '+goal+'.',
+      'Entregue exatamente 6 slides: capa, conceito, relevância, aplicação geral, ressalvas e encerramento.',
+      'Seja claro, conciso e adequado a uma postagem de Instagram. Evite prescrição individual, promessas, alarmismo e afirmações absolutas.',
+      'Não invente estudos, DOI, PMID, autores, números ou referências. Se as informações fornecidas não sustentarem uma afirmação, sinalize a necessidade de verificação no próprio texto.',
+      'Use apenas os dados de referência abaixo como material fornecido, sem presumir que sejam verdadeiros ou suficientes:',
+      notes||'(Nenhuma referência fornecida.)',
+      'Responda SOMENTE com JSON válido neste formato: {"slides":[{"slideType":"cover|content|comparison|list|tip|closing","line1":"...","line2":"...","desc":"...","list":["...","..."],"tag1":"...","tag2":"..."}]}.',
+      'A primeira página deve usar slideType cover; a última closing. Nas demais use content, comparison, list ou tip. line1 e line2 devem ser curtos. desc deve ser um parágrafo breve. list deve ser um array de até 4 itens. Não inclua markdown nem texto fora do JSON.'
+    ].join('\n\n');
+  }
+  function parseAIJSON(raw){
+    let text=String(raw||'').trim().replace(/^\uFEFF/,'');
+    text=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+    try{return JSON.parse(text);}catch(e){
+      const start=text.indexOf('{'),end=text.lastIndexOf('}');
+      if(start>=0&&end>start)return JSON.parse(text.slice(start,end+1));
+      throw new Error('A resposta não veio em JSON válido. Tente novamente ou use um modelo que siga instruções estruturadas.');
+    }
+  }
+  function normalizeAISlides(data){
+    const raw=Array.isArray(data)?data:data?.slides;
+    if(!Array.isArray(raw)||raw.length<2||raw.length>12)throw new Error('A IA deve retornar entre 2 e 12 slides no campo "slides".');
+    const allowed=['cover','content','comparison','list','tip','closing'];
+    return raw.map((x,i)=>{
+      if(!x||typeof x!=='object')throw new Error('Um dos slides retornados está em formato inválido.');
+      const items=Array.isArray(x.list)?x.list.map(v=>String(v).trim()).filter(Boolean).slice(0,4):String(x.list||'').split('\n').map(v=>v.trim()).filter(Boolean).slice(0,4);
+      return {line1:String(x.line1||x.title||'').trim().slice(0,90),line2:String(x.line2||'').trim().slice(0,90),desc:String(x.desc||x.description||'').trim().slice(0,650),list:items.join('\n'),listNum:x.slideType==='list',tag1:String(x.tag1||'').trim().slice(0,50),tag2:String(x.tag2||'').trim().slice(0,50),showTag1:!!x.tag1,showTag2:!!x.tag2,imgUrl:'',image:'',showImg:false,imgColor:false,slideType:allowed.includes(x.slideType)?x.slideType:(i===0?'cover':i===raw.length-1?'closing':'content')};
+    });
+  }
+  async function generateCarouselWithAI(){
+    const topic=document.getElementById('editor-topic').value.trim();
+    if(!topic){showToast('Informe o tema da publicação.');return;}
+    const a=getAISettings(),status=document.getElementById('ai-generation-status'),btn=document.getElementById('ai-generate-btn');
+    if(a.mode==='none'){status.textContent='Abra Configurações e escolha uma IA externa ou o Ollama.';return;}
+    if(a.mode==='api'&&(!a.apiUrl||!a.model||!(document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)))){status.textContent='Configure endpoint, modelo e chave da API em Configurações e salve.';return;}
+    if(a.mode==='ollama'&&(!a.ollamaUrl||!a.ollamaModel)){status.textContent='Configure o endereço e o modelo do Ollama em Configurações.';return;}
+    btn.disabled=true;btn.textContent='⏳ Gerando...';status.textContent='Enviando apenas o briefing editorial e as referências fornecidas ao modelo selecionado...';
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),120000);
+    try{
+      const prompt=buildAICarouselPrompt();let content='';
+      if(a.mode==='ollama'){
+        const response=await fetch(a.ollamaUrl+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:a.ollamaModel,stream:false,format:'json',messages:[{role:'system',content:'Responda estritamente em JSON válido.'},{role:'user',content:prompt}],options:{temperature:0.5}}),signal:controller.signal});
+        if(!response.ok)throw new Error('Ollama respondeu HTTP '+response.status+'.');
+        const data=await response.json();content=data.message?.content||'';
+      }else{
+        const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
+        const response=await fetch(a.apiUrl+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:a.model,messages:[{role:'system',content:'Você é um assistente editorial científico. Siga exatamente o formato JSON solicitado.'},{role:'user',content:prompt}],temperature:0.5,response_format:{type:'json_object'}}),signal:controller.signal});
+        if(!response.ok){let detail='';try{detail=(await response.json()).error?.message||'';}catch(e){}throw new Error('API respondeu HTTP '+response.status+(detail?': '+detail:''));}
+        const data=await response.json();content=data.choices?.[0]?.message?.content||'';
+      }
+      const parsed=parseAIJSON(content);stagedAISlides=normalizeAISlides(parsed);
+      const review=document.getElementById('ai-draft-review');
+      review.style.display='block';review.innerHTML='<strong>Roteiro recebido — '+stagedAISlides.length+' slides</strong><ol>'+stagedAISlides.map((x,i)=>'<li><strong>'+aiEscapeHtml([x.line1,x.line2].filter(Boolean).join(' — '))+'</strong><br>'+aiEscapeHtml(x.desc)+'</li>').join('')+'</ol><small>Leia e revise as afirmações. A IA não verificou evidências nem substitui a revisão científica.</small>';
+      document.getElementById('ai-apply-btn').style.display='inline-flex';
+      status.textContent='Roteiro gerado. O conteúdo atual ainda não foi alterado.';
+    }catch(e){
+      const msg=e.name==='AbortError'?'A solicitação excedeu 2 minutos.':(e.message||'Falha desconhecida.');
+      status.textContent='Falha na geração: '+msg+' Verifique modelo, conexão e permissões CORS.';
+    }finally{clearTimeout(timeout);btn.disabled=false;btn.textContent='🤖 Gerar carrossel com IA configurada';}
+  }
+  function applyAIGeneratedCarousel(){
+    if(!Array.isArray(stagedAISlides)||!stagedAISlides.length){showToast('Nenhum roteiro aguardando aplicação.');return;}
+    carouselSlides=stagedAISlides.map(x=>({...x}));activeCarouselSlide=0;
+    const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b)setFormat(b);
+    applyCarouselSlide(0);autoSaveDraft();
+    document.getElementById('ai-generation-status').textContent='Roteiro aplicado. Personalize os slides e revise as referências antes de publicar.';
+    document.getElementById('ai-apply-btn').style.display='none';document.getElementById('ai-draft-review').style.display='none';stagedAISlides=null;
+    showToast('Carrossel da IA aplicado. Revise antes de publicar.');
+  }
+
   function generateEditorialCarousel(){
     const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value;
     if(!topic){showToast('Informe o tema da publicação.');return;}
