@@ -469,6 +469,71 @@
   .editorial-action-row .btn{width:auto}
   @media(max-width:900px){.editorial-workspace{grid-template-columns:1fr}.editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}}
   @media(max-width:600px){.editorial-workspace{padding:10px!important;gap:10px!important}.editorial-side-stack{display:flex}.editorial-fields-grid{grid-template-columns:1fr}.editorial-card{padding:11px}.editorial-action-row{flex-direction:column}.editorial-action-row>.btn{width:100%}}
+
+/* Interface reorganizada: painel de edição em grade, sem coluna estreita */
+@media (min-width: 901px) {
+  body { height:100vh; min-height:100vh; overflow:hidden; align-items:stretch; }
+  .panel {
+    width:calc(100vw - 420px)!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:calc(100vh - 53px);
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    position:relative;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    align-content:start;
+    align-items:start;
+    gap:12px!important;
+    padding:16px!important;
+    flex:0 0 auto!important;
+    border-right:1px solid var(--app-panel-border);
+  }
+  .panel > .theme-app-toggle,
+  .panel > hr,
+  .panel > #btn-save-img,
+  .panel > #btn-export-zip,
+  .panel > #btn-export-pdf,
+  .panel > button[onclick="openFullscreen()"],
+  .panel > button[onclick="copyHTML()"],
+  .panel > button[onclick="resetAll()"] { grid-column:1/-1; }
+  .panel > .section { min-width:0; width:100%; }
+  #sec-assistente { grid-column:1/-1; }
+  #sec-assistente .editorial-workspace {
+    display:grid;
+    grid-template-columns:minmax(0,1.35fr) minmax(280px,.9fr);
+    align-items:start;
+  }
+  #sec-assistente .editorial-side-stack { min-width:0; }
+  .section-body { min-width:0; }
+  .preview-wrap {
+    width:420px!important;
+    min-width:420px!important;
+    max-width:420px!important;
+    height:calc(100vh - 53px)!important;
+    flex:0 0 420px!important;
+    position:sticky!important;
+    top:53px!important;
+  }
+  .panel::-webkit-scrollbar { width:9px; }
+  .panel::-webkit-scrollbar-thumb { background:#454545; border-radius:8px; border:2px solid var(--app-panel); }
+}
+@media (min-width:1500px) {
+  .panel { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:1200px) and (min-width:901px) {
+  .panel { width:calc(100vw - 360px)!important; grid-template-columns:minmax(0,1fr)!important; }
+  #sec-assistente { grid-column:auto; }
+  #sec-assistente .editorial-workspace { grid-template-columns:minmax(0,1fr); }
+  .preview-wrap { width:360px!important; min-width:360px!important; max-width:360px!important; flex-basis:360px!important; }
+}
+@media (max-width:900px) {
+  body { height:auto!important; min-height:100%; overflow-x:hidden!important; overflow-y:auto!important; }
+  .panel { display:flex!important; width:100%!important; height:auto!important; max-height:none!important; overflow:visible!important; }
+  .preview-wrap { position:relative!important; width:100%!important; min-width:0!important; max-width:none!important; height:auto!important; }
+}
+
 </style>
 <style>
 /* Navegação lateral reorganizada: categorias sempre visíveis e conteúdo em painel próprio */
