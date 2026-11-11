@@ -265,9 +265,13 @@
   .post[data-format="retrato"]  .img-center-wrap { height: 150px; }
   .post[data-format="quadrado"] .img-center-wrap { height: 130px; }
   .post[data-format="stories"]  .img-center-wrap { height: 180px; }
-  .image-edit-wrap { position:relative; z-index:3; width:100%; height:190px; flex:0 0 190px; overflow:visible; }
-  .image-edit-object { position:absolute; left:0; top:0; width:100%; height:150px; touch-action:none; cursor:grab; user-select:none; }
+  .image-edit-wrap { position:absolute; inset:0; z-index:4; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .image-edit-object { position:absolute; left:0; top:55%; width:100%; height:150px; touch-action:none; cursor:grab; user-select:none; pointer-events:auto; }
   .image-edit-object:active { cursor:grabbing; }
+  .image-center-guide { position:absolute; z-index:5; pointer-events:none; display:none; border-color:#fff; filter:drop-shadow(0 0 2px #000); }
+  .image-center-guide.guide-v { top:0; bottom:0; left:50%; border-left:1px dashed rgba(255,255,255,.9); }
+  .image-center-guide.guide-h { left:0; right:0; top:50%; border-top:1px dashed rgba(255,255,255,.9); }
+  .image-center-guide.visible { display:block; }
   .image-edit-object img.pen-img { display:block; width:100%; height:100%; object-fit:contain; object-position:50% 50%; opacity:.92; pointer-events:none; border-radius:10px; }
   .image-edit-object.selected { outline:2px solid var(--accent); outline-offset:2px; }
   .image-edit-handle { position:absolute; right:-7px; bottom:-7px; width:16px; height:16px; border:2px solid #fff; border-radius:50%; background:var(--accent); cursor:nwse-resize; touch-action:none; }
@@ -894,8 +898,8 @@ Terceiro item da lista</textarea></div>
         <div class="field"><label for="image-contrast">Contraste <output id="image-contrast-out">100%</output></label><input id="image-contrast" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-hue">Matiz <output id="image-hue-out">0°</output></label><input id="image-hue" type="range" min="0" max="360" value="0" oninput="updateImageEditFromControls()"></div>
       </div>
-      <button type="button" class="btn secondary" style="margin-top:8px" onclick="resetImageEdit()">↺ Redefinir ajustes da imagem</button>
-      <div class="template-hint">Dica: clique na imagem para selecioná-la, arraste para mover e use a alça no canto para redimensionar. Ctrl+V cola uma imagem quando o foco não está em um campo de texto.</div>
+      <div class="btn-row" style="margin-top:8px"><button type="button" class="btn secondary" onclick="resetImageEdit()">↺ Redefinir ajustes</button><button type="button" class="btn secondary" style="color:#ef8b80" onclick="deleteImage()">✕ Apagar imagem</button></div>
+      <div class="template-hint">Dica: arraste a imagem livremente pela prévia. As linhas-guia aparecem ao alinhar o centro horizontal ou vertical. Use Delete para apagar a imagem selecionada. Ctrl+V cola uma imagem quando o foco não está em um campo de texto.</div>
       <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
         <label>Plano de fundo da postagem</label>
         <label class="upload-btn" for="background-upload">🖼️ Enviar imagem de fundo</label>
@@ -1074,6 +1078,7 @@ Terceiro item da lista</textarea></div>
     <div class="deco-circle2" id="deco-c2"></div>
     <svg id="deco-svg-layer" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 600 650" preserveAspectRatio="xMidYMid slice"></svg>
     <div class="carousel-counter" id="carousel-counter">1 / 1</div>
+    <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-center-guide guide-v" id="image-guide-v" data-html2canvas-ignore="true"></div><div class="image-center-guide guide-h" id="image-guide-h" data-html2canvas-ignore="true"></div><div class="image-edit-object" id="image-edit-object"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
     <div class="content">
       <div id="preview-title">
         <div id="title-line1">Seu título</div>
@@ -1082,7 +1087,7 @@ Terceiro item da lista</textarea></div>
       <div class="divider-post"></div>
       <p id="preview-desc">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</p>
       <ul id="preview-list"></ul>
-      <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-edit-object" id="image-edit-object"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
+      
     </div>
     <div class="tag-bottom-wrap">
       <div class="tag-bottom" id="preview-tag1">👇 Leia a legenda</div>
@@ -1830,7 +1835,7 @@ Terceiro item da lista</textarea></div>
     if (tab === 'url') { window._uploadedImgSrc = ''; updatePreview(); }
   }
 
-  let imageEditState={x:0,y:0,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
   function currentImageEdit(){return {...imageEditState};}
   function syncImageEditControls(){
     const fields={fit:'image-fit',width:'image-width',height:'image-height',posX:'image-pos-x',posY:'image-pos-y',brightness:'image-brightness',saturation:'image-saturation',contrast:'image-contrast',hue:'image-hue'};
@@ -1842,6 +1847,9 @@ Terceiro item da lista</textarea></div>
     const obj=document.getElementById('image-edit-object'),img=document.getElementById('pen-img');
     if(!obj||!img)return;
     obj.style.left=imageEditState.x+'%';obj.style.top=imageEditState.y+'%';obj.style.width=imageEditState.width+'%';obj.style.height=imageEditState.height+'px';
+    const post=document.getElementById('post'),guideV=document.getElementById('image-guide-v'),guideH=document.getElementById('image-guide-h');
+    const postH=post?.clientHeight||650,centerX=imageEditState.x+imageEditState.width/2,centerY=imageEditState.y+(imageEditState.height/postH*100)/2;
+    guideV?.classList.toggle('visible',Math.abs(centerX-50)<=1.5);guideH?.classList.toggle('visible',Math.abs(centerY-50)<=1.5);
     img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';
     const colorMode=!!document.getElementById('toggle-img-color')?.checked;
     const saturation=colorMode?imageEditState.saturation:0;
@@ -1857,8 +1865,23 @@ Terceiro item da lista</textarea></div>
     applyImageEdit();
   }
   function resetImageEdit(){
-    imageEditState={x:0,y:0,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
     applyImageEdit();showToast('Ajustes da imagem redefinidos.');
+  }
+  function deleteImage(){
+    const img=document.getElementById('pen-img'),obj=document.getElementById('image-edit-object');
+    window._uploadedImgSrc='';
+    const input=document.getElementById('input-img');if(input)input.value='';
+    const toggle=document.getElementById('toggle-img');if(toggle)toggle.checked=false;
+    const prev=document.getElementById('upload-img-preview');if(prev){prev.removeAttribute('src');prev.style.display='none';}
+    if(img){img.removeAttribute('src');img.style.display='none';}
+    if(obj)obj.classList.remove('selected');
+    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+    if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides.length){
+      carouselSlides[activeCarouselSlide]={...carouselSlides[activeCarouselSlide],image:'',imgUrl:'',showImg:false,imageEdit:currentImageEdit()};
+      renderCarouselTools();
+    }
+    syncImageEditControls();autoSaveDraft();showToast('Imagem apagada.');
   }
   function setImageSource(dataUrl){
     window._uploadedImgSrc=dataUrl;
@@ -1870,6 +1893,7 @@ Terceiro item da lista</textarea></div>
   function initDirectImageEditing(){
     const stage=document.getElementById('preview-stage'),obj=document.getElementById('image-edit-object'),handle=document.getElementById('image-edit-handle');
     if(!stage||!obj||!handle)return;
+    document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&obj.classList.contains('selected')&&!e.target?.matches?.('input,textarea,[contenteditable="true"]')){e.preventDefault();deleteImage();}});
     document.addEventListener('paste',e=>{
       if(e.target?.matches?.('input,textarea,[contenteditable="true"]'))return;
       const items=Array.from(e.clipboardData?.items||[]),item=items.find(x=>x.type&&x.type.startsWith('image/'));
@@ -1883,7 +1907,7 @@ Terceiro item da lista</textarea></div>
       if(e.target===handle)return;
       if(!document.getElementById('toggle-img').checked)return;
       obj.classList.add('selected');const p=point(e);
-      gesture={type:'move',x:p.x,y:p.y,startX:imageEditState.x,startY:imageEditState.y,parentW:obj.parentElement.clientWidth,parentH:obj.parentElement.clientHeight};
+      gesture={type:'move',x:p.x,y:p.y,startX:imageEditState.x,startY:imageEditState.y,parentW:document.getElementById('post').clientWidth,parentH:document.getElementById('post').clientHeight};
       obj.setPointerCapture(e.pointerId);e.preventDefault();
     });
     handle.addEventListener('pointerdown',e=>{
@@ -1894,7 +1918,7 @@ Terceiro item da lista</textarea></div>
       if(!gesture)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
       if(gesture.type==='move'){
         imageEditState.x=Math.max(0,Math.min(100-imageEditState.width,gesture.startX+dx/gesture.parentW*100));
-        imageEditState.y=Math.max(0,Math.min(100,gesture.startY+dy/gesture.parentH*100));
+        imageEditState.y=Math.max(0,Math.min(100-imageEditState.height/gesture.parentH*100,gesture.startY+dy/gesture.parentH*100));
       }else{
         imageEditState.width=Math.max(20,Math.min(100,gesture.width+dx/gesture.parentW*100));
         imageEditState.height=Math.max(60,Math.min(320,gesture.height+dy));
@@ -2482,6 +2506,7 @@ Terceiro item da lista</textarea></div>
         showIco:  document.getElementById('toggle-icons').checked,
         showImg:  document.getElementById('toggle-img').checked,
         imgUrl:   document.getElementById('input-img').value,
+        imageEdit: currentImageEdit(),
         backgroundImage: backgroundImageData,
         backgroundFit: document.getElementById('background-fit').value,
         fontFamily: document.getElementById('font-family').value,
@@ -2525,6 +2550,7 @@ Terceiro item da lista</textarea></div>
       }
       if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
       if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
+      if(d.imageEdit)imageEditState={...imageEditState,...d.imageEdit};
       if (d.backgroundImage !== undefined) backgroundImageData = d.backgroundImage || '';
       if (d.backgroundFit) document.getElementById('background-fit').value = d.backgroundFit;
       if (d.fontFamily) document.getElementById('font-family').value = d.fontFamily;
