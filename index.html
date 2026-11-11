@@ -2724,13 +2724,15 @@ Terceiro item da lista</textarea></div>
     const showIco  = document.getElementById('toggle-icons').checked;
     const showImg  = document.getElementById('toggle-img').checked;
     const imgColor = document.getElementById('toggle-img-color').checked;
-    const imgUrl   = document.getElementById('input-img').value;
+    const imgUrl   = window._uploadedImgSrc || document.getElementById('input-img').value;
+    const fullImageState = {...imageEditState};
     const gradInt  = document.getElementById('slider-grad').value / 100;
     const t = THEMES[currentTheme];
 
     const imgFilter = imgColor ? 'none' : 'saturate(0) brightness(1.4)';
-    const imgTag = showImg
-      ? '<div style="display:flex;justify-content:center;align-items:center;padding:4px 12px;flex-shrink:0;"><img style="display:block;object-fit:cover;border-radius:10px;max-width:86%;max-height:140px;filter:' + imgFilter + '" src="' + imgUrl + '" alt="" onerror="this.style.display=\'none\'"/></div>'
+    const imgWidth = Math.max(20,Math.min(100,Number(fullImageState.width)||100));
+    const imgTag = showImg && imgUrl
+      ? '<div style="display:flex;justify-content:center;align-items:center;padding:4px 12px;flex-shrink:0;width:100%;"><img style="display:block;width:'+imgWidth+'%;height:auto;max-width:100%;max-height:38vh;object-fit:contain;object-position:'+Number(fullImageState.posX??50)+'% '+Number(fullImageState.posY??50)+'%;transform:scale('+(Number(fullImageState.zoom)||100)/100+');opacity:'+(Math.max(0,Math.min(100,Number(fullImageState.opacity??100)))/100)+';filter:brightness('+(imgColor?Number(fullImageState.brightness||100):Math.min(300,Number(fullImageState.brightness||100)*1.4)/100)+') saturate('+(imgColor?Number(fullImageState.saturation||100):0)+'%) contrast('+(Number(fullImageState.contrast||100))+'%) hue-rotate('+(Number(fullImageState.hue)||0)+'deg);border-radius:10px;" src="' + imgUrl + '" alt="" onerror="this.style.display=\'none\'"/></div>'
       : '';
     const waTag = showWa
       ? '<div class="whatsapp-row"><svg class="wa-svg" viewBox="0 0 32 32"><path fill="#25D366" d="M16 3C9.373 3 4 8.373 4 15c0 2.385.668 4.61 1.832 6.5L4 29l7.695-1.813A12.94 12.94 0 0 0 16 28c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10a9.96 9.96 0 0 1-5.03-1.357l-.36-.214-4.57 1.077 1.1-4.453-.234-.372A9.96 9.96 0 0 1 6 15c0-5.523 4.477-10 10-10zm-3.27 5c-.2 0-.524.075-.8.375-.275.3-1.05 1.025-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.1 3.2 5.125 4.375 2.525.975 3.025.775 3.575.725.55-.05 1.775-.725 2.025-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35-.3-.15-1.775-.875-2.05-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-.3-.15-1.265-.465-2.41-1.485-.89-.795-1.49-1.775-1.665-2.075-.175-.3-.018-.462.131-.61.134-.134.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.243-.583-.49-.5-.675-.51L12.73 10z"/></svg><span class="whatsapp-number">' + wa + '</span></div>'
