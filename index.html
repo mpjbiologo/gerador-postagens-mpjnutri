@@ -902,7 +902,7 @@ Terceiro item da lista</textarea></div>
         <div class="field"><label for="image-height">Altura <output id="image-height-out">150 px</output></label><input id="image-height" type="range" min="60" max="320" value="150" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-pos-x">Posição horizontal <output id="image-pos-x-out">0%</output></label><input id="image-pos-x" type="range" min="0" max="100" value="0" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-pos-y">Posição vertical <output id="image-pos-y-out">0%</output></label><input id="image-pos-y" type="range" min="0" max="100" value="0" oninput="updateImageEditFromControls()"></div>
-        <div class="field"><label for="image-brightness">Brilho <output id="image-brightness-out">100%</output></label><input id="image-brightness" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
+        <div class="field" style="grid-column:1/-1"><label for="image-opacity">Transparência <output id="image-opacity-out">100%</output></label><input id="image-opacity" type="range" min="0" max="100" value="100" oninput="updateImageEditFromControls()"></div><div class="field"><label for="image-brightness">Brilho <output id="image-brightness-out">100%</output></label><input id="image-brightness" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-saturation">Saturação <output id="image-saturation-out">100%</output></label><input id="image-saturation" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-contrast">Contraste <output id="image-contrast-out">100%</output></label><input id="image-contrast" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-hue">Matiz <output id="image-hue-out">0°</output></label><input id="image-hue" type="range" min="0" max="360" value="0" oninput="updateImageEditFromControls()"></div><div class="field" style="grid-column:1/-1"><label>Remoção de fundo com IA</label><button type="button" class="btn secondary" id="remove-bg-btn" onclick="removeImageBackground()">✂️ Remover fundo automaticamente</button><button type="button" class="btn secondary" id="restore-bg-btn" style="display:none;margin-top:6px" onclick="restoreImageBackground()">↶ Restaurar imagem original</button><div class="template-hint" id="remove-bg-status">Processamento local no navegador. Na primeira utilização, será necessário baixar o modelo de IA (aproximadamente 40 MB).</div></div>
@@ -1844,7 +1844,7 @@ Terceiro item da lista</textarea></div>
     if (tab === 'url') { imageEditState.originalSrc='';updateBackgroundRemovalControls();window._uploadedImgSrc = ''; updatePreview(); }
   }
 
-  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100,originalSrc:''};
+  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100,opacity:100,originalSrc:''};
   function currentImageEdit(){return {...imageEditState};}
   function setImageZoom(delta){imageEditState.zoom=Math.max(50,Math.min(250,(Number(imageEditState.zoom)||100)+delta));applyImageEdit();}
   function setImageColorMode(color){
@@ -1898,7 +1898,7 @@ Terceiro item da lista</textarea></div>
   function syncImageEditControls(){
     const fields={fit:'image-fit',width:'image-width',height:'image-height',posX:'image-pos-x',posY:'image-pos-y',brightness:'image-brightness',saturation:'image-saturation',contrast:'image-contrast',hue:'image-hue'};
     Object.entries(fields).forEach(([key,id])=>{const el=document.getElementById(id);if(el)el.value=imageEditState[key];});
-    const labels={zoom:(Number(imageEditState.zoom)||100)+'%',width:imageEditState.width+'%',height:imageEditState.height+' px',posX:imageEditState.posX+'%',posY:imageEditState.posY+'%',brightness:imageEditState.brightness+'%',saturation:imageEditState.saturation+'%',contrast:imageEditState.contrast+'%',hue:imageEditState.hue+'°'};
+    const labels={zoom:(Number(imageEditState.zoom)||100)+'%',width:imageEditState.width+'%',height:imageEditState.height+' px',posX:imageEditState.posX+'%',posY:imageEditState.posY+'%',brightness:imageEditState.brightness+'%',saturation:imageEditState.saturation+'%',contrast:imageEditState.contrast+'%',hue:imageEditState.hue+'°',opacity:(Number(imageEditState.opacity??100))+'%'};
     Object.entries(labels).forEach(([key,value])=>{const el=document.getElementById('image-'+key+'-out');if(el)el.textContent=value;});
   }
   function applyImageEdit(){
@@ -1908,7 +1908,7 @@ Terceiro item da lista</textarea></div>
     const post=document.getElementById('post'),guideV=document.getElementById('image-guide-v'),guideH=document.getElementById('image-guide-h');
     const postH=post?.clientHeight||650,centerX=imageEditState.x+imageEditState.width/2,centerY=imageEditState.y+(imageEditState.height/postH*100)/2;
     guideV?.classList.toggle('visible',Math.abs(centerX-50)<=1.5);guideH?.classList.toggle('visible',Math.abs(centerY-50)<=1.5);
-    img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';img.style.transform='scale('+(Number(imageEditState.zoom)||100)/100+')';img.style.transformOrigin='center center';
+    img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';img.style.transform='scale('+(Number(imageEditState.zoom)||100)/100+')';img.style.transformOrigin='center center';img.style.opacity=Math.max(0,Math.min(100,Number(imageEditState.opacity??100)))/100;
     const colorMode=!!document.getElementById('toggle-img-color')?.checked;
     const saturation=colorMode?imageEditState.saturation:0;
     const brightness=colorMode?imageEditState.brightness:Math.min(300,imageEditState.brightness*1.4);
@@ -1920,11 +1920,11 @@ Terceiro item da lista</textarea></div>
   }
   function updateImageEditFromControls(){
     const val=(id,fallback)=>Number(document.getElementById(id)?.value??fallback);
-    imageEditState={...imageEditState,fit:document.getElementById('image-fit')?.value||'contain',width:val('image-width',100),height:val('image-height',150),posX:val('image-pos-x',50),posY:val('image-pos-y',50),brightness:val('image-brightness',100),saturation:val('image-saturation',100),contrast:val('image-contrast',100),hue:val('image-hue',0)};
+    imageEditState={...imageEditState,fit:document.getElementById('image-fit')?.value||'contain',width:val('image-width',100),height:val('image-height',150),posX:val('image-pos-x',50),posY:val('image-pos-y',50),brightness:val('image-brightness',100),saturation:val('image-saturation',100),contrast:val('image-contrast',100),hue:val('image-hue',0),opacity:val('image-opacity',100)};
     applyImageEdit();
   }
   function resetImageEdit(){
-    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100};
+    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100,opacity:100};
     applyImageEdit();showToast('Ajustes da imagem redefinidos.');
   }
   function deleteImage(){
