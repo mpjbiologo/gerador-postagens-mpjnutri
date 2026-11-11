@@ -524,7 +524,14 @@ body{display:block;padding:0;min-height:100%;overflow:hidden;background:var(--ap
 .pt-formats button{border:0;background:transparent;color:var(--app-sub);font:600 11px 'DM Sans',sans-serif;padding:6px 10px;border-radius:7px;cursor:pointer}
 .pt-formats button:hover{color:var(--app-text)}
 .pt-formats button.active{background:var(--ui-accent);color:var(--ui-accent-ink)}
-.preview-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:22px;overflow:hidden;background:radial-gradient(circle at 50% 45%,var(--ui-accent-soft),transparent 65%),var(--app-bg)}
+.preview-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:22px;overflow:hidden;background:radial-gradient(circle at 50% 45%,var(--ui-accent-soft),transparent 65%),var(--app-bg)}
+.preview-carousel-nav{display:none;position:absolute;z-index:8;left:50%;bottom:10px;transform:translateX(-50%);align-items:center;justify-content:center;gap:12px;padding:6px 9px;border:1px solid var(--app-panel-border);border-radius:14px;background:var(--app-panel);box-shadow:0 8px 24px rgba(0,0,0,.24)}
+body.carousel-mode .preview-stage{padding-bottom:58px}
+body.carousel-mode .preview-carousel-nav{display:flex}
+.preview-carousel-nav button{display:grid;place-items:center;min-width:36px;height:34px;padding:0 10px;border:1px solid var(--app-btn-border);border-radius:9px;background:var(--app-btn-bg);color:var(--app-text);font:600 16px 'DM Sans',sans-serif;cursor:pointer;transition:background .15s,border-color .15s,opacity .15s}
+.preview-carousel-nav button:hover:not(:disabled){border-color:var(--ui-accent);background:var(--ui-accent-soft)}
+.preview-carousel-nav button:disabled{opacity:.35;cursor:not-allowed}
+.preview-carousel-position{min-width:58px;text-align:center;color:var(--app-text);font:600 12px 'DM Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .post-scaler{position:relative;flex:0 0 auto}
 .post-scaler>.post{position:absolute;top:0;left:0;transform-origin:0 0;box-shadow:0 24px 60px rgba(0,0,0,.45);border-radius:6px}
 .export-dock{padding:14px 16px 16px;border-top:1px solid var(--app-panel-border);display:flex;flex-direction:column;gap:9px;background:var(--app-panel)}
@@ -1077,7 +1084,7 @@ Terceiro item da lista</textarea></div>
       </div>
     </div>
   </div>
-  </div></div>
+  </div><div class="preview-carousel-nav" id="preview-carousel-nav" role="group" aria-label="Navegação da prévia do carrossel"><button type="button" id="preview-slide-prev" onclick="previewCarouselStep(-1)" aria-label="Slide anterior" title="Slide anterior">←</button><span class="preview-carousel-position" id="preview-slide-position" aria-live="polite">1 de 1</span><button type="button" id="preview-slide-next" onclick="previewCarouselStep(1)" aria-label="Próximo slide" title="Próximo slide">→</button></div></div>
   <div class="export-dock" id="export-dock">
     <button class="btn export-main" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
     <div class="export-grid">
@@ -1572,7 +1579,22 @@ Terceiro item da lista</textarea></div>
     const prev=document.getElementById('upload-img-preview');if(prev){prev.src=d.image||'';prev.style.display=d.image?'block':'none';}
     updatePreview();renderCarouselTools();
   }
+  function syncCarouselPreviewControls(){
+    const total=carouselSlides.length||1;
+    const position=document.getElementById('preview-slide-position');
+    const prev=document.getElementById('preview-slide-prev');
+    const next=document.getElementById('preview-slide-next');
+    if(position)position.textContent=(activeCarouselSlide+1)+' de '+total;
+    if(prev)prev.disabled=activeCarouselSlide<=0;
+    if(next)next.disabled=activeCarouselSlide>=total-1;
+  }
+  function previewCarouselStep(direction){
+    if(document.getElementById('post').dataset.mode!=='carrossel')return;
+    const target=activeCarouselSlide+direction;
+    if(target>=0&&target<carouselSlides.length)selectCarouselSlide(target);
+  }
   function renderCarouselTools(){
+    syncCarouselPreviewControls();
     const list=document.getElementById('carousel-slide-list');if(!list)return;
     list.innerHTML=carouselSlides.map((d,i)=>'<button type="button" class="carousel-slide-chip '+(i===activeCarouselSlide?'active':'')+'" onclick="selectCarouselSlide('+i+')">'+(i===0?'Capa':'Slide '+(i+1))+'</button>').join('');
     const thumbs=document.getElementById('carousel-thumb-grid');
@@ -2560,7 +2582,7 @@ Terceiro item da lista</textarea></div>
       document.getElementById('export-hint').textContent=mode==='carrossel'
         ?'Cada slide vira um PNG separado — ou exporte tudo em ZIP ou PDF.'
         :'PNG em alta resolução, pronto para o Instagram.';
-      fitPreview();
+      syncCarouselPreviewControls();fitPreview();
     }
     new MutationObserver(syncFormatUI).observe(post,{attributes:true,attributeFilter:['data-mode','data-format']});
 
