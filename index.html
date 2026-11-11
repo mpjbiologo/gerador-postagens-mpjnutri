@@ -443,6 +443,32 @@
   .settings-note{font-size:11px;line-height:1.5;color:var(--app-sub);background:var(--app-btn-bg);border-radius:8px;padding:10px;margin:10px 0}
   .settings-status{font-size:12px;padding:9px;border-radius:7px;background:var(--app-btn-bg);margin-top:10px;white-space:pre-wrap}
   @media(max-width:560px){.settings-open-btn{right:8px;top:8px;padding:7px 9px;font-size:10px}.app-header-left{padding-right:112px}.settings-dialog{padding:14px}.settings-grid{grid-template-columns:1fr}}
+
+  /* Workspace editorial: cards em duas colunas, sem fluxo vertical interminável */
+  .editorial-workspace{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);align-items:start;gap:14px!important;padding:14px!important}
+  .editorial-card{min-width:0;background:var(--app-bg);border:1px solid var(--app-section-border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:11px}
+  .editorial-caption-card{grid-row:span 1}
+  .editorial-side-stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .editorial-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding-bottom:9px;border-bottom:1px solid var(--app-section-border)}
+  .editorial-card-head h3{font-size:15px;margin:3px 0 2px;color:var(--app-text);font-weight:700}
+  .editorial-card-head p{font-size:11px;line-height:1.45;color:var(--app-sub);margin:0}
+  .editorial-kicker{font-size:9px;letter-spacing:1px;font-weight:800;color:var(--accent)}
+  .editorial-card-icon{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;background:var(--app-btn-bg);color:var(--accent);font-size:19px}
+  .editorial-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .editorial-fields-grid .field{min-width:0}
+  .editorial-options-row{display:flex;flex-wrap:wrap;gap:12px}
+  .editorial-check{font-size:11px;color:var(--app-sub);display:flex;align-items:center;gap:6px;cursor:pointer}
+  .editorial-check input{accent-color:var(--accent)}
+  .editorial-action-row{display:flex;gap:8px;flex-wrap:wrap}
+  .editorial-action-row>.btn{flex:1;min-width:120px}
+  .editorial-primary{min-height:42px;font-weight:700}
+  .editorial-card .field textarea{min-height:72px}
+  .editorial-card #caption-output{min-height:220px;line-height:1.6}
+  .editorial-card .settings-status{margin-top:0}
+  .editorial-card .btn{width:100%}
+  .editorial-action-row .btn{width:auto}
+  @media(max-width:900px){.editorial-workspace{grid-template-columns:1fr}.editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}}
+  @media(max-width:600px){.editorial-workspace{padding:10px!important;gap:10px!important}.editorial-side-stack{display:flex}.editorial-fields-grid{grid-template-columns:1fr}.editorial-card{padding:11px}.editorial-action-row{flex-direction:column}.editorial-action-row>.btn{width:100%}}
 </style>
 </head>
 <body>
@@ -799,37 +825,63 @@ Terceiro item da lista</textarea></div>
   </div>
 
 
-  <div class="section" id="sec-assistente">
-    <div class="section-header" onclick="toggleSection('sec-assistente')"><div class="section-title">✍️ Assistente editorial</div><div class="section-arrow">▼</div></div>
-    <div class="section-body">
-      <div class="field"><label for="editor-topic">Tema da publicação</label><input id="editor-topic" placeholder="Ex.: fibras alimentares e microbiota"/></div>
-      <div class="field"><label for="editor-audience">Público</label><input id="editor-audience" placeholder="Ex.: adultos, atletas, pessoas idosas"/></div>
-      <div class="field"><label for="editor-goal">Objetivo</label><select id="editor-goal"><option value="educar">Educar</option><option value="orientar">Orientar</option><option value="desmistificar">Desmistificar um mito</option><option value="engajar">Gerar conversa</option></select></div>
-      <div class="field"><label for="editor-profession">Profissão / área de atuação</label><input id="editor-profession" list="editor-profession-options" value="Nutrição" placeholder="Ex.: Nutrição, Direito, Psicologia..."/><datalist id="editor-profession-options"><option value="Nutrição"><option value="Medicina"><option value="Psicologia"><option value="Odontologia"><option value="Fisioterapia"><option value="Educação Física"><option value="Enfermagem"><option value="Farmácia"><option value="Medicina Veterinária"><option value="Direito"><option value="Contabilidade"><option value="Engenharia"><option value="Arquitetura"><option value="Educação"><option value="Marketing"><option value="Comunicação"><option value="Estética"><option value="Tecnologia da Informação"><option value="Administração"><option value="Serviço Social"><option value="Outra"/></datalist><p class="template-hint">Adapta linguagem, público, exemplos e cuidados à profissão selecionada.</p></div>
-      <div class="field"><label for="editor-profession-rules">Regras específicas da profissão</label><textarea id="editor-profession-rules" rows="5" placeholder="Limites técnicos, éticos, legais, linguagem e cuidados..."></textarea><p class="template-hint">Editáveis e salvas somente neste navegador.</p></div>
-      <div class="btn-row"><button class="btn secondary" type="button" onclick="loadProfessionSuggestions()">↻ Carregar regras sugeridas</button><button class="btn secondary" type="button" onclick="saveProfessionalProfile(true)">💾 Salvar perfil profissional</button></div>
-      <div id="profession-profile-status" class="settings-status" aria-live="polite">Perfil padrão: Nutrição. Confira normas oficiais na fonte competente.</div>
-      <button class="btn" type="button" onclick="generateEditorialCarousel()">✨ Criar estrutura de carrossel (modelo)</button>
-      <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA configurada</button>
-      <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">📋 Copiar briefing para IA</button>
-      <div id="ai-generation-status" class="settings-status" aria-live="polite">A IA utilizará o provedor escolhido em Configurações.</div>
-      <div id="ai-draft-review" class="template-hint" style="display:none"></div>
-      <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro gerado ao carrossel</button>
-      <p class="template-hint">A estrutura é um ponto de partida editorial, não uma validação científica nem uma recomendação clínica. Revise as afirmações e inclua fontes confiáveis.</p>
-      <button class="btn secondary" type="button" onclick="reviewEditorialText()">🔎 Revisar texto localmente</button>
-      <div id="editorial-local-review" class="template-hint" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--app-section-border);border-radius:8px;line-height:1.55"></div>
-      <div class="field"><label for="research-notes">Referências científicas e observações</label><textarea id="research-notes" rows="5" placeholder="Cole DOI, PMID, título, autores, link ou observações da revisão..."></textarea></div>
-      <button class="btn secondary" type="button" onclick="saveResearchNotes()">💾 Salvar referências neste navegador</button>
-      <button class="btn secondary" type="button" onclick="auditScientificDraft()">🔎 Checklist de revisão científica</button>
-      <div id="scientific-audit" class="template-hint" aria-live="polite"></div>
-      <div class="field"><label for="caption-output">Legenda e hashtags</label><textarea id="caption-output" rows="5" placeholder="A legenda será montada a partir do conteúdo atual..."></textarea></div>
-      <div class="btn-row"><button class="btn secondary" type="button" onclick="buildCaption()">Gerar legenda</button><button class="btn secondary" type="button" onclick="copyCaption()">Copiar</button></div>
-      <button class="btn" type="button" id="ai-editorial-btn" onclick="generateEditorialPackWithAI()">✨ Criar pacote editorial com IA</button>
-      <div id="ai-editorial-status" class="settings-status" aria-live="polite">Gera opções de título, legenda, hashtags e pontos de atenção usando a IA configurada.</div>
-      <div id="ai-editorial-review" class="template-hint" style="display:none"></div>
+  <div class="section open" id="sec-assistente">
+    <div class="section-header" onclick="toggleSection('sec-assistente')"><div class="section-title">✍️ Central de criação editorial</div><div class="section-arrow">▼</div></div>
+    <div class="section-body editorial-workspace">
+      <div class="editorial-card editorial-caption-card">
+        <div class="editorial-card-head"><div><span class="editorial-kicker">01 · CRIAÇÃO PRINCIPAL</span><h3>Gerador de legendas</h3><p>Crie uma legenda pronta para revisar, editar e publicar.</p></div><span class="editorial-card-icon">✍️</span></div>
+        <div class="editorial-fields-grid">
+          <div class="field"><label for="editor-topic">Tema / assunto</label><input id="editor-topic" placeholder="Ex.: fibras alimentares e microbiota"/></div>
+          <div class="field"><label for="editor-audience">Público</label><input id="editor-audience" placeholder="Ex.: adultos, atletas, pessoas idosas"/></div>
+          <div class="field"><label for="caption-tone">Tom de voz</label><select id="caption-tone"><option value="profissional e acessível">Profissional e acessível</option><option value="didático e explicativo">Didático e explicativo</option><option value="próximo e conversacional">Próximo e conversacional</option><option value="provocativo e reflexivo">Provocativo e reflexivo</option><option value="técnico e aprofundado">Técnico e aprofundado</option><option value="leve e descontraído">Leve e descontraído</option><option value="persuasivo sem exageros">Persuasivo sem exageros</option></select></div>
+          <div class="field"><label for="caption-length">Tamanho da legenda</label><select id="caption-length"><option value="curta">Curta · leitura rápida</option><option value="media" selected>Média · equilibrada</option><option value="longa">Longa · aprofundada</option></select></div>
+          <div class="field"><label for="editor-goal">Objetivo</label><select id="editor-goal"><option value="educar">Educar</option><option value="orientar">Orientar</option><option value="desmistificar">Desmistificar um mito</option><option value="engajar">Gerar conversa</option><option value="apresentar serviço">Apresentar serviço</option><option value="gerar reflexão">Gerar reflexão</option></select></div>
+          <div class="field"><label for="caption-cta">Chamada para ação</label><select id="caption-cta"><option value="natural e discreta">Natural e discreta</option><option value="salvar e compartilhar">Salvar e compartilhar</option><option value="comentar uma opinião">Convidar a comentar</option><option value="procurar atendimento profissional">Procurar atendimento profissional</option><option value="nenhuma">Sem chamada para ação</option></select></div>
+        </div>
+        <div class="field"><label for="caption-context">Contexto / informações que devem aparecer</label><textarea id="caption-context" rows="4" placeholder="Cole informações do conteúdo, pontos que precisam aparecer, dados, observações ou a mensagem central. Se deixar vazio, a IA usará o tema e o conteúdo atual da postagem."></textarea></div>
+        <div class="editorial-options-row">
+          <label class="editorial-check"><input type="checkbox" id="caption-use-emojis" checked> Usar emojis com moderação</label>
+          <label class="editorial-check"><input type="checkbox" id="caption-use-hashtags" checked> Sugerir hashtags</label>
+        </div>
+        <div class="editorial-action-row"><button class="btn editorial-primary" id="caption-ai-btn" type="button" onclick="generateCaptionWithAI()">✨ Gerar legenda com IA</button><button class="btn secondary" type="button" onclick="buildCaption()">Montar versão simples</button></div>
+        <div id="caption-ai-status" class="settings-status" aria-live="polite">Configure uma IA em Configurações para gerar legendas com inteligência artificial.</div>
+        <div class="field"><label for="caption-output">Sua legenda · editável</label><textarea id="caption-output" rows="10" placeholder="A legenda gerada aparecerá aqui. Você poderá editar livremente antes de copiar."></textarea></div>
+        <div class="editorial-action-row"><button class="btn" type="button" onclick="copyCaption()">⧉ Copiar legenda</button><button class="btn secondary" type="button" onclick="reviewEditorialText()">🔎 Revisar texto</button></div>
+        <div id="caption-ai-review" class="template-hint" style="display:none"></div>
+      </div>
+
+      <div class="editorial-side-stack">
+        <div class="editorial-card">
+          <div class="editorial-card-head"><div><span class="editorial-kicker">02 · IDENTIDADE PROFISSIONAL</span><h3>Perfil e regras da área</h3><p>Define o contexto técnico e ético das gerações.</p></div><span class="editorial-card-icon">◈</span></div>
+          <div class="field"><label for="editor-profession">Profissão / área de atuação</label><input id="editor-profession" list="editor-profession-options" value="Nutrição" placeholder="Ex.: Nutrição, Direito, Psicologia..."/><datalist id="editor-profession-options"><option value="Nutrição"><option value="Medicina"><option value="Psicologia"><option value="Odontologia"><option value="Fisioterapia"><option value="Educação Física"><option value="Enfermagem"><option value="Farmácia"><option value="Medicina Veterinária"><option value="Direito"><option value="Contabilidade"><option value="Engenharia"><option value="Arquitetura"><option value="Educação"><option value="Marketing"><option value="Comunicação"><option value="Estética"><option value="Tecnologia da Informação"><option value="Administração"><option value="Serviço Social"><option value="Outra"/></datalist></div>
+          <div class="field"><label for="editor-profession-rules">Regras específicas da profissão</label><textarea id="editor-profession-rules" rows="5" placeholder="Limites técnicos, éticos, legais, linguagem e cuidados..."></textarea></div>
+          <div class="editorial-action-row"><button class="btn secondary" type="button" onclick="loadProfessionSuggestions()">Carregar sugestões</button><button class="btn secondary" type="button" onclick="saveProfessionalProfile(true)">Salvar perfil</button></div>
+          <div id="profession-profile-status" class="settings-status" aria-live="polite">Perfil padrão: Nutrição. Regras salvas neste navegador.</div>
+        </div>
+
+        <div class="editorial-card">
+          <div class="editorial-card-head"><div><span class="editorial-kicker">03 · CARROSSEL</span><h3>Roteiro e estrutura</h3><p>Crie uma sequência de slides com ou sem IA.</p></div><span class="editorial-card-icon">▤</span></div>
+          <button class="btn" type="button" onclick="generateEditorialCarousel()">Criar estrutura de carrossel</button>
+          <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA</button>
+          <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">Copiar briefing para IA</button>
+          <div id="ai-generation-status" class="settings-status" aria-live="polite">O roteiro gerado não será aplicado sem sua aprovação.</div>
+          <div id="ai-draft-review" class="template-hint" style="display:none"></div>
+          <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro ao carrossel</button>
+        </div>
+
+        <div class="editorial-card">
+          <div class="editorial-card-head"><div><span class="editorial-kicker">04 · CONFERÊNCIA</span><h3>Referências e revisão</h3><p>Organize fontes e confira pontos de atenção.</p></div><span class="editorial-card-icon">✓</span></div>
+          <div class="field"><label for="research-notes">Referências e observações</label><textarea id="research-notes" rows="4" placeholder="DOI, PMID, autores, links ou observações..."></textarea></div>
+          <div class="editorial-action-row"><button class="btn secondary" type="button" onclick="saveResearchNotes()">Salvar referências</button><button class="btn secondary" type="button" onclick="auditScientificDraft()">Checklist técnico</button></div>
+          <div id="scientific-audit" class="template-hint" aria-live="polite"></div>
+          <div id="editorial-local-review" class="template-hint" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--app-section-border);border-radius:8px;line-height:1.55"></div>
+          <div id="ai-editorial-review" class="template-hint" style="display:none"></div>
+          <button class="btn secondary" type="button" id="ai-editorial-btn" onclick="generateEditorialPackWithAI()">Gerar pacote editorial completo</button>
+          <div id="ai-editorial-status" class="settings-status" aria-live="polite">Gera títulos, legenda e pontos de atenção.</div>
+        </div>
+      </div>
     </div>
   </div>
-
   <div class="section" id="sec-calendario">
     <div class="section-header" onclick="toggleSection('sec-calendario')"><div class="section-title">🗓️ Planejamento editorial</div><div class="section-arrow">▼</div></div>
     <div class="section-body">
@@ -1899,12 +1951,47 @@ Terceiro item da lista</textarea></div>
     document.getElementById('input-line1').value=title.slice(0,90);document.getElementById('input-line2').value='';
     updatePreview();autoSaveDraft();showToast('Título aplicado à postagem. Revise a quebra de linha e o layout.');
   }
+  function generateCaptionWithAI(){
+    const btn=document.getElementById('caption-ai-btn'),status=document.getElementById('caption-ai-status'),review=document.getElementById('caption-ai-review');
+    const topic=(document.getElementById('editor-topic').value||'').trim();
+    const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim();
+    const desc=document.getElementById('input-desc').value.trim(),list=document.getElementById('input-list').value.trim();
+    const context=document.getElementById('caption-context').value.trim();
+    if(!topic&&!title&&!desc&&!list&&!context){status.textContent='Informe um tema ou contexto para a legenda.';return;}
+    const profile=buildProfessionalEditorialContext();
+    const audience=document.getElementById('editor-audience').value.trim()||'público geral';
+    const tone=document.getElementById('caption-tone').value,length=document.getElementById('caption-length').value,goal=document.getElementById('editor-goal').value,cta=document.getElementById('caption-cta').value;
+    const emojis=document.getElementById('caption-use-emojis').checked,hashtags=document.getElementById('caption-use-hashtags').checked;
+    const prompt=[
+      'Crie uma legenda original para Instagram em português brasileiro. Entregue um texto pronto para edição, não um plano ou explicação.',
+      profile,
+      'TEMA: '+(topic||title||'conforme o contexto informado'),
+      'PÚBLICO: '+audience,'OBJETIVO: '+goal,'TOM: '+tone,'EXTENSÃO: '+length+' (curta: 400-650 caracteres; média: 700-1.100; longa: 1.200-1.700, aproximadamente).',
+      'CHAMADA PARA AÇÃO: '+cta,'EMOJIS: '+(emojis?'permitidos com moderação':'não usar emojis'),'HASHTAGS: '+(hashtags?'sugerir até 5 hashtags específicas e pertinentes, sem genéricas em excesso':'não incluir hashtags'),
+      'TÍTULO/CONTEÚDO DA ARTE: '+(title||'(não informado)'),'DESCRIÇÃO DA ARTE: '+(desc||'(não informada)'),'TÓPICOS DA ARTE: '+(list||'(não informados)'),'CONTEXTO ADICIONAL DO USUÁRIO: '+(context||'(não informado)'),'REFERÊNCIAS/OBSERVAÇÕES: '+(document.getElementById('research-notes').value.trim()||'(não informadas)'),
+      'Estruture com abertura interessante, desenvolvimento claro, utilidade prática e encerramento coerente. Evite repetir literalmente a arte, clichês, clickbait, excesso de emojis, promessas, generalizações e hashtags irrelevantes. Não invente dados, estudos, leis, fontes, diagnósticos ou resultados. Se faltarem informações, não preencha lacunas com suposições.',
+      'Retorne JSON: {"caption":"legenda completa","review_flags":["pontos que merecem conferência"]}.'
+    ].join('\n\n');
+    btn.disabled=true;btn.textContent='⏳ Gerando legenda...';status.textContent='A IA está escrevendo. O texto existente será preservado até a resposta chegar.';
+    requestConfiguredAI(prompt,'Você é um redator editorial multiprofissional experiente. Escreva com naturalidade, precisão e respeito às regras da profissão informada. Retorne somente JSON válido.')
+      .then(data=>{
+        const caption=String(data.caption||'').trim(),flags=Array.isArray(data.review_flags)?data.review_flags.map(x=>String(x).trim()).filter(Boolean):[];
+        if(!caption)throw new Error('A IA não retornou uma legenda válida.');
+        document.getElementById('caption-output').value=caption;
+        review.style.display='block';
+        review.innerHTML='<strong>LEMBRETES PARA REVISÃO</strong>'+(flags.length?'<ul>'+flags.map(x=>'<li>'+aiEscapeHtml(x)+'</li>').join('')+'</ul>':'<p>Confira precisão, fontes, contexto e adequação à profissão antes de publicar.</p>')+'<small>Texto gerado por IA. Não houve verificação automática de fontes externas.</small>';
+        status.textContent='Legenda gerada. Edite o texto e copie quando estiver satisfeito.';
+      })
+      .catch(e=>{status.textContent='Não foi possível gerar a legenda: '+(e.message||'erro desconhecido');})
+      .finally(()=>{btn.disabled=false;btn.textContent='✨ Gerar legenda com IA';});
+  }
+
   function buildCaption(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim(),desc=document.getElementById('input-desc').value.trim(),list=document.getElementById('input-list').value.split('\n').map(x=>x.trim()).filter(Boolean);
-    const topic=(document.getElementById('editor-topic').value||title).trim();
-    const tags=['#Nutrição','#NutriçãoComCiência','#Saúde','#AlimentaçãoSaudável'];
-    const caption=[title,desc,list.length?'\n'+list.map(x=>'• '+x).join('\n'):'','\nInformação de qualidade faz diferença. Salve este conteúdo e compartilhe com quem pode se beneficiar.','\nConteúdo educativo. A orientação nutricional deve considerar a individualidade.','\n'+tags.join(' ')].filter(Boolean).join('\n\n');
-    document.getElementById('caption-output').value=caption;showToast('Legenda montada; revise antes de publicar.');
+    const topic=(document.getElementById('editor-topic').value||title).trim(),profile=getProfessionalProfile(),context=(document.getElementById('caption-context')?.value||'').trim();
+    const cta=document.getElementById('caption-cta')?.value||'natural e discreta';
+    const caption=[topic||title,desc,list.length?list.map(x=>'• '+x).join('\n'):'',context,cta==='nenhuma'?'':'\n'+(cta==='salvar e compartilhar'?'Salve este conteúdo e compartilhe com quem possa se beneficiar.':cta==='comentar uma opinião'?'Conte nos comentários o que você pensa sobre o assunto.':cta==='procurar atendimento profissional'?'Procure um profissional habilitado para avaliar sua situação.':'Se este conteúdo foi útil, salve para consultar depois.')].filter(Boolean).join('\n\n');
+    document.getElementById('caption-output').value=caption;showToast('Legenda simples montada. Revise e personalize antes de publicar.');
   }
   function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
   function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
