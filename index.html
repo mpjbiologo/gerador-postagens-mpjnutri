@@ -2728,7 +2728,7 @@ Terceiro item da lista</textarea></div>
     const clone=source.cloneNode(true);clone.id='fullscreen-preview-post';clone.classList.remove('selected');
     clone.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));
     clone.querySelectorAll('.image-edit-handle,.video-edit-handle,.image-center-guide,.video-center-guide').forEach(el=>el.remove());
-    clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+    // Mantém os IDs internos: o CSS do post usa seletores por ID para renderizar textos e elementos.
     clone.style.transform='none';
     const fmt=source.dataset.format||'retrato',ratio=fmt==='quadrado'?1:(fmt==='stories'?366/650:4/5);
     clone.classList.add('fullscreen-preview-post');clone.style.setProperty('--preview-ratio',String(ratio));
