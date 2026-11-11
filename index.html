@@ -296,7 +296,7 @@
   .img-source-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
   .img-tab { flex: 1; padding: 5px; background: var(--app-btn-bg); border: 1.5px solid var(--app-btn-border); border-radius: 7px; font-size: 10px; font-weight: 700; color: var(--app-btn-color); cursor: pointer; text-align: center; font-family: "DM Sans", sans-serif; transition: border-color .15s, color .15s; }
   .img-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(126,219,126,0.08); }
-  .img-upload-preview { width: 100%; height: 70px; object-fit: cover; border-radius: 7px; margin-top: 6px; display: none; border: 1px solid var(--app-btn-border); }
+  .img-upload-preview { width: 100%; max-height: 190px; height: auto; object-fit: contain; object-position: center; background:rgba(0,0,0,.18); border-radius: 7px; margin-top: 6px; display: none; border: 1px solid var(--app-btn-border); }
 
 
   .content { position: relative; z-index: 2; padding: 24px 24px 0; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden; }
@@ -897,7 +897,7 @@ Terceiro item da lista</textarea></div>
       <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="field"><label>Modo de cor</label><div class="btn-row"><button type="button" class="btn secondary" onclick="setImageColorMode(true)">🌈 Colorida</button><button type="button" class="btn secondary" onclick="setImageColorMode(false)">◐ Preto e branco</button></div><label class="toggle toggle-with-text" style="margin-top:8px"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()" aria-label="Manter cores originais"><span class="toggle-track" aria-hidden="true"></span><span class="toggle-text">Manter cores originais</span></label></div>
       <div class="image-edit-tools" id="image-edit-tools">
-        <div class="field"><label for="image-fit">Enquadramento</label><select id="image-fit" onchange="updateImageEditFromControls()"><option value="contain">Imagem inteira</option><option value="cover">Preencher / cortar</option></select></div>
+        <div class="field"><label for="image-fit">Enquadramento</label><select id="image-fit" onchange="updateImageEditFromControls()"><option value="contain">Imagem inteira</option><option value="cover">Preencher / cortar</option></select></div><div class="field" style="grid-column:1/-1"><label>Zoom da imagem <output id="image-zoom-out">100%</output></label><div class="btn-row"><button type="button" class="btn secondary" onclick="setImageZoom(-10)" aria-label="Diminuir zoom">− Zoom</button><button type="button" class="btn secondary" onclick="setImageZoom(10)" aria-label="Aumentar zoom">＋ Zoom</button></div></div>
         <div class="field"><label for="image-width">Largura <output id="image-width-out">100%</output></label><input id="image-width" type="range" min="20" max="100" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-height">Altura <output id="image-height-out">150 px</output></label><input id="image-height" type="range" min="60" max="320" value="150" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-pos-x">Posição horizontal <output id="image-pos-x-out">0%</output></label><input id="image-pos-x" type="range" min="0" max="100" value="0" oninput="updateImageEditFromControls()"></div>
@@ -1844,8 +1844,9 @@ Terceiro item da lista</textarea></div>
     if (tab === 'url') { imageEditState.originalSrc='';updateBackgroundRemovalControls();window._uploadedImgSrc = ''; updatePreview(); }
   }
 
-  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,originalSrc:''};
+  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100,originalSrc:''};
   function currentImageEdit(){return {...imageEditState};}
+  function setImageZoom(delta){imageEditState.zoom=Math.max(50,Math.min(250,(Number(imageEditState.zoom)||100)+delta));applyImageEdit();}
   function setImageColorMode(color){
     const toggle=document.getElementById('toggle-img-color');if(toggle)toggle.checked=!!color;
     applyImageEdit();showToast(color?'Imagem colorida':'Imagem em preto e branco');
@@ -1897,7 +1898,7 @@ Terceiro item da lista</textarea></div>
   function syncImageEditControls(){
     const fields={fit:'image-fit',width:'image-width',height:'image-height',posX:'image-pos-x',posY:'image-pos-y',brightness:'image-brightness',saturation:'image-saturation',contrast:'image-contrast',hue:'image-hue'};
     Object.entries(fields).forEach(([key,id])=>{const el=document.getElementById(id);if(el)el.value=imageEditState[key];});
-    const labels={width:imageEditState.width+'%',height:imageEditState.height+' px',posX:imageEditState.posX+'%',posY:imageEditState.posY+'%',brightness:imageEditState.brightness+'%',saturation:imageEditState.saturation+'%',contrast:imageEditState.contrast+'%',hue:imageEditState.hue+'°'};
+    const labels={zoom:(Number(imageEditState.zoom)||100)+'%',width:imageEditState.width+'%',height:imageEditState.height+' px',posX:imageEditState.posX+'%',posY:imageEditState.posY+'%',brightness:imageEditState.brightness+'%',saturation:imageEditState.saturation+'%',contrast:imageEditState.contrast+'%',hue:imageEditState.hue+'°'};
     Object.entries(labels).forEach(([key,value])=>{const el=document.getElementById('image-'+key+'-out');if(el)el.textContent=value;});
   }
   function applyImageEdit(){
@@ -1907,7 +1908,7 @@ Terceiro item da lista</textarea></div>
     const post=document.getElementById('post'),guideV=document.getElementById('image-guide-v'),guideH=document.getElementById('image-guide-h');
     const postH=post?.clientHeight||650,centerX=imageEditState.x+imageEditState.width/2,centerY=imageEditState.y+(imageEditState.height/postH*100)/2;
     guideV?.classList.toggle('visible',Math.abs(centerX-50)<=1.5);guideH?.classList.toggle('visible',Math.abs(centerY-50)<=1.5);
-    img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';
+    img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';img.style.transform='scale('+(Number(imageEditState.zoom)||100)/100+')';img.style.transformOrigin='center center';
     const colorMode=!!document.getElementById('toggle-img-color')?.checked;
     const saturation=colorMode?imageEditState.saturation:0;
     const brightness=colorMode?imageEditState.brightness:Math.min(300,imageEditState.brightness*1.4);
@@ -1923,7 +1924,7 @@ Terceiro item da lista</textarea></div>
     applyImageEdit();
   }
   function resetImageEdit(){
-    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+    imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100};
     applyImageEdit();showToast('Ajustes da imagem redefinidos.');
   }
   function deleteImage(){
