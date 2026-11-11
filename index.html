@@ -113,6 +113,15 @@
   .toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
   .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
 
+  .toggle.toggle-with-text { width:auto; height:auto; display:inline-flex; align-items:center; gap:9px; cursor:pointer; vertical-align:middle; }
+  .toggle-with-text .toggle-track { position:relative; inset:auto; display:block; width:40px; height:22px; flex:0 0 40px; border:1px solid #555; box-shadow:inset 0 1px 2px rgba(0,0,0,.22); }
+  .toggle-with-text .toggle-track::after { width:14px; height:14px; top:3px; left:3px; }
+  .toggle-with-text input:checked + .toggle-track { background:#39a852; border-color:#267c3a; }
+  .toggle-with-text input:checked + .toggle-track::after { transform:translateX(18px); background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+  .toggle-with-text .toggle-text { display:inline-block; color:var(--app-text); font-size:11px; line-height:1.35; font-weight:600; white-space:nowrap; }
+  .toggle-with-text:focus-within .toggle-track { outline:2px solid var(--accent); outline-offset:2px; }
+
+
   .slider-row { display: flex; align-items: center; gap: 10px; }
   .slider-row input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; background: var(--app-slider-track); border-radius: 4px; outline: none; padding: 0; border: none; }
   .slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; cursor: pointer; }
@@ -886,7 +895,7 @@ Terceiro item da lista</textarea></div>
         </div>
       </div>
       <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
-      <div class="field"><label>Modo de cor</label><div class="btn-row"><button type="button" class="btn secondary" onclick="setImageColorMode(true)">🌈 Colorida</button><button type="button" class="btn secondary" onclick="setImageColorMode(false)">◐ Preto e branco</button></div><label class="toggle" style="margin-top:6px"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><span>Manter cores originais</span><div class="toggle-track"></div></label></div>
+      <div class="field"><label>Modo de cor</label><div class="btn-row"><button type="button" class="btn secondary" onclick="setImageColorMode(true)">🌈 Colorida</button><button type="button" class="btn secondary" onclick="setImageColorMode(false)">◐ Preto e branco</button></div><label class="toggle toggle-with-text" style="margin-top:8px"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()" aria-label="Manter cores originais"><span class="toggle-track" aria-hidden="true"></span><span class="toggle-text">Manter cores originais</span></label></div>
       <div class="image-edit-tools" id="image-edit-tools">
         <div class="field"><label for="image-fit">Enquadramento</label><select id="image-fit" onchange="updateImageEditFromControls()"><option value="contain">Imagem inteira</option><option value="cover">Preencher / cortar</option></select></div>
         <div class="field"><label for="image-width">Largura <output id="image-width-out">100%</output></label><input id="image-width" type="range" min="20" max="100" value="100" oninput="updateImageEditFromControls()"></div>
