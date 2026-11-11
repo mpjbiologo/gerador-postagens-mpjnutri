@@ -1151,8 +1151,13 @@ Terceiro item da lista</textarea></div>
         const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
         if(!key)throw new Error('Informe a chave da API.');
         const response=await fetch(a.apiUrl+'/models',{headers:{Authorization:'Bearer '+key}});
-        if(!response.ok)throw new Error('API respondeu HTTP '+response.status+'. Confira endpoint, chave e permissões.');
-        const data=await response.json();status.textContent='Conexão com a API estabelecida. Modelos disponíveis: '+((data.data||[]).map(x=>x.id).slice(0,12).join(', ')||'endpoint respondeu corretamente')+'\nModelo selecionado: '+a.model;
+        if(response.ok){
+          const data=await response.json();status.textContent='Conexão com a API estabelecida. Modelos disponíveis: '+((data.data||[]).map(x=>x.id).slice(0,12).join(', ')||'endpoint respondeu corretamente')+'\nModelo selecionado: '+a.model;
+        }else{
+          const probe=await fetch(a.apiUrl+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:a.model,messages:[{role:'user',content:'Responda apenas: OK'}],max_tokens:8,temperature:0})});
+          if(!probe.ok){let detail='';try{detail=(await probe.json()).error?.message||'';}catch(e){}throw new Error('Teste da API falhou (HTTP '+probe.status+'). '+(detail||'Confira endpoint, chave, modelo e permissões CORS.'));}
+          status.textContent='API conectada e modelo respondeu ao teste. O provedor não disponibilizou a listagem /models; a validação foi feita com uma solicitação curta ao modelo '+a.model+'.';
+        }
       }
     }catch(e){status.textContent='Não foi possível conectar: '+(e.message||'erro desconhecido')+'. Verifique se o serviço está ativo, URL, chave e permissões CORS.';}
   }
