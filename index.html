@@ -470,20 +470,36 @@
     <section class="settings-pane" id="settings-pane-ai">
       <div class="field"><label for="ai-mode">Modo de IA</label><select id="ai-mode" onchange="updateAISettingsVisibility()"><option value="none">Não utilizar IA</option><option value="api">IA externa por API</option><option value="ollama">IA local — Ollama</option></select></div>
       <div id="ai-api-settings">
-        <h3>IA externa compatível com API OpenAI</h3>
-        <div class="field"><label for="ai-provider">Provedor</label><select id="ai-provider" onchange="applyAIProviderPreset()"><option value="custom">Personalizado / OpenAI-compatible</option><option value="openai">OpenAI</option><option value="openrouter">OpenRouter</option><option value="groq">Groq</option></select></div>
+        <h3>Provedores de IA por API</h3>
+        <p class="settings-note">Escolha um serviço para preencher automaticamente o endereço da API e consultar o cadastro/modelos. Você precisa criar sua própria conta e gerar uma chave no site do provedor.</p>
+        <div class="field"><label for="ai-provider">Serviço / provedor</label>
+          <select id="ai-provider" onchange="applyAIProviderPreset()">
+            <option value="openai">OpenAI</option><option value="openrouter">OpenRouter — vários modelos em uma API</option><option value="groq">Groq</option><option value="together">Together AI</option><option value="fireworks">Fireworks AI</option><option value="deepseek">DeepSeek</option><option value="mistral">Mistral AI</option><option value="cerebras">Cerebras</option><option value="sambanova">SambaNova</option><option value="xai">xAI — Grok</option><option value="perplexity">Perplexity</option><option value="deepinfra">DeepInfra</option><option value="nvidia">NVIDIA NIM</option><option value="huggingface">Hugging Face Inference</option><option value="custom">Outro / endpoint personalizado</option>
+          </select>
+        </div>
+        <div class="settings-note" id="ai-provider-description">Selecione um provedor para ver detalhes e links oficiais.</div>
+        <div class="btn-row" style="margin-top:-4px"><a class="btn secondary" id="ai-provider-console" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">🔑 Criar / gerenciar chave</a><a class="btn secondary" id="ai-provider-docs" href="https://platform.openai.com/docs" target="_blank" rel="noopener noreferrer">📚 Documentação da API</a></div>
         <div class="field"><label for="ai-api-url">Endpoint base</label><input id="ai-api-url" placeholder="https://api.openai.com/v1"></div>
         <div class="settings-grid">
-          <div class="field"><label for="ai-api-model">Modelo</label><input id="ai-api-model" placeholder="Nome exato do modelo"></div>
+          <div class="field"><label for="ai-api-model">Identificador do modelo</label><input id="ai-api-model" list="ai-model-options" placeholder="Selecione uma sugestão ou digite o ID exato"><datalist id="ai-model-options"></datalist></div>
           <div class="field"><label for="ai-api-key">Chave da API</label><input id="ai-api-key" type="password" autocomplete="off" placeholder="Cole sua chave para esta sessão"></div>
         </div>
-        <div class="settings-note">A chave fica apenas na memória desta aba (sessionStorage), não é gravada no perfil nem no projeto. Como o site é estático, chamadas diretas do navegador expõem a chave ao próprio navegador e não oferecem proteção de servidor. Para uso público ou profissional contínuo, o ideal é um backend/proxy privado.</div>
+        <div class="field"><label for="ai-model-hint">Como escolher o modelo?</label><p class="settings-note" id="ai-model-hint">O ID precisa corresponder exatamente ao nome disponibilizado na sua conta. As sugestões são exemplos e podem mudar conforme o provedor.</p></div>
+        <details class="settings-advanced"><summary>⚙️ Parâmetros avançados de geração</summary>
+          <div class="settings-grid">
+            <div class="field"><label for="ai-temperature">Criatividade / temperatura <output id="ai-temperature-value">0,5</output></label><input id="ai-temperature" type="range" min="0" max="1.5" step="0.1" value="0.5" oninput="document.getElementById('ai-temperature-value').textContent=Number(this.value).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})"></div>
+            <div class="field"><label for="ai-max-tokens">Limite de tokens de resposta</label><select id="ai-max-tokens"><option value="1500">1.500 — curto</option><option value="3000" selected>3.000 — equilibrado</option><option value="5000">5.000 — detalhado</option><option value="8000">8.000 — longo</option></select></div>
+          </div>
+          <p class="settings-note">Alguns modelos não aceitam temperatura ou possuem limites próprios. Se houver erro de parâmetro, reduza as opções ou use a configuração padrão do provedor.</p>
+        </details>
+        <div class="settings-note">A chave fica somente nesta sessão do navegador. Como o site é estático, chamadas diretas expõem a chave ao navegador; para uso profissional contínuo, prefira um backend/proxy privado. Nunca compartilhe sua chave.</div>
       </div>
       <div id="ai-ollama-settings" style="display:none">
-        <h3>Ollama local</h3>
-        <div class="field"><label for="ollama-url">Endereço do Ollama</label><input id="ollama-url" placeholder="http://localhost:11434"></div>
-        <div class="field"><label for="ollama-model">Modelo instalado</label><input id="ollama-model" placeholder="Ex.: llama3.2, qwen2.5"></div>
-        <div class="settings-note">O Ollama precisa estar instalado e em execução no computador que abre o gerador. Para acesso pelo navegador, talvez seja necessário habilitar CORS com OLLAMA_ORIGINS. Não exponha a porta do Ollama diretamente à internet.</div>
+        <h3>IA local — Ollama</h3>
+        <div class="btn-row"><a class="btn secondary" href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">⬇️ Baixar Ollama</a><a class="btn secondary" href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">🧠 Biblioteca de modelos</a><a class="btn secondary" href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">📚 API / documentação</a></div>
+        <div class="field"><label for="ollama-url">Endereço do serviço</label><input id="ollama-url" placeholder="http://localhost:11434"></div>
+        <div class="field"><label for="ollama-model">Modelo instalado</label><input id="ollama-model" list="ollama-model-options" placeholder="Ex.: llama3.2, qwen2.5"><datalist id="ollama-model-options"><option value="llama3.2"><option value="qwen2.5"><option value="gemma3"><option value="mistral"><option value="deepseek-r1"><option value="phi4"></datalist></div>
+        <div class="settings-note">O modelo precisa estar baixado no computador (por exemplo, pelo comando <code>ollama pull qwen2.5</code>). O gerador tentará acessar o Ollama no próprio computador. Pode ser necessário configurar OLLAMA_ORIGINS para permitir o domínio do GitHub Pages. Não exponha a porta do Ollama à internet.</div>
       </div>
       <div class="btn-row"><button class="btn" onclick="saveAISettings()">💾 Salvar configuração de IA</button><button class="btn secondary" onclick="testAIConnection()">Testar conexão</button></div>
       <div id="ai-connection-status" class="settings-status" aria-live="polite">Configure um provedor e teste a conexão.</div>
@@ -1069,7 +1085,7 @@ Terceiro item da lista</textarea></div>
     const p=(()=>{try{return JSON.parse(localStorage.getItem(SETTINGS_PROFILE_KEY)||'null')||getBrandProfile()||{};}catch(e){return getBrandProfile()||{};}})();
     ['name','role','instagram','whatsapp','email','site'].forEach(k=>{const el=document.getElementById('profile-'+k);if(el)el.value=p[k]|| (k==='instagram'?p.handle||'':k==='whatsapp'?p.wa||'':'');});
     let a={};try{a=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');}catch(e){}
-    document.getElementById('ai-mode').value=a.mode||'none';document.getElementById('ai-provider').value=a.provider||'custom';document.getElementById('ai-api-url').value=a.apiUrl||'https://api.openai.com/v1';document.getElementById('ai-api-model').value=a.model||'';document.getElementById('ollama-url').value=a.ollamaUrl||'http://localhost:11434';document.getElementById('ollama-model').value=a.ollamaModel||'';document.getElementById('ai-api-key').value=sessionStorage.getItem(AI_SESSION_KEY)||'';
+    document.getElementById('ai-mode').value=a.mode||'none';document.getElementById('ai-provider').value=AI_PROVIDER_PRESETS[a.provider]?a.provider:'custom';document.getElementById('ai-api-url').value=a.apiUrl||'https://api.openai.com/v1';document.getElementById('ai-api-model').value=a.model||'';document.getElementById('ai-temperature').value=a.temperature??0.5;document.getElementById('ai-max-tokens').value=String(a.maxTokens||3000);document.getElementById('ai-temperature-value').textContent=Number(a.temperature??0.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});document.getElementById('ollama-url').value=a.ollamaUrl||'http://localhost:11434';document.getElementById('ollama-model').value=a.ollamaModel||'';document.getElementById('ai-api-key').value=sessionStorage.getItem(AI_SESSION_KEY)||'';applyAIProviderPreset();if(a.apiUrl)document.getElementById('ai-api-url').value=a.apiUrl;
     updateAISettingsVisibility();document.getElementById('settings-overlay').classList.add('open');document.body.style.overflow='hidden';
   }
   function closeSettings(){document.getElementById('settings-overlay').classList.remove('open');document.body.style.overflow='';}
@@ -1087,12 +1103,35 @@ Terceiro item da lista</textarea></div>
   function updateAISettingsVisibility(){
     const mode=document.getElementById('ai-mode').value;document.getElementById('ai-api-settings').style.display=mode==='api'?'block':'none';document.getElementById('ai-ollama-settings').style.display=mode==='ollama'?'block':'none';
   }
+  const AI_PROVIDER_PRESETS={
+    openai:{url:'https://api.openai.com/v1',console:'https://platform.openai.com/api-keys',docs:'https://platform.openai.com/docs',description:'Modelos proprietários da OpenAI. A disponibilidade e o preço dependem da conta e do modelo.',models:['gpt-4.1','gpt-4.1-mini','gpt-4.1-nano','o4-mini']},
+    openrouter:{url:'https://openrouter.ai/api/v1',console:'https://openrouter.ai/keys',docs:'https://openrouter.ai/docs',description:'Uma única API para acessar modelos de diferentes empresas. Confira preço, limites e provedor de cada modelo.',models:['openai/gpt-4.1-mini','google/gemini-2.5-flash','anthropic/claude-sonnet-4','deepseek/deepseek-chat']},
+    groq:{url:'https://api.groq.com/openai/v1',console:'https://console.groq.com/keys',docs:'https://console.groq.com/docs',description:'Inferência rápida com modelos disponíveis no catálogo Groq. Os IDs mudam conforme o catálogo.',models:['openai/gpt-oss-20b','openai/gpt-oss-120b','llama-3.3-70b-versatile']},
+    together:{url:'https://api.together.ai/v1',console:'https://api.together.ai/settings/api-keys',docs:'https://docs.together.ai/docs/introduction',description:'Hospedagem de modelos abertos e APIs de inferência.',models:['Qwen/Qwen2.5-72B-Instruct-Turbo','meta-llama/Llama-3.3-70B-Instruct-Turbo','deepseek-ai/DeepSeek-V3']},
+    fireworks:{url:'https://api.fireworks.ai/inference/v1',console:'https://fireworks.ai/account/api-keys',docs:'https://docs.fireworks.ai',description:'Inferência hospedada e modelos otimizados. Use o identificador exato exibido na sua conta.',models:['accounts/fireworks/models/llama-v3p3-70b-instruct','accounts/fireworks/models/deepseek-v3p1']},
+    deepseek:{url:'https://api.deepseek.com/v1',console:'https://platform.deepseek.com/api_keys',docs:'https://api-docs.deepseek.com',description:'Modelos DeepSeek via API compatível com Chat Completions.',models:['deepseek-chat','deepseek-reasoner']},
+    mistral:{url:'https://api.mistral.ai/v1',console:'https://console.mistral.ai/api-keys',docs:'https://docs.mistral.ai',description:'Modelos Mistral para texto e tarefas gerais. Consulte os IDs ativos na documentação.',models:['mistral-large-latest','mistral-small-latest','ministral-8b-latest']},
+    cerebras:{url:'https://api.cerebras.ai/v1',console:'https://cloud.cerebras.ai',docs:'https://inference-docs.cerebras.ai',description:'Inferência de baixa latência em modelos suportados pela plataforma.',models:['llama3.1-8b','llama-3.3-70b','qwen-3-32b']},
+    sambanova:{url:'https://api.sambanova.ai/v1',console:'https://cloud.sambanova.ai',docs:'https://docs.sambanova.ai',description:'Plataforma de inferência para modelos abertos; confira modelos habilitados na sua conta.',models:['Meta-Llama-3.3-70B-Instruct','DeepSeek-V3-0324','Qwen3-32B']},
+    xai:{url:'https://api.x.ai/v1',console:'https://console.x.ai',docs:'https://docs.x.ai',description:'API dos modelos Grok, com formato compatível com OpenAI para Chat Completions.',models:['grok-3','grok-3-mini','grok-2-latest']},
+    perplexity:{url:'https://api.perplexity.ai',console:'https://www.perplexity.ai/settings/api',docs:'https://docs.perplexity.ai',description:'API de modelos Perplexity com foco em respostas e busca na web. Confirme se o modelo escolhido aceita o formato solicitado.',models:['sonar','sonar-pro','sonar-reasoning']},
+    deepinfra:{url:'https://api.deepinfra.com/v1/openai',console:'https://deepinfra.com/dash/api_keys',docs:'https://deepinfra.com/docs',description:'Catálogo de modelos hospedados com endpoint compatível com OpenAI.',models:['meta-llama/Meta-Llama-3.3-70B-Instruct','deepseek-ai/DeepSeek-V3']},
+    nvidia:{url:'https://integrate.api.nvidia.com/v1',console:'https://build.nvidia.com',docs:'https://docs.api.nvidia.com/nim',description:'NVIDIA NIM oferece endpoints para modelos disponíveis no catálogo NVIDIA.',models:['meta/llama-3.3-70b-instruct','nvidia/llama-3.1-nemotron-70b-instruct']},
+    huggingface:{url:'https://router.huggingface.co/v1',console:'https://huggingface.co/settings/tokens',docs:'https://huggingface.co/docs/inference-providers',description:'Roteador de provedores de inferência Hugging Face. Alguns modelos exigem sufixo de provedor no ID.',models:['openai/gpt-oss-120b:fastest','meta-llama/Llama-3.3-70B-Instruct:fastest']},
+    custom:{url:'',console:'',docs:'',description:'Use qualquer endpoint que implemente o formato OpenAI Chat Completions. APIs nativas incompatíveis precisam de um adaptador ou backend.',models:[]}
+  };
   function applyAIProviderPreset(){
-    const presets={openai:'https://api.openai.com/v1',openrouter:'https://openrouter.ai/api/v1',groq:'https://api.groq.com/openai/v1'};
-    const p=document.getElementById('ai-provider').value;if(presets[p])document.getElementById('ai-api-url').value=presets[p];
+    const p=document.getElementById('ai-provider').value,info=AI_PROVIDER_PRESETS[p]||AI_PROVIDER_PRESETS.custom;
+    if(info.url)document.getElementById('ai-api-url').value=info.url;
+    const consoleLink=document.getElementById('ai-provider-console'),docsLink=document.getElementById('ai-provider-docs');
+    consoleLink.href=info.console||'#';consoleLink.style.display=info.console?'inline-flex':'none';
+    docsLink.href=info.docs||'#';docsLink.style.display=info.docs?'inline-flex':'none';
+    document.getElementById('ai-provider-description').textContent=info.description;
+    const dl=document.getElementById('ai-model-options');dl.innerHTML=info.models.map(m=>'<option value="'+m.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"></option>').join('');
+    document.getElementById('ai-api-model').placeholder=info.models.length?'Escolha uma sugestão ou informe outro ID':'Informe o ID exato do modelo';
   }
   function getAISettings(){
-    return {mode:document.getElementById('ai-mode').value,provider:document.getElementById('ai-provider').value,apiUrl:document.getElementById('ai-api-url').value.trim().replace(/\/$/,''),model:document.getElementById('ai-api-model').value.trim(),ollamaUrl:document.getElementById('ollama-url').value.trim().replace(/\/$/,''),ollamaModel:document.getElementById('ollama-model').value.trim()};
+    return {mode:document.getElementById('ai-mode').value,provider:document.getElementById('ai-provider').value,apiUrl:document.getElementById('ai-api-url').value.trim().replace(/\/$/,''),model:document.getElementById('ai-api-model').value.trim(),temperature:Number(document.getElementById('ai-temperature')?.value||0.5),maxTokens:Number(document.getElementById('ai-max-tokens')?.value||3000),ollamaUrl:document.getElementById('ollama-url').value.trim().replace(/\/$/,''),ollamaModel:document.getElementById('ollama-model').value.trim()};
   }
   function saveAISettings(){
     const a=getAISettings();try{localStorage.setItem(AI_SETTINGS_KEY,JSON.stringify(a));const key=document.getElementById('ai-api-key').value.trim();if(key)sessionStorage.setItem(AI_SESSION_KEY,key);else sessionStorage.removeItem(AI_SESSION_KEY);showToast('Configuração de IA salva. Chave válida somente nesta sessão.');}
@@ -1676,12 +1715,12 @@ Terceiro item da lista</textarea></div>
     try{
       const prompt=buildAICarouselPrompt();let content='';
       if(a.mode==='ollama'){
-        const response=await fetch(a.ollamaUrl+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:a.ollamaModel,stream:false,format:'json',messages:[{role:'system',content:'Responda estritamente em JSON válido.'},{role:'user',content:prompt}],options:{temperature:0.5}}),signal:controller.signal});
+        const response=await fetch(a.ollamaUrl+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:a.ollamaModel,stream:false,format:'json',messages:[{role:'system',content:'Responda estritamente em JSON válido.'},{role:'user',content:prompt}],options:{temperature:a.temperature,num_predict:a.maxTokens}}),signal:controller.signal});
         if(!response.ok)throw new Error('Ollama respondeu HTTP '+response.status+'.');
         const data=await response.json();content=data.message?.content||'';
       }else{
         const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
-        const response=await fetch(a.apiUrl+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:a.model,messages:[{role:'system',content:'Você é um assistente editorial científico. Siga exatamente o formato JSON solicitado.'},{role:'user',content:prompt}],temperature:0.5,response_format:{type:'json_object'}}),signal:controller.signal});
+        const response=await fetch(a.apiUrl+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:a.model,messages:[{role:'system',content:'Você é um assistente editorial científico. Siga exatamente o formato JSON solicitado e retorne somente JSON válido.'},{role:'user',content:prompt}],temperature:a.temperature,max_tokens:a.maxTokens}),signal:controller.signal});
         if(!response.ok){let detail='';try{detail=(await response.json()).error?.message||'';}catch(e){}throw new Error('API respondeu HTTP '+response.status+(detail?': '+detail:''));}
         const data=await response.json();content=data.choices?.[0]?.message?.content||'';
       }
