@@ -499,7 +499,7 @@
         <div class="btn-row"><a class="btn secondary" href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">⬇️ Baixar Ollama</a><a class="btn secondary" href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">🧠 Biblioteca de modelos</a><a class="btn secondary" href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">📚 API / documentação</a></div>
         <div class="field"><label for="ollama-url">Endereço do serviço</label><input id="ollama-url" placeholder="http://localhost:11434"></div>
         <div class="field"><label for="ollama-model">Modelo instalado</label><input id="ollama-model" list="ollama-model-options" placeholder="Ex.: llama3.2, qwen2.5"><datalist id="ollama-model-options"><option value="llama3.2"><option value="qwen2.5"><option value="gemma3"><option value="mistral"><option value="deepseek-r1"><option value="phi4"></datalist></div>
-        <div class="settings-note">O modelo precisa estar baixado no computador (por exemplo, pelo comando <code>ollama pull qwen2.5</code>). O gerador tentará acessar o Ollama no próprio computador. Pode ser necessário configurar OLLAMA_ORIGINS para permitir o domínio do GitHub Pages. Não exponha a porta do Ollama à internet.</div>
+        <div class="settings-note">O modelo precisa estar baixado no computador (por exemplo, pelo comando <code>ollama pull qwen2.5</code>). Como o gerador está hospedado no GitHub Pages, o Ollama precisa permitir a origem <code>https://mpjbiologo.github.io</code> em <code>OLLAMA_ORIGINS</code>. Se o teste retornar “Failed to fetch”, consulte as instruções detalhadas exibidas no diagnóstico. Reinicie o Ollama depois de alterar a variável. Não exponha a porta 11434 à internet.</div>
       </div>
       <div class="btn-row"><button class="btn" onclick="saveAISettings()">💾 Salvar configuração de IA</button><button class="btn secondary" onclick="testAIConnection()">Testar conexão</button></div>
       <div id="ai-connection-status" class="settings-status" aria-live="polite">Configure um provedor e teste a conexão.</div>
@@ -1137,6 +1137,11 @@ Terceiro item da lista</textarea></div>
     const a=getAISettings();try{localStorage.setItem(AI_SETTINGS_KEY,JSON.stringify(a));const key=document.getElementById('ai-api-key').value.trim();if(key)sessionStorage.setItem(AI_SESSION_KEY,key);else sessionStorage.removeItem(AI_SESSION_KEY);showToast('Configuração de IA salva. Chave válida somente nesta sessão.');}
     catch(e){showToast('Não foi possível salvar a configuração de IA.');}
   }
+  function ollamaBrowserAccessHelp(){
+    const origin=window.location.origin;
+    const command="[Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS','http://localhost:*,http://127.0.0.1:*, "+origin+"','User')";
+    return "\\n\\nO navegador não conseguiu ler a resposta do Ollama. Como este gerador está hospedado em "+origin+", o motivo provável é CORS (o Ollama pode estar funcionando normalmente).\\n\\nNo Windows, abra o PowerShell e execute:\\n"+command+"\\n\\nDepois encerre o Ollama pelo ícone da bandeja do sistema e abra-o novamente. Feche e reabra esta página e teste outra vez. Se você já usa OLLAMA_ORIGINS para outros aplicativos, inclua também as origens deles nessa lista antes de salvar; esse comando substitui o valor anterior.";
+  }
   async function testAIConnection(){
     const a=getAISettings(),status=document.getElementById('ai-connection-status');status.textContent='Testando conexão...';
     try{
@@ -1159,7 +1164,11 @@ Terceiro item da lista</textarea></div>
           status.textContent='API conectada e modelo respondeu ao teste. O provedor não disponibilizou a listagem /models; a validação foi feita com uma solicitação curta ao modelo '+a.model+'.';
         }
       }
-    }catch(e){status.textContent='Não foi possível conectar: '+(e.message||'erro desconhecido')+'. Verifique se o serviço está ativo, URL, chave e permissões CORS.';}
+    }catch(e){
+      const detail=e.message||'erro desconhecido';
+      const browserBlocked=e instanceof TypeError||/failed to fetch|networkerror|load failed/i.test(detail);
+      status.textContent='Não foi possível conectar: '+detail+'. '+(a.mode==='ollama'&&browserBlocked?ollamaBrowserAccessHelp():'Verifique o serviço, endereço, chave e permissões CORS.');
+    }
   }
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('settings-overlay')?.classList.contains('open'))closeSettings();});
 
@@ -1736,7 +1745,8 @@ Terceiro item da lista</textarea></div>
       status.textContent='Roteiro gerado. O conteúdo atual ainda não foi alterado.';
     }catch(e){
       const msg=e.name==='AbortError'?'A solicitação excedeu 2 minutos.':(e.message||'Falha desconhecida.');
-      status.textContent='Falha na geração: '+msg+' Verifique modelo, conexão e permissões CORS.';
+      const browserBlocked=e instanceof TypeError||/failed to fetch|networkerror|load failed/i.test(msg);
+      status.textContent='Falha na geração: '+msg+(a.mode==='ollama'&&browserBlocked?ollamaBrowserAccessHelp():' Verifique modelo, conexão e permissões CORS.');
     }finally{clearTimeout(timeout);btn.disabled=false;btn.textContent='🤖 Gerar carrossel com IA configurada';}
   }
   function applyAIGeneratedCarousel(){
