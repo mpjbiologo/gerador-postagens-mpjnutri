@@ -286,6 +286,19 @@
   .image-edit-handle { position:absolute; right:-7px; bottom:-7px; width:16px; height:16px; border:2px solid #fff; border-radius:50%; background:var(--accent); cursor:nwse-resize; touch-action:none; }
   .image-edit-object:not(.selected) .image-edit-handle { display:none; }
 
+
+  .fullscreen-preview-modal{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:56px 20px 24px;background:rgba(5,10,7,.94);backdrop-filter:blur(8px)}
+  .fullscreen-preview-modal.open{display:flex}
+  .fullscreen-preview-close{position:absolute;top:14px;right:18px;z-index:3;border:1px solid rgba(255,255,255,.25);background:#202820;color:#fff;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}
+  .fullscreen-preview-frame{position:relative;display:flex;align-items:center;justify-content:center;max-width:100%;max-height:100%;width:100%;height:100%}
+  .fullscreen-preview-post{position:relative!important;left:auto!important;top:auto!important;transform:none!important;margin:auto;flex:none;max-height:88vh;aspect-ratio:var(--preview-ratio);overflow:hidden;box-shadow:0 20px 70px rgba(0,0,0,.55);border-radius:6px}
+  .fullscreen-preview-post .image-edit-wrap,.fullscreen-preview-post .video-edit-wrap{pointer-events:none!important}
+  .fullscreen-preview-post .image-edit-object,.fullscreen-preview-post .video-edit-object{outline:none!important;cursor:default!important}
+  .fullscreen-preview-post .image-edit-handle,.fullscreen-preview-post .video-edit-handle,.fullscreen-preview-post .image-center-guide,.fullscreen-preview-post .video-center-guide{display:none!important}
+  .fullscreen-preview-play{position:absolute;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:68px;height:68px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;font-size:28px;cursor:pointer;display:none;box-shadow:0 4px 22px rgba(0,0,0,.4)}
+  .fullscreen-preview-play.visible{display:block}.fullscreen-preview-play.playing{opacity:.18}.fullscreen-preview-play.playing:hover{opacity:1}
+  @media(max-width:600px){.fullscreen-preview-modal{padding:54px 8px 12px}.fullscreen-preview-post{max-width:96vw;max-height:88vh}}
+
   .video-edit-wrap{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:visible;display:none}
   .video-edit-object{position:absolute;left:10%;top:10%;width:80%;height:240px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none}
   .video-edit-object:active{cursor:grabbing}
@@ -622,6 +635,11 @@ body:not(.carousel-mode) .carousel-only{display:none}
 </head>
 <body>
 
+<div id="fullscreen-preview-modal" class="fullscreen-preview-modal" role="dialog" aria-modal="true" aria-label="Prévia em tela cheia">
+  <button type="button" class="fullscreen-preview-close" onclick="closeFullscreenPreview()">✕ Fechar</button>
+  <div class="fullscreen-preview-frame" id="fullscreen-preview-frame"></div>
+  <button type="button" id="fullscreen-preview-play" class="fullscreen-preview-play" onclick="toggleFullscreenPreviewVideo()" aria-label="Reproduzir vídeo">▶</button>
+</div>
 <div class="toast" id="toast"></div>
 <div class="settings-overlay" id="settings-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="if(event.target===this)closeSettings()">
   <div class="settings-dialog">
@@ -2702,11 +2720,38 @@ Terceiro item da lista</textarea></div>
     navigator.clipboard.writeText(buildFullHTML()).then(() => showToast('📋 HTML copiado!')).catch(() => showToast('❌ Erro'));
   }
 
-  function openFullscreen() {
-    const tab=window.open('about:blank','_blank');
-    if(!tab){showToast('Permita pop-ups para abrir a tela cheia.');return;}
-    tab.document.open();tab.document.write(buildFullHTML());tab.document.close();
+  let fullscreenPreviewVideo=null;
+  function openFullscreen(){
+    const modal=document.getElementById('fullscreen-preview-modal'),frame=document.getElementById('fullscreen-preview-frame'),source=document.getElementById('post');
+    if(!modal||!frame||!source)return;
+    frame.innerHTML='';
+    const clone=source.cloneNode(true);clone.id='fullscreen-preview-post';clone.classList.remove('selected');
+    clone.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));
+    clone.querySelectorAll('.image-edit-handle,.video-edit-handle,.image-center-guide,.video-center-guide').forEach(el=>el.remove());
+    clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+    clone.style.transform='none';
+    const fmt=source.dataset.format||'retrato',ratio=fmt==='quadrado'?1:(fmt==='stories'?366/650:4/5);
+    clone.classList.add('fullscreen-preview-post');clone.style.setProperty('--preview-ratio',String(ratio));
+    clone.style.width='min(92vw, calc(88vh * '+ratio+'))';clone.style.height='auto';
+    const video=clone.querySelector('video'),play=document.getElementById('fullscreen-preview-play');
+    fullscreenPreviewVideo=video||null;
+    if(video){video.controls=false;video.muted=false;video.loop=false;video.pause();video.style.pointerEvents='none';play.classList.add('visible');play.classList.remove('playing');play.textContent='▶';}
+    else play.classList.remove('visible');
+    frame.appendChild(clone);modal.classList.add('open');document.body.style.overflow='hidden';document.addEventListener('keydown',handleFullscreenPreviewKey);
   }
+  function closeFullscreenPreview(){
+    const modal=document.getElementById('fullscreen-preview-modal');
+    if(fullscreenPreviewVideo){fullscreenPreviewVideo.pause();fullscreenPreviewVideo=null;}
+    modal?.classList.remove('open');document.getElementById('fullscreen-preview-frame').innerHTML='';
+    document.body.style.overflow='';document.removeEventListener('keydown',handleFullscreenPreviewKey);
+  }
+  function handleFullscreenPreviewKey(e){if(e.key==='Escape')closeFullscreenPreview();}
+  async function toggleFullscreenPreviewVideo(){
+    const v=fullscreenPreviewVideo;if(!v)return;const btn=document.getElementById('fullscreen-preview-play');
+    if(v.paused){try{v.muted=false;await v.play();btn.textContent='Ⅱ';btn.classList.add('playing');}catch(e){showToast('Não foi possível reproduzir o vídeo nesta prévia.');}}
+    else{v.pause();btn.textContent='▶';btn.classList.remove('playing');}
+  }
+  document.addEventListener('click',e=>{if(e.target?.id==='fullscreen-preview-modal')closeFullscreenPreview();});
 
   function buildFullHTML() {
     const line1    = document.getElementById('input-line1').value;
