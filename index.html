@@ -470,6 +470,51 @@
   @media(max-width:900px){.editorial-workspace{grid-template-columns:1fr}.editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}}
   @media(max-width:600px){.editorial-workspace{padding:10px!important;gap:10px!important}.editorial-side-stack{display:flex}.editorial-fields-grid{grid-template-columns:1fr}.editorial-card{padding:11px}.editorial-action-row{flex-direction:column}.editorial-action-row>.btn{width:100%}}
 </style>
+<style>
+/* Navegação lateral reorganizada: categorias sempre visíveis e conteúdo em painel próprio */
+@media(min-width:901px){
+  .panel{display:grid!important;grid-template-columns:218px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;gap:12px!important;width:min(1080px,calc(100vw - 390px))!important;min-width:700px!important;height:calc(100vh - 53px)!important;max-height:calc(100vh - 53px)!important;overflow:hidden!important;padding:12px!important;flex:0 1 1080px!important}
+  .sidebar-nav{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;min-height:0;overflow-y:auto;padding:4px 5px 12px 2px;border-right:1px solid var(--app-panel-border)}
+  .sidebar-nav-heading{padding:9px 10px 5px;color:var(--app-sub);font-size:10px;font-weight:700;letter-spacing:1.2px}
+  .sidebar-nav-hint{padding:0 10px 10px;color:var(--app-sub);font-size:10px;line-height:1.4}
+  .sidebar-nav .theme-app-toggle{margin:0 4px 8px!important;width:calc(100% - 8px)!important;justify-content:center}
+  .sidebar-nav-item{width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:11px 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--app-btn-color);font:600 12px 'DM Sans',sans-serif;cursor:pointer;transition:.15s}
+  .sidebar-nav-item:hover{background:var(--app-section-hover);color:var(--app-text)}
+  .sidebar-nav-item.active{background:rgba(126,219,126,.11);border-color:rgba(126,219,126,.35);color:var(--accent)}
+  .sidebar-nav-item .nav-indicator{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.65;flex:0 0 6px}
+  .panel-sections{grid-column:2;grid-row:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 5px 28px 0;scrollbar-gutter:stable}
+  .panel-sections>.section{display:none!important;border-radius:11px}
+  .panel-sections>.section.active{display:block!important}
+  .panel-sections>.section.active>.section-header{cursor:default;padding:13px 15px}
+  .panel-sections>.section.active>.section-header .section-title{font-size:13px;letter-spacing:.8px}
+  .panel-sections>.section.active>.section-header .section-arrow{display:none}
+  .panel-sections>.section.active>.section-body{display:flex!important;padding:4px 15px 18px}
+  .preview-wrap{min-width:320px!important}
+}
+@media(max-width:1100px) and (min-width:901px){
+ .panel{grid-template-columns:185px minmax(0,1fr)!important;width:calc(100vw - 330px)!important;min-width:680px!important;padding:9px!important;gap:8px!important}
+ .sidebar-nav-item{font-size:11px;padding:10px 8px}
+}
+@media(max-width:900px) and (min-width:701px){
+ .panel{display:grid!important;grid-template-columns:190px minmax(0,1fr)!important;grid-template-rows:minmax(500px,auto)!important;width:100%!important;min-width:0!important;height:auto!important;max-height:none!important;overflow:visible!important}
+ .sidebar-nav{grid-column:1;grid-row:1;position:sticky;top:65px;align-self:start;max-height:calc(100vh - 80px);overflow-y:auto}
+ .panel-sections{grid-column:2;grid-row:1;overflow:visible;min-height:500px}
+ .panel-sections>.section{display:none!important}
+ .panel-sections>.section.active{display:block!important}
+ .panel-sections>.section.active>.section-body{display:flex!important}
+}
+@media(max-width:700px){
+ .panel{display:flex!important;flex-direction:column!important;height:auto!important;max-height:none!important;overflow:visible!important;gap:8px!important}
+ .sidebar-nav{display:flex;flex-direction:row;gap:6px;overflow-x:auto;overflow-y:hidden;padding:3px 0 9px;border-right:0;border-bottom:1px solid var(--app-panel-border);scrollbar-width:thin}
+ .sidebar-nav-heading,.sidebar-nav-hint{display:none}
+ .sidebar-nav .theme-app-toggle{width:auto!important;flex:0 0 auto;margin:0!important;padding:7px 10px}
+ .sidebar-nav-item{width:auto;flex:0 0 auto;white-space:nowrap;padding:9px 11px;font-size:11px}
+ .panel-sections{width:100%;overflow:visible;padding:0 0 18px}
+ .panel-sections>.section{display:none!important}
+ .panel-sections>.section.active{display:block!important}
+ .panel-sections>.section.active>.section-body{display:flex!important}
+}
+</style>
 </head>
 <body>
 
@@ -2349,6 +2394,57 @@ Terceiro item da lista</textarea></div>
   document.querySelectorAll('.deco-btn').forEach(el => el.addEventListener('click', autoSaveDraft));
   document.querySelectorAll('.format-btn').forEach(el => el.addEventListener('click', autoSaveDraft));
   document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
+
+
+  // Transforma a lista de seções em navegação por categorias sem remover ferramentas.
+  (function initSidebarNavigation(){
+    const panel=document.querySelector('.panel');
+    if(!panel || panel.dataset.sidebarReady==='1') return;
+    panel.dataset.sidebarReady='1';
+    const themeToggle=panel.querySelector('#app-theme-btn');
+    const sections=Array.from(panel.querySelectorAll(':scope > .section'));
+    const nav=document.createElement('nav');
+    nav.className='sidebar-nav';
+    nav.setAttribute('aria-label','Categorias do editor');
+    const heading=document.createElement('div');
+    heading.className='sidebar-nav-heading';
+    heading.textContent='FERRAMENTAS';
+    const hint=document.createElement('div');
+    hint.className='sidebar-nav-hint';
+    hint.textContent='Escolha uma categoria para abrir suas ferramentas.';
+    nav.append(heading,hint);
+    if(themeToggle) nav.appendChild(themeToggle);
+    const content=document.createElement('div');
+    content.className='panel-sections';
+    sections.forEach(section=>{
+      const title=section.querySelector('.section-title');
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='sidebar-nav-item';
+      button.dataset.target=section.id;
+      button.innerHTML='<span class="nav-indicator" aria-hidden="true"></span><span></span>';
+      button.lastElementChild.textContent=title ? title.textContent.trim() : section.id;
+      button.addEventListener('click',()=>window.setActiveSidebarSection(section.id));
+      nav.appendChild(button);
+      content.appendChild(section);
+    });
+    panel.append(nav,content);
+    window.setActiveSidebarSection=function(id){
+      const target=sections.find(section=>section.id===id);
+      if(!target) return;
+      sections.forEach(section=>section.classList.toggle('active',section===target));
+      nav.querySelectorAll('.sidebar-nav-item').forEach(button=>{
+        const active=button.dataset.target===id;
+        button.classList.toggle('active',active);
+        button.setAttribute('aria-current',active?'page':'false');
+      });
+      try{localStorage.setItem('content-generator-active-section',id)}catch(e){}
+      target.classList.add('open');
+    };
+    let saved='';
+    try{saved=localStorage.getItem('content-generator-active-section')||''}catch(e){}
+    window.setActiveSidebarSection(sections.some(section=>section.id===saved)?saved:'sec-assistente');
+  })();
 
   renderHistory();
   if(document.getElementById('research-notes'))document.getElementById('research-notes').value=localStorage.getItem(RESEARCH_KEY)||'';
