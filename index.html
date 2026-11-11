@@ -1139,8 +1139,8 @@ Terceiro item da lista</textarea></div>
   }
   function ollamaBrowserAccessHelp(){
     const origin=window.location.origin;
-    const command="[Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS','http://localhost:*,http://127.0.0.1:*, "+origin+"','User')";
-    return "\\n\\nO navegador não conseguiu ler a resposta do Ollama. Como este gerador está hospedado em "+origin+", o motivo provável é CORS (o Ollama pode estar funcionando normalmente).\\n\\nNo Windows, abra o PowerShell e execute:\\n"+command+"\\n\\nDepois encerre o Ollama pelo ícone da bandeja do sistema e abra-o novamente. Feche e reabra esta página e teste outra vez. Se você já usa OLLAMA_ORIGINS para outros aplicativos, inclua também as origens deles nessa lista antes de salvar; esse comando substitui o valor anterior.";
+    const command="[Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS','http://localhost:*,http://127.0.0.1:*,"+origin+"','User')";
+    return "\n\nO navegador não conseguiu ler a resposta do Ollama. Como este gerador está hospedado em "+origin+", o motivo provável é CORS (o Ollama pode estar funcionando normalmente).\n\nNo Windows, abra o PowerShell e execute:\n"+command+"\n\nDepois encerre o Ollama pelo ícone da bandeja do sistema e abra-o novamente. Feche e reabra esta página e teste outra vez. Se você já usa OLLAMA_ORIGINS para outros aplicativos, inclua também as origens deles nessa lista antes de salvar; esse comando substitui o valor anterior.";
   }
   async function testAIConnection(){
     const a=getAISettings(),status=document.getElementById('ai-connection-status');status.textContent='Testando conexão...';
