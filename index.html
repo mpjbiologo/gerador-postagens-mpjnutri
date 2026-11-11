@@ -1992,8 +1992,11 @@ Terceiro item da lista</textarea></div>
   }
   function applyAIGeneratedCarousel(){
     if(!Array.isArray(stagedAISlides)||!stagedAISlides.length){showToast('Nenhum roteiro aguardando aplicação.');return;}
+    // Troca o formato antes de substituir os slides: setFormat salva o slide atual
+    // quando já estamos em carrossel e não deve sobrescrever a nova capa.
+    const b=document.querySelector('.format-btn[data-fmt="carrossel"]');
+    if(b&&document.getElementById('post').dataset.mode!=='carrossel')setFormat(b);
     carouselSlides=stagedAISlides.map(x=>({...x}));activeCarouselSlide=0;
-    const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b)setFormat(b);
     applyCarouselSlide(0);autoSaveDraft();
     document.getElementById('ai-generation-status').textContent='Roteiro aplicado. Personalize os slides e revise as referências antes de publicar.';
     document.getElementById('ai-apply-btn').style.display='none';document.getElementById('ai-draft-review').style.display='none';stagedAISlides=null;
