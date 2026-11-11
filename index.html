@@ -978,6 +978,7 @@ Terceiro item da lista</textarea></div>
 
         <div class="editorial-card">
           <div class="editorial-card-head"><div><span class="editorial-kicker">03 · CARROSSEL</span><h3>Roteiro e estrutura</h3><p>Crie uma sequência de slides com ou sem IA.</p></div><span class="editorial-card-icon">▤</span></div>
+          <div class="field"><label for="editor-slide-count">Quantidade de slides</label><select id="editor-slide-count"><option value="2">2 slides</option><option value="3">3 slides</option><option value="4">4 slides</option><option value="5">5 slides</option><option value="6" selected>6 slides</option><option value="7">7 slides</option><option value="8">8 slides</option><option value="9">9 slides</option><option value="10">10 slides</option><option value="11">11 slides</option><option value="12">12 slides</option></select><small class="template-hint">A quantidade inclui a capa e o encerramento.</small></div>
           <button class="btn" type="button" onclick="generateEditorialCarousel()">Criar estrutura de carrossel</button>
           <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA</button>
           <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">Copiar briefing para IA</button>
@@ -1943,6 +1944,7 @@ Terceiro item da lista</textarea></div>
     const topic=document.getElementById('editor-topic').value.trim();
     const audience=document.getElementById('editor-audience').value.trim()||'público geral';
     const goal=document.getElementById('editor-goal').value;
+    const slideCount=Math.max(2,Math.min(12,Number(document.getElementById('editor-slide-count')?.value)||6));
     const notes=document.getElementById('research-notes').value.trim();
     const professionalContext=buildProfessionalEditorialContext();
     return [
@@ -1950,7 +1952,7 @@ Terceiro item da lista</textarea></div>
       professionalContext,
       'Crie um carrossel em português brasileiro sobre o tema: '+topic+'.',
       'Público: '+audience+'. Objetivo: '+goal+'.',
-      'Entregue exatamente 6 slides: capa, conceito, relevância, aplicação geral, ressalvas e encerramento.',
+      'Entregue exatamente '+slideCount+' slides, contando capa e encerramento. Distribua o desenvolvimento em '+(slideCount-2)+' slides intermediários, sem repetir ideias.',
       'Seja claro, conciso e adequado a uma postagem de Instagram. Evite prescrição individual, promessas, alarmismo e afirmações absolutas.',
       'Não invente estudos, DOI, PMID, autores, números ou referências. Se as informações fornecidas não sustentarem uma afirmação, sinalize a necessidade de verificação no próprio texto.',
       'Use apenas os dados de referência abaixo como material fornecido, sem presumir que sejam verdadeiros ou suficientes:',
@@ -1970,7 +1972,8 @@ Terceiro item da lista</textarea></div>
   }
   function normalizeAISlides(data){
     const raw=Array.isArray(data)?data:data?.slides;
-    if(!Array.isArray(raw)||raw.length<2||raw.length>12)throw new Error('A IA deve retornar entre 2 e 12 slides no campo "slides".');
+    const requestedCount=Math.max(2,Math.min(12,Number(document.getElementById('editor-slide-count')?.value)||6));
+    if(!Array.isArray(raw)||raw.length!==requestedCount)throw new Error('A quantidade retornada ('+(Array.isArray(raw)?raw.length:0)+') não corresponde aos '+requestedCount+' slides solicitados. Gere novamente.');
     const allowed=['cover','content','comparison','list','tip','closing'];
     return raw.map((x,i)=>{
       if(!x||typeof x!=='object')throw new Error('Um dos slides retornados está em formato inválido.');
@@ -2025,22 +2028,30 @@ Terceiro item da lista</textarea></div>
 
   function generateEditorialCarousel(){
     const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value;
+    const count=Math.max(2,Math.min(12,Number(document.getElementById('editor-slide-count')?.value)||6));
     if(!topic){showToast('Informe o tema da publicação.');return;}
-    const goalText={educar:'explicar com clareza',orientar:'apresentar caminhos gerais e seguros',desmistificar:'analisar criticamente uma afirmação',engajar:'estimular reflexão e diálogo'}[goal];
-    carouselSlides=[
-      {line1:topic,line2:'o que você precisa saber',desc:'Um guia para '+aud+'.',list:'',listNum:false,tag1:'Deslize para continuar',tag2:'',showTag1:true,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'cover'},
-      {line1:'Vamos entender',line2:'o conceito',desc:'Comece definindo '+topic+' em linguagem simples. Apresente o conceito central e explique por que ele merece atenção.',list:'Definição clara\nContexto importante',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'content'},
-      {line1:'Por que isso',line2:'importa?',desc:'Relacione o tema com situações reais do cotidiano de '+aud+'. Evite generalizações e diferencie evidência, hipótese e opinião.',list:'O que já sabemos\nO que ainda está em estudo',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'comparison'},
-      {line1:'O que considerar',line2:'na prática',desc:'Apresente informações aplicáveis e compatíveis com o contexto individual. Não transforme orientações gerais em prescrição individual.',list:'Observe o contexto\nConsidere necessidades individuais\nProcure orientação quando necessário',listNum:true,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'list'},
-      {line1:'Atenção aos',line2:'detalhes',desc:'Inclua limites da evidência, possíveis exceções, contraindicações relevantes e situações em que a avaliação profissional é importante.',list:'Não prometa resultados\nNão extrapole estudos\nConfira a qualidade das fontes',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'tip'},
-      {line1:'Informação boa',line2:'é informação revisada',desc:'Revise as afirmações, acrescente referências científicas e adapte o conteúdo à realidade do público. Salve e compartilhe se foi útil.',list:'',listNum:false,tag1:'Salve e compartilhe',tag2:'',showTag1:true,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:'closing'}
+    const makeSlide=(line1,line2,desc,list='',slideType='content',tag1='')=>({line1,line2,desc,list,listNum:slideType==='list',tag1,tag2:'',showTag1:!!tag1,showTag2:false,imgUrl:'',image:'',showImg:false,slideType});
+    const cover=makeSlide(topic,'o que você precisa saber','Um guia para '+aud+'.','','cover','Deslize para continuar');
+    const middle=[
+      makeSlide('Vamos entender','o conceito','Comece definindo '+topic+' em linguagem simples. Apresente o conceito central e explique por que ele merece atenção.','Definição clara\nContexto importante','content'),
+      makeSlide('Por que isso','importa?','Relacione o tema com situações reais do cotidiano de '+aud+'. Evite generalizações e diferencie evidência, hipótese e opinião.','O que já sabemos\nO que ainda está em estudo','comparison'),
+      makeSlide('O que considerar','na prática','Apresente informações aplicáveis e compatíveis com o contexto individual. Não transforme orientações gerais em prescrição individual.','Observe o contexto\nConsidere necessidades individuais\nProcure orientação quando necessário','list'),
+      makeSlide('Atenção aos','detalhes','Inclua limites da evidência, possíveis exceções, contraindicações relevantes e situações em que a avaliação profissional é importante.','Não prometa resultados\nNão extrapole estudos\nConfira a qualidade das fontes','tip'),
+      makeSlide('Como avaliar','a informação','Explique quais critérios ajudam a interpretar informações sobre '+topic+'. Diferencie fontes confiáveis de opiniões e conteúdos sem sustentação.','Verifique a origem\nConfira a data\nProcure evidências','list'),
+      makeSlide('Erros comuns','e equívocos','Apresente interpretações equivocadas frequentes sobre '+topic+' e explique como evitá-las, sem criar alarmismo.','Evite generalizações\nConsidere o contexto','tip'),
+      makeSlide('O que observar','no cotidiano','Mostre aspectos práticos que ajudam '+aud+' a refletir sobre o tema, sem transformar a publicação em orientação individual.','Observe sinais relevantes\nConsidere diferenças individuais','content'),
+      makeSlide('Quando buscar','orientação','Explique em quais situações a avaliação de um profissional habilitado pode ajudar a interpretar o tema com segurança.','Considere seu contexto\nProcure avaliação individual','comparison'),
+      makeSlide('Em resumo','o essencial','Reúna os principais aprendizados sobre '+topic+' em uma síntese clara, sem acrescentar afirmações novas.','Retome o conceito\nDestaque os cuidados\nReforce a informação confiável','list'),
+      makeSlide('Para aprofundar','com segurança','Indique que o leitor pode consultar fontes técnicas e materiais de instituições reconhecidas para aprofundar o assunto.','Priorize fontes verificáveis\nConfira referências','tip')
     ];
-    activeCarouselSlide=0;const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b)setFormat(b);applyCarouselSlide(0);autoSaveDraft();showToast('Estrutura criada. Revise e personalize cada slide.');
+    const closing=makeSlide('Informação boa','é informação revisada','Revise as afirmações, acrescente referências verificáveis e adapte o conteúdo à realidade do público. Salve e compartilhe se foi útil.','','closing','Salve e compartilhe');
+    carouselSlides=[cover,...middle.slice(0,count-2),closing];
+    activeCarouselSlide=0;const b=document.querySelector('.format-btn[data-fmt="carrossel"]');if(b)setFormat(b);applyCarouselSlide(0);autoSaveDraft();showToast('Estrutura criada com '+count+' slides. Revise e personalize cada slide.');
   }
   function copyEditorialPrompt(){
-    const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value;
+    const topic=document.getElementById('editor-topic').value.trim(),aud=document.getElementById('editor-audience').value.trim()||'público geral',goal=document.getElementById('editor-goal').value,count=Math.max(2,Math.min(12,Number(document.getElementById('editor-slide-count')?.value)||6));
     if(!topic){showToast('Informe o tema primeiro.');return;}
-    const prompt='Crie um roteiro de carrossel educativo sobre: '+topic+'. Público: '+aud+'. Objetivo: '+goal+'. Escreva em português brasileiro, com linguagem clara e rigor científico. Não invente estudos, números, referências ou consensos. Diferencie evidência de hipótese, aponte limites e sinalize afirmações que exigem fonte. Estruture em capa, conceito, relevância, aplicação geral, ressalvas e encerramento. Sugira fontes científicas verificáveis (DOI/PMID/link) sem fabricar referências.';
+    const prompt='Crie um roteiro de carrossel educativo com exatamente '+count+' slides, incluindo capa e encerramento, sobre: '+topic+'. Público: '+aud+'. Objetivo: '+goal+'. Escreva em português brasileiro, com linguagem clara e rigor científico. Não invente estudos, números, referências ou consensos. Diferencie evidência de hipótese, aponte limites e sinalize afirmações que exigem fonte. Distribua o desenvolvimento nos slides intermediários sem repetir ideias. Sugira fontes científicas verificáveis (DOI/PMID/link) sem fabricar referências.';
     navigator.clipboard.writeText(prompt).then(()=>showToast('Briefing copiado.')).catch(()=>showToast('Não foi possível copiar.'));
   }
 
