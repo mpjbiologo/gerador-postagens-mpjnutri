@@ -1156,6 +1156,8 @@ Terceiro item da lista</textarea></div>
   </div><div class="preview-carousel-nav" id="preview-carousel-nav" role="group" aria-label="Navegação da prévia do carrossel"><button type="button" id="preview-slide-prev" onclick="previewCarouselStep(-1)" aria-label="Slide anterior" title="Slide anterior">←</button><span class="preview-carousel-position" id="preview-slide-position" aria-live="polite">1 de 1</span><button type="button" id="preview-slide-next" onclick="previewCarouselStep(1)" aria-label="Próximo slide" title="Próximo slide">→</button></div></div>
   <div class="export-dock" id="export-dock">
     <button class="btn export-main" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
+    <button class="btn secondary" id="btn-export-video" onclick="exportPostVideo()">🎬 Exportar como vídeo</button>
+    <div class="field" style="padding:0 2px"><label for="video-export-duration">Duração (segundos)</label><input id="video-export-duration" type="number" min="3" max="60" value="10" style="width:100%"><label style="display:flex;align-items:center;gap:7px;margin-top:7px"><input type="checkbox" id="video-export-audio" checked style="width:auto"> Incluir áudio do vídeo enviado</label><div class="template-hint" id="video-export-status">MP4 quando compatível com o navegador; caso contrário, WebM.</div></div>
     <div class="export-grid">
       <button class="btn secondary carousel-only" id="btn-export-zip" onclick="exportCarouselZip()">📦 Exportar carrossel em ZIP</button>
       <button class="btn secondary carousel-only" id="btn-export-pdf" onclick="exportCarouselPDF()">📄 Exportar em PDF</button>
@@ -2523,6 +2525,42 @@ Terceiro item da lista</textarea></div>
     finally{applyCarouselSlide(original);}
     return canvases;
   }
+
+  function drawVideoOnExportCanvas(ctx,canvas){
+    const v=document.getElementById('post-video'),o=document.getElementById('video-edit-object'),p=document.getElementById('post');
+    if(!v?.src||v.readyState<2||!o||!v.videoWidth)return;
+    const sx=canvas.width/p.clientWidth,sy=canvas.height/p.clientHeight,w=o.clientWidth*sx,h=o.clientHeight*sy,z=(videoEditState.zoom||100)/100,dw=w*z,dh=h*z,dx=o.offsetLeft*sx+(w-dw)/2,dy=o.offsetTop*sy+(h-dh)/2;
+    let cx=0,cy=0,cw=v.videoWidth,ch=v.videoHeight;
+    if(videoEditState.fit==='cover'){const sc=Math.max(dw/cw,dh/ch);cw=dw/sc;ch=dh/sc;cx=(v.videoWidth-cw)/2;cy=(v.videoHeight-ch)/2;}
+    else{const sc=Math.min(dw/cw,dh/ch),rw=cw*sc,rh=ch*sc;ctx.save();ctx.globalAlpha=videoEditState.opacity/100;ctx.filter='brightness('+videoEditState.brightness+'%) saturate('+videoEditState.saturation+'%) contrast('+videoEditState.contrast+'%)';ctx.drawImage(v,dx+(dw-rw)/2,dy+(dh-rh)/2,rw,rh);ctx.restore();return;}
+    ctx.save();ctx.globalAlpha=Math.max(0,Math.min(100,videoEditState.opacity))/100;ctx.filter='brightness('+videoEditState.brightness+'%) saturate('+videoEditState.saturation+'%) contrast('+videoEditState.contrast+'%)';ctx.drawImage(v,cx,cy,cw,ch,dx,dy,dw,dh);ctx.restore();
+  }
+  async function exportPostVideo(){
+    const btn=document.getElementById('btn-export-video'),status=document.getElementById('video-export-status'),v=document.getElementById('post-video'),wrap=document.getElementById('video-edit-wrap'),p=document.getElementById('post');
+    if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){showToast('Gravação de vídeo não é compatível com este navegador.');return;}
+    const seconds=Math.max(3,Math.min(60,Number(document.getElementById('video-export-duration').value)||10)),audio=document.getElementById('video-export-audio').checked&&!!v.src,wasPaused=v.paused,wasMuted=v.muted,display=wrap.style.display;
+    let recorder,stream,raf;
+    btn.disabled=true;btn.textContent='⏳ Preparando…';status.textContent='Preparando a composição…';
+    try{
+      if(v.src&&v.readyState<2)await new Promise((res,rej)=>{const t=setTimeout(()=>rej(Error('Vídeo não carregou a tempo.')),15000);v.addEventListener('loadeddata',()=>{clearTimeout(t);res();},{once:true});v.addEventListener('error',()=>{clearTimeout(t);rej(Error('Falha ao ler o vídeo.'));},{once:true});});
+      wrap.style.display='none';await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      const base=await html2canvas(p,{scale:1.5,useCORS:true,allowTaint:false,backgroundColor:null,logging:false});wrap.style.display=display;
+      const c=document.createElement('canvas');c.width=base.width;c.height=base.height;const ctx=c.getContext('2d',{alpha:false});ctx.drawImage(base,0,0);stream=c.captureStream(30);
+      if(audio&&v.captureStream){v.muted=false;v.captureStream().getAudioTracks().forEach(t=>stream.addTrack(t));}
+      const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],mime=types.find(t=>MediaRecorder.isTypeSupported(t));
+      if(!mime)throw Error('Não há formato MP4/WebM disponível neste navegador.');
+      const chunks=[];recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});const stopped=new Promise((res,rej)=>{recorder.onstop=res;recorder.onerror=e=>rej(e.error||Error('Erro durante a gravação.'));});recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
+      if(v.src){v.loop=true;if(v.ended||v.currentTime>=v.duration)v.currentTime=0;await v.play();}
+      recorder.start(250);const start=performance.now();
+      const frame=()=>{ctx.drawImage(base,0,0);drawVideoOnExportCanvas(ctx,c);const elapsed=(performance.now()-start)/1000;status.textContent='Gravando '+Math.min(seconds,Math.floor(elapsed))+' / '+seconds+' s';if(elapsed<seconds)raf=requestAnimationFrame(frame);else if(recorder.state!=='inactive')recorder.stop();};
+      raf=requestAnimationFrame(frame);await stopped;cancelAnimationFrame(raf);
+      const mp4=mime.startsWith('video/mp4'),blob=new Blob(chunks,{type:mp4?'video/mp4':'video/webm'});if(!blob.size)throw Error('Arquivo gerado vazio.');
+      const url=URL.createObjectURL(blob),a=document.createElement('a'),name=(document.getElementById('input-handle').value||'post').replace('@','').replace(/[^a-z0-9_-]/gi,'')||'post';a.href=url;a.download=name+'-'+Date.now()+(mp4?'.mp4':'.webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      status.textContent='Concluído: '+(mp4?'MP4':'WebM')+' · '+(blob.size/1048576).toFixed(1)+' MB';showToast('Vídeo exportado!');
+    }catch(e){if(raf)cancelAnimationFrame(raf);if(recorder&&recorder.state!=='inactive')recorder.stop();status.textContent='Falha: '+(e.message||'erro desconhecido');showToast('Não foi possível exportar o vídeo.');}
+    finally{wrap.style.display=display;v.muted=wasMuted;if(v.src&&wasPaused)v.pause();if(stream)stream.getTracks().forEach(t=>t.stop());btn.disabled=false;btn.textContent='🎬 Exportar como vídeo';}
+  }
+
   async function exportCarouselZip(){
     if(!window.JSZip){showToast('Biblioteca ZIP indisponível.');return;}
     const btn=document.getElementById('btn-export-zip');btn.disabled=true;btn.textContent='⏳ Preparando ZIP...';
