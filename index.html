@@ -1878,7 +1878,7 @@ Terceiro item da lista</textarea></div>
     ].join('\n\n');
     btn.disabled=true;btn.textContent='⏳ Preparando...';status.textContent='A IA está elaborando o pacote editorial. O texto atual não será alterado automaticamente.';
     try{
-      const data=await requestConfiguredAI(prompt,'Você é um assistente editorial para conteúdo de nutrição baseado em evidências.');
+      const data=await requestConfiguredAI(prompt,'Você é um assistente editorial multiprofissional para Instagram. Adapte o conteúdo à profissão, às regras específicas e aos princípios gerais de responsabilidade fornecidos no briefing.');
       const titles=Array.isArray(data.titles)?data.titles.map(x=>String(x).trim()).filter(Boolean).slice(0,3):[];
       const caption=String(data.caption||'').trim();
       const hashtags=Array.isArray(data.hashtags)?data.hashtags.map(x=>String(x).trim()).filter(Boolean).slice(0,8):[];
