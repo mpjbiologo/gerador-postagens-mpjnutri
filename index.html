@@ -72,109 +72,6 @@
     transition: background 0.3s, color 0.3s;
   }
 
-  /* CABEÇALHO — fixo no topo */
-  .app-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 53px;
-    background: var(--app-panel);
-    border-bottom: 1px solid var(--app-panel-border);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    transition: background 0.3s, border-color 0.3s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
-  .app-header-left { display: flex; flex-direction: column; gap: 3px; align-items: center; width: 100%; }
-  .app-header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-
-  /* PAINEL — rola junto com a página */
-  .panel {
-    width: 320px;
-    min-width: 320px;
-    flex-shrink: 0;
-    background: var(--app-panel);
-    border-right: 1px solid var(--app-panel-border);
-    padding: 20px 18px 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 13px;
-    transition: background 0.3s, border-color 0.3s;
-  }
-
-  /* PREVIEW — sticky: fica fixo enquanto o painel rola */
-  .preview-wrap {
-    position: sticky;
-    top: 53px;
-    height: calc(100vh - 53px);
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--app-bg);
-    overflow: hidden;
-    align-self: flex-start;
-    transition: background 0.3s;
-  }
-
-  /* ── MOBILE ── */
-  @media (max-width: 700px) {
-    body { flex-direction: column; }
-    .app-header { padding: 8px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
-    .app-header-right { width: 100%; justify-content: flex-end; }
-    .app-header-meta { gap: 4px; }
-    .app-header-meta span[style*="•"] { display: none; }
-    .preview-wrap { top: 0 !important; height: auto !important; }
-
-    .panel {
-      width: 100%;
-      min-width: unset;
-      max-width: unset;
-      border-right: none;
-      border-bottom: 1px solid var(--app-panel-border);
-      padding: 16px 14px 24px;
-      order: 2;
-    }
-
-    .preview-wrap {
-      position: relative;
-      height: auto;
-      width: 100%;
-      padding: 16px 12px;
-      order: 1;
-      align-self: auto;
-    }
-
-    #post {
-      max-width: 100% !important;
-      max-height: 70vw !important;
-    }
-
-    .post[data-format="retrato"]  { width: 56vw !important; height: 70vw !important; }
-    .post[data-format="quadrado"] { width: 70vw !important; height: 70vw !important; }
-    .post[data-format="stories"]  { width: 40vw !important; height: 71vw !important; }
-
-    .post[data-format="retrato"]  .img-center-wrap { height: 19vw !important; }
-    .post[data-format="quadrado"] .img-center-wrap { height: 18vw !important; }
-    .post[data-format="stories"]  .img-center-wrap { height: 22vw !important; }
-    #title-line1, #title-line2 { font-size: 14px; }
-    #preview-desc { font-size: 7px; }
-    #preview-list li { font-size: 6px; }
-    #preview-list li::before { font-size: 8px !important; }
-    #preview-tag1, #preview-tag2 { font-size: 7px !important; padding: 3px 8px !important; }
-    .handle { font-size: 9px !important; }
-    .whatsapp-number { font-size: 8px !important; }
-    .wa-svg { width: 10px !important; height: 10px !important; }
-    .icon-btn svg.outline { width: 14px !important; height: 14px !important; }
-    .icon-label { font-size: 5px !important; }
-    .footer { padding: 5px 10px !important; }
-    .content { padding: 6px 10px 0 !important; }
-    .deco-circle  { width: 60px !important; height: 60px !important; top: -20px !important; right: -20px !important; }
-    .deco-circle2 { width: 36px !important; height: 36px !important; top: 6px !important;  right: 6px !important;  }
-  }
-
   .panel-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--accent); }
   .panel-sub { font-size: 11px; color: var(--app-sub); margin-top: 2px; }
 
@@ -471,76 +368,211 @@
   @media(max-width:600px){.editorial-workspace{padding:10px!important;gap:10px!important}.editorial-side-stack{display:flex}.editorial-fields-grid{grid-template-columns:1fr}.editorial-card{padding:11px}.editorial-action-row{flex-direction:column}.editorial-action-row>.btn{width:100%}}
 
 </style>
-<style>
-</style>
-<style id="stable-workspace-layout">
-/* Estrutura única: navegação, editor e prévia */
-@media (min-width:1001px){
-  html,body{width:100%;height:100%;min-height:100%}
-  body{height:100vh;min-height:0;overflow:hidden;align-items:stretch}
-  .panel{
-    display:grid!important;
-    grid-template-columns:190px minmax(0,1fr)!important;
-    grid-template-rows:minmax(0,1fr)!important;
-    gap:14px!important;flex:1 1 auto!important;
-    width:calc(100vw - 420px)!important;min-width:0!important;max-width:none!important;
-    height:calc(100vh - 53px)!important;max-height:calc(100vh - 53px)!important;
-    overflow:hidden!important;padding:14px!important
-  }
-  .sidebar-nav{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:5px;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 9px 12px 0;border-right:1px solid var(--app-panel-border)}
-  .sidebar-nav-heading{padding:8px 9px 3px;color:var(--app-sub);font-size:10px;font-weight:800;letter-spacing:1.1px}
-  .sidebar-nav-hint{padding:0 9px 8px;color:var(--app-sub);font-size:10px;line-height:1.45}
-  .sidebar-nav .theme-app-toggle{width:100%!important;margin:2px 0 9px!important;justify-content:center}
-  .sidebar-nav-item{width:100%;min-width:0;display:flex;align-items:center;gap:9px;text-align:left;padding:10px 9px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--app-btn-color);font:600 11px 'DM Sans',sans-serif;cursor:pointer;line-height:1.3}
-  .sidebar-nav-item:hover{background:var(--app-section-hover);color:var(--app-text)}
-  .sidebar-nav-item.active{background:rgba(126,219,126,.12);border-color:rgba(126,219,126,.35);color:var(--accent)}
-  .sidebar-nav-item .nav-indicator{width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px}
-  .nav-exports{display:flex;flex-direction:column;gap:6px;padding:12px 2px 4px;margin-top:8px;border-top:1px solid var(--app-panel-border)}
-  .nav-exports-title{font-size:9px;letter-spacing:1px;font-weight:800;color:var(--app-sub);padding:0 5px 3px}
-  .nav-exports .btn{width:100%;padding:9px 7px;font-size:10px;min-height:34px}
-  .panel-sections{grid-column:2;grid-row:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 5px 28px 0;scrollbar-gutter:stable}
-  .panel-sections>.section{display:none!important;width:100%;min-width:0}
-  .panel-sections>.section.active{display:block!important}
-  .panel-sections>.section.active>.section-header{cursor:default;padding:13px 15px}
-  .panel-sections>.section.active>.section-header .section-title{font-size:13px;letter-spacing:.7px}
-  .panel-sections>.section.active>.section-header .section-arrow{display:none}
-  .panel-sections>.section.active>.section-body{display:flex!important;padding:8px 15px 20px;min-width:0}
-  .preview-wrap{position:relative!important;top:auto!important;align-self:stretch!important;flex:0 0 420px!important;width:420px!important;min-width:360px!important;max-width:460px!important;height:calc(100vh - 53px)!important;min-height:0;overflow:auto}
+<style id="ui-modern">
+/* ═════════ INTERFACE MODERNA — layout guiado em etapas ═════════ */
+:root{
+  --ui-accent:#7edb7e; --ui-accent-ink:#06210c; --ui-accent-soft:rgba(126,219,126,.12); --ui-accent-line:rgba(126,219,126,.38);
+  --app-bg:#0b0e0c; --app-panel:#111512; --app-panel-border:#1f2621;
+  --app-section:#151a16; --app-section-border:#232b25; --app-section-hover:#1b221d;
+  --app-input-bg:#0e120f; --app-input-border:#2a332c; --app-input-color:#eef3ef;
+  --app-label:#93a096; --app-text:#eef3ef; --app-sub:#7d897f;
+  --app-btn-bg:#182019; --app-btn-border:#29332b; --app-btn-color:#c4cec6;
+  --app-toggle-bg:#2c352e; --app-slider-track:#2c352e;
+  --ui-radius:14px; --ui-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px rgba(0,0,0,.25);
+  --header-h:62px;
 }
-@media (min-width:1001px) and (max-width:1250px){
-  .panel{grid-template-columns:164px minmax(0,1fr)!important;width:calc(100vw - 370px)!important;gap:10px!important;padding:10px!important}
-  .preview-wrap{flex-basis:370px!important;width:370px!important;min-width:330px!important}
-  .sidebar-nav-item{font-size:10px;padding:9px 7px}
-  .sidebar-nav-hint{display:none}
+body.app-light{
+  --ui-accent:#1f8a4c; --ui-accent-ink:#ffffff; --ui-accent-soft:rgba(31,138,76,.10); --ui-accent-line:rgba(31,138,76,.35);
+  --app-bg:#f3f5f2; --app-panel:#ffffff; --app-panel-border:#e2e7e1;
+  --app-section:#ffffff; --app-section-border:#e3e8e2; --app-section-hover:#f2f6f1;
+  --app-input-bg:#fbfcfb; --app-input-border:#d5ddd4; --app-input-color:#17201a;
+  --app-label:#5d6b60; --app-text:#17201a; --app-sub:#6f7c72;
+  --app-btn-bg:#f4f7f3; --app-btn-border:#d8e0d6; --app-btn-color:#3d4a40;
+  --app-toggle-bg:#cfd8ce; --app-slider-track:#d5ddd4;
+  --ui-shadow:0 1px 2px rgba(16,24,18,.05),0 8px 24px rgba(16,24,18,.06);
 }
-@media (max-width:1000px){
-  html,body{height:auto;min-height:100%}
-  body{display:flex;flex-direction:column;height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
-  .panel{display:flex!important;flex-direction:column!important;order:1;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:12px 14px 24px!important;gap:10px!important}
-  .sidebar-nav{order:0;display:flex;flex-direction:row;align-items:center;gap:6px;width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;padding:2px 0 9px;border:0;border-bottom:1px solid var(--app-panel-border);scrollbar-width:thin}
-  .sidebar-nav-heading,.sidebar-nav-hint{display:none}
-  .sidebar-nav .theme-app-toggle{width:auto!important;flex:0 0 auto;margin:0!important}
-  .sidebar-nav-item{width:auto;flex:0 0 auto;white-space:nowrap;padding:9px 11px;font-size:11px}
-  .nav-exports{display:flex;flex-direction:row;flex:0 0 auto;gap:6px;padding:0 0 0 8px;margin:0;border:0;border-left:1px solid var(--app-panel-border)}
-  .nav-exports-title{display:none}
-  .nav-exports .btn{width:auto;white-space:nowrap;flex:0 0 auto;padding:8px 10px;font-size:10px}
-  .panel-sections{order:1;width:100%;min-width:0;overflow:visible;padding:0 0 12px}
-  .panel-sections>.section{display:none!important}
-  .panel-sections>.section.active{display:block!important}
-  .panel-sections>.section.active>.section-body{display:flex!important}
-  .preview-wrap{order:2;position:relative!important;top:auto!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:0;padding:16px 10px;overflow:visible;align-self:auto}
-}
-@media(max-width:600px){
-  .panel{padding:10px 9px 20px!important}
-  .sidebar-nav-item{padding:8px 10px;font-size:10px}
-  .nav-exports .btn{padding:8px;font-size:9px}
-  .editorial-workspace{grid-template-columns:minmax(0,1fr)!important;padding:9px!important}
+/* Elementos da interface usam o verde da marca — o tema do post só muda a prévia */
+.app-header,.sidebar-nav,.panel,.preview-toolbar,.export-dock,.settings-dialog,.toast{--accent:var(--ui-accent);--accent-dark:var(--ui-accent-ink)}
+
+html,body{height:100%}
+body{display:block;padding:0;min-height:100%;overflow:hidden;background:var(--app-bg);color:var(--app-text);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+::selection{background:var(--ui-accent);color:var(--ui-accent-ink)}
+*{scrollbar-width:thin;scrollbar-color:var(--app-btn-border) transparent}
+*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-thumb{background:var(--app-btn-border);border-radius:8px}
+
+/* ── Cabeçalho ── */
+.app-header{position:fixed;inset:0 0 auto 0;height:var(--header-h);z-index:1000;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,420px) minmax(0,1fr);align-items:center;gap:20px;padding:0 20px;background:var(--app-panel);border-bottom:1px solid var(--app-panel-border)}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-mark{width:36px;height:36px;flex:0 0 36px;border-radius:11px;display:grid;place-items:center;font-size:17px;color:#06210c;background:linear-gradient(135deg,#7edb7e,#2f9d5a);box-shadow:0 6px 18px rgba(80,190,110,.25)}
+.brand-text{min-width:0}
+.brand-title{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;line-height:1.1;white-space:nowrap}
+.brand-sub{font-size:11px;color:var(--app-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub a{color:var(--ui-accent);font-weight:600;text-decoration:none}
+.header-progress{display:flex;flex-direction:column;gap:6px}
+.hp-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;color:var(--app-sub)}
+.hp-label strong{color:var(--app-text);font-size:12px}
+.hp-bar{height:6px;border-radius:6px;background:var(--app-btn-bg);border:1px solid var(--app-panel-border);overflow:hidden}
+.hp-bar span{display:block;height:100%;width:16%;border-radius:6px;background:linear-gradient(90deg,var(--ui-accent),#3fb871);transition:width .35s ease}
+.header-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.theme-app-toggle,.settings-open-btn{position:static;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px;border-radius:10px;border:1px solid var(--app-btn-border);background:var(--app-btn-bg);color:var(--app-btn-color);font:600 12px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
+.theme-app-toggle:hover,.settings-open-btn:hover{border-color:var(--ui-accent);color:var(--app-text)}
+
+/* ── Estrutura em 3 colunas ── */
+.app-shell{position:fixed;inset:var(--header-h) 0 0 0;display:grid;grid-template-columns:236px minmax(0,1fr) clamp(380px,34vw,560px)}
+.sidebar-nav{display:flex;flex-direction:column;gap:3px;padding:16px 12px;overflow-y:auto;background:var(--app-panel);border-right:1px solid var(--app-panel-border)}
+.nav-group-title{padding:14px 10px 6px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--app-sub)}
+.nav-group-title:first-child{padding-top:2px}
+.sidebar-nav-item{position:relative;display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--app-btn-color);font:500 13px 'DM Sans',sans-serif;text-align:left;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.sidebar-nav-item:hover{background:var(--app-section-hover);color:var(--app-text)}
+.sidebar-nav-item .nav-num{width:26px;height:26px;flex:0 0 26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;border:1.5px solid var(--app-btn-border);color:var(--app-sub);background:var(--app-bg);transition:all .2s}
+.sidebar-nav-item .nav-text{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.sidebar-nav-item .nav-text small{font-size:10.5px;color:var(--app-sub);font-weight:400;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-nav-item.done .nav-num{background:var(--ui-accent-soft);border-color:var(--ui-accent-line);color:var(--ui-accent)}
+.sidebar-nav-item.active{background:var(--ui-accent-soft);border-color:var(--ui-accent-line);color:var(--app-text);font-weight:600}
+.sidebar-nav-item.active .nav-num{background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-accent-ink)}
+.sidebar-nav-item.extra .nav-num{border-radius:8px;font-size:13px}
+.nav-step-line{width:2px;height:8px;margin:-2px 0 -2px 22px;background:var(--app-panel-border);border-radius:2px}
+.nav-footer{margin-top:auto;padding-top:14px;display:flex;flex-direction:column;gap:6px}
+.nav-tip{font-size:11px;line-height:1.5;color:var(--app-sub);padding:10px 11px;border-radius:11px;background:var(--app-bg);border:1px dashed var(--app-panel-border)}
+.nav-reset{background:none;border:0;color:var(--app-sub);font:500 11px 'DM Sans',sans-serif;cursor:pointer;padding:6px;border-radius:8px}
+.nav-reset:hover{color:#e57373;background:rgba(229,115,115,.08)}
+
+/* ── Editor ── */
+.panel{display:block;width:auto;min-width:0;padding:0;gap:0;border:0;overflow-y:auto;background:var(--app-bg);container-type:inline-size}
+.panel-sections{max-width:920px;margin:0 auto;padding:26px 28px 40px}
+.panel-sections>.section{display:none;background:transparent;border:0;border-radius:0;overflow:visible}
+.panel-sections>.section.is-active{display:block;animation:stepIn .28s ease}
+@keyframes stepIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-sections>.section>.section-header{display:none}
+.panel-sections>.section.is-active>.section-body{display:flex;padding:20px;gap:16px;background:var(--app-section);border:1px solid var(--app-section-border);border-radius:var(--ui-radius);box-shadow:var(--ui-shadow)}
+.panel-sections>.section.is-active>.section-body.editorial-workspace{display:grid!important}
+.step-intro{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.step-intro-icon{width:46px;height:46px;flex:0 0 46px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--ui-accent-soft);border:1px solid var(--ui-accent-line)}
+.step-kicker{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ui-accent)}
+.step-intro h2{font-size:24px;line-height:1.15;margin:2px 0 4px;font-weight:700;letter-spacing:-.3px}
+.step-intro p{font-size:13.5px;color:var(--app-sub);line-height:1.5;max-width:60ch}
+.step-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+.step-footer .btn{width:auto;padding:12px 18px;border-radius:11px}
+.step-footer .step-next{margin-left:auto;min-width:200px}
+.step-next.pulse{animation:pulse 1.4s ease 2}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,219,126,.55)}50%{box-shadow:0 0 0 9px rgba(126,219,126,0)}}
+
+/* Campos e controles */
+.field label,.toggle-row>label{color:var(--app-label)}
+.field label{font-size:11px;letter-spacing:.6px;margin-bottom:7px}
+.field input,.field textarea,.field select,.section-body select,.project-search{width:100%;background:var(--app-input-bg);border:1px solid var(--app-input-border);border-radius:10px;color:var(--app-input-color);font:14px 'DM Sans',sans-serif;padding:11px 13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus,.field select:focus,.project-search:focus{border-color:var(--ui-accent);box-shadow:0 0 0 3px var(--ui-accent-soft)}
+.field input[type=range]{padding:0;border:0;box-shadow:none;background:transparent;accent-color:var(--ui-accent)}
+.field input[type=checkbox]{width:auto}
+.toggle-row{padding:10px 12px;border-radius:10px;background:var(--app-bg);border:1px solid var(--app-section-border)}
+.toggle-row>label{font-size:13px}
+.toggle-track{background:var(--app-toggle-bg)}
+.btn{border-radius:10px;padding:11px 14px;font-size:13px;transition:filter .15s,transform .1s,border-color .15s}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.secondary{background:var(--app-btn-bg);color:var(--app-btn-color);border:1px solid var(--app-btn-border)}
+.template-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.template-card{min-height:118px;border-radius:12px;background:var(--app-bg);border-color:var(--app-section-border)}
+.template-card:hover{box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.template-preview{height:46px;border-radius:8px}
+.template-name{font-size:12.5px}.template-desc{font-size:10.5px}
+.template-hint{font-size:12px;line-height:1.55}
+.theme-grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.grad-grid,.deco-btn-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+.theme-swatch.active,.grad-swatch.active{border-color:var(--ui-accent);box-shadow:0 0 0 2px var(--app-section),0 0 0 4px var(--ui-accent)}
+.theme-swatch span,.grad-swatch span{font-size:9.5px}
+.format-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.format-btn{padding:16px 8px;gap:10px;border-radius:12px;font-size:12px;background:var(--app-bg)}
+.format-btn .format-icon{border:2px solid currentColor;background:transparent!important;border-radius:4px}
+.format-btn .fmt-desc{font-size:10px;font-weight:500;text-transform:none;color:var(--app-sub)}
+.format-btn.active,.deco-btn.active,.img-tab.active,.tag-quick-btn.active,.carousel-slide-chip.active{background:var(--ui-accent-soft)}
+.history-item,.editorial-plan-item{background:var(--app-bg);border:1px solid var(--app-section-border);border-radius:10px}
+.history-item-title{color:var(--app-text)}.history-item-date,.history-empty{color:var(--app-sub)}
+.history-action{background:var(--app-btn-bg);border-color:var(--app-btn-border);color:var(--app-btn-color)}
+.history-action:hover{color:var(--app-text)}
+.step{color:var(--app-btn-color);font-size:13px}
+.step strong{color:var(--app-text)}
+.step-num{width:20px;height:20px;font-size:10px}
+.settings-status{background:var(--app-bg);border:1px solid var(--app-section-border);font-size:12px}
+.editorial-card{background:var(--app-bg);border-radius:12px}
+.field-counter{font-size:10px}
+
+.field .slider-row input[type=range],.field input[type=range]{height:6px;border-radius:6px;background:var(--app-slider-track);-webkit-appearance:none;appearance:none}
+.field input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--ui-accent);cursor:pointer;border:2px solid var(--app-section)}
+.field input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ui-accent);border:2px solid var(--app-section)}
+.field label.upload-btn{text-transform:none;letter-spacing:0;font-size:13px;color:var(--app-btn-color);margin-bottom:8px;padding:12px}
+.carousel-actions .btn,.carousel-actions .btn.small{font-size:12px;padding:10px 8px;min-width:0}
+.carousel-tools>label{display:block;font-size:14px;font-weight:700;color:var(--app-text);margin-bottom:8px}
+
+/* Central editorial: responde à largura do editor, não da janela */
+.editorial-workspace{grid-template-columns:minmax(0,1.3fr) minmax(260px,.9fr);gap:14px!important;padding:16px!important}
+.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@container (max-width:780px){
+  .editorial-workspace{grid-template-columns:minmax(0,1fr)!important}
   .editorial-side-stack{display:flex!important}
-  .editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  .editorial-card{padding:11px!important}
 }
-@media(max-width:390px){.editorial-fields-grid{grid-template-columns:1fr!important}}
-</style></head>
+@container (max-width:460px){.editorial-fields-grid{grid-template-columns:1fr!important}.format-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ── Prévia ── */
+.preview-wrap{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;height:auto;padding:0;overflow:hidden;background:var(--app-panel);border-left:1px solid var(--app-panel-border)}
+.preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--app-panel-border);flex-wrap:wrap}
+.pt-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--app-text)}
+.pt-title small{font-weight:500;color:var(--app-sub);font-size:11px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--ui-accent);animation:live 2s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(126,219,126,.55)}70%{box-shadow:0 0 0 7px rgba(126,219,126,0)}100%{box-shadow:0 0 0 0 rgba(126,219,126,0)}}
+.pt-formats{display:flex;padding:3px;gap:2px;border-radius:10px;background:var(--app-bg);border:1px solid var(--app-panel-border)}
+.pt-formats button{border:0;background:transparent;color:var(--app-sub);font:600 11px 'DM Sans',sans-serif;padding:6px 10px;border-radius:7px;cursor:pointer}
+.pt-formats button:hover{color:var(--app-text)}
+.pt-formats button.active{background:var(--ui-accent);color:var(--ui-accent-ink)}
+.preview-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:22px;overflow:hidden;background:radial-gradient(circle at 50% 45%,var(--ui-accent-soft),transparent 65%),var(--app-bg)}
+.post-scaler{position:relative;flex:0 0 auto}
+.post-scaler>.post{position:absolute;top:0;left:0;transform-origin:0 0;box-shadow:0 24px 60px rgba(0,0,0,.45);border-radius:6px}
+.export-dock{padding:14px 16px 16px;border-top:1px solid var(--app-panel-border);display:flex;flex-direction:column;gap:9px;background:var(--app-panel)}
+.export-main{padding:14px;font-size:14px;border-radius:12px;box-shadow:0 8px 22px rgba(80,190,110,.22)}
+.export-dock.flash{animation:dockFlash 1.2s ease 2}
+@keyframes dockFlash{0%,100%{box-shadow:none}50%{box-shadow:inset 0 0 0 2px var(--ui-accent)}}
+.export-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.export-grid .btn{padding:9px 8px;font-size:11.5px}
+.export-hint{font-size:11px;color:var(--app-sub);text-align:center;line-height:1.4}
+body:not(.carousel-mode) .carousel-only{display:none}
+
+/* ── Telas médias ── */
+@media (max-width:1280px){
+  .app-shell{grid-template-columns:200px minmax(0,1fr) clamp(340px,34vw,460px)}
+  .sidebar-nav-item .nav-text small{display:none}
+  .panel-sections{padding:20px 18px 32px}
+  .app-header{grid-template-columns:auto minmax(180px,1fr) auto}
+  .brand-sub{display:none}
+}
+/* ── Tablet e celular: uma coluna ── */
+@media (max-width:1000px){
+  html,body{height:auto;overflow:visible}
+  .panel-sections{scroll-margin-top:104px}
+  .app-header{position:sticky;top:0;height:auto;grid-template-columns:1fr auto;gap:10px 12px;padding:10px 14px}
+  .header-progress{grid-column:1/-1;grid-row:2}
+  .settings-open-btn span{display:none}
+  .app-shell{position:static;display:flex;flex-direction:column}
+  .sidebar-nav{order:-2;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--app-panel-border)}
+  .nav-group-title,.nav-step-line,.nav-tip{display:none}
+  .sidebar-nav-item{width:auto;flex:0 0 auto;padding:6px 10px 6px 6px;white-space:nowrap}
+  .sidebar-nav-item .nav-num{width:24px;height:24px;flex-basis:24px}
+  .nav-footer{margin:0;padding:0;flex-direction:row}
+  .preview-wrap{order:-1;border-left:0;border-bottom:1px solid var(--app-panel-border)}
+  .preview-stage{height:min(48vh,440px);flex:none;padding:14px}
+  .panel{overflow:visible}
+  .panel-sections{padding:18px 14px 28px}
+  .step-intro h2{font-size:20px}
+  .step-footer .step-next{min-width:0;flex:1}
+}
+@media (max-width:520px){
+  .brand-title{font-size:16px}.brand-mark{width:32px;height:32px;flex-basis:32px}
+  .theme-app-toggle{padding:0 10px}
+  .panel-sections>.section.is-active>.section-body{padding:14px}
+  .step-intro-icon{display:none}
+  .pt-formats button{padding:6px 8px}
+}
+</style>
+</head>
 <body>
 
 <div class="toast" id="toast"></div>
@@ -606,21 +638,29 @@
 
 <!-- CABEÇALHO -->
 <header class="app-header">
-  <div class="app-header-left">
-    <div class="panel-title" style="font-size:20px;">Gerador de Postagens</div>
-    <div class="app-header-meta">
-      <span class="panel-sub" style="font-size:12px;">Padronizado para Instagram e outras redes sociais</span>
-      <span class="panel-sub" style="font-size:12px;">•</span>
-      <span class="panel-sub" style="font-size:12px;">Desenvolvido por <a href="https://instagram.com/mpjnutri" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:600;">@mpjnutri</a> — uso, edição e distribuição livres</span>
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">✦</div>
+    <div class="brand-text">
+      <div class="brand-title">Gerador de Postagens</div>
+      <div class="brand-sub">Feito por <a href="https://instagram.com/mpjnutri" target="_blank" rel="noopener">@mpjnutri</a> · uso, edição e distribuição livres</div>
     </div>
   </div>
-  <button type="button" class="settings-open-btn" onclick="openSettings()" aria-label="Abrir configurações">⚙️ Configurações</button>
+  <div class="header-progress" aria-live="polite">
+    <div class="hp-label"><span id="hp-step">Passo 1 de 6</span><strong id="hp-name">Modelo</strong></div>
+    <div class="hp-bar"><span id="hp-fill"></span></div>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="theme-app-toggle" id="app-theme-btn" onclick="toggleAppTheme()" title="Alternar tema da interface">🌙 Escuro</button>
+    <button type="button" class="settings-open-btn" onclick="openSettings()" aria-label="Abrir configurações">⚙️ <span>Configurações</span></button>
+  </div>
 </header>
 
-<!-- PAINEL -->
-<div class="panel">
+<div class="app-shell">
+<nav class="sidebar-nav" id="sidebar-nav" aria-label="Etapas do editor"></nav>
 
-  <button class="theme-app-toggle" id="app-theme-btn" onclick="toggleAppTheme()" style="width:100%">🌙 Escuro</button>
+<!-- PAINEL -->
+<main class="panel">
+<div class="panel-sections" id="panel-sections">
 
   <div class="section open" id="sec-modelos">
     <div class="section-header" onclick="toggleSection('sec-modelos')">
@@ -847,10 +887,10 @@ Terceiro item da lista</textarea></div>
     </div>
     <div class="section-body">
       <div class="format-grid">
-        <button class="format-btn" data-fmt="quadrado" onclick="setFormat(this)"><div class="format-icon" style="width:28px;height:28px;"></div>1:1</button>
-        <button class="format-btn active" data-fmt="retrato" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;"></div>4:5</button>
-        <button class="format-btn" data-fmt="stories" onclick="setFormat(this)"><div class="format-icon" style="width:16px;height:28px;"></div>9:16</button>
-        <button class="format-btn" data-fmt="carrossel" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;border-style:dashed;"></div>Carrossel</button>
+        <button class="format-btn" data-fmt="quadrado" onclick="setFormat(this)"><div class="format-icon" style="width:28px;height:28px;"></div>1:1<span class="fmt-desc">Feed quadrado</span></button>
+        <button class="format-btn active" data-fmt="retrato" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;"></div>4:5<span class="fmt-desc">Feed retrato</span></button>
+        <button class="format-btn" data-fmt="stories" onclick="setFormat(this)"><div class="format-icon" style="width:16px;height:28px;"></div>9:16<span class="fmt-desc">Stories e Reels</span></button>
+        <button class="format-btn" data-fmt="carrossel" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;border-style:dashed;"></div>Carrossel<span class="fmt-desc">Vários slides</span></button>
       </div>
       <div class="carousel-tools" id="carousel-tools">
         <label>Slides do carrossel</label>
@@ -972,32 +1012,34 @@ Terceiro item da lista</textarea></div>
     </div>
   </div>
 
-  <hr class="divider">
-
-  <button class="btn" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
-  <button class="btn secondary" id="btn-export-zip" onclick="exportCarouselZip()">📦 Exportar carrossel em ZIP</button>
-  <button class="btn secondary" id="btn-export-pdf" onclick="exportCarouselPDF()">📄 Exportar em PDF</button>
-  <button class="btn" onclick="openFullscreen()">🖥️ Abrir em tela cheia</button>
-  <button class="btn secondary" onclick="copyHTML()">📋 Copiar HTML</button>
-  <button class="btn secondary" onclick="resetAll()">↺ Resetar tudo</button>
-
   <div class="section" id="sec-inst">
     <div class="section-header" onclick="toggleSection('sec-inst')">
-      <div class="section-title">📸 Como gerar imagem</div>
+      <div class="section-title">❓ Ajuda</div>
       <div class="section-arrow">▼</div>
     </div>
-    <div class="section-body" style="gap:8px">
-      <div class="step"><div class="step-num">1</div><span>Clique em <strong style="color:var(--accent)">Abrir em tela cheia</strong></span></div>
-      <div class="step"><div class="step-num">2</div><span>Pressione <strong style="color:var(--accent)">F12</strong> → DevTools</span></div>
-      <div class="step"><div class="step-num">3</div><span><strong style="color:var(--accent)">Ctrl+Shift+M</strong> — modo responsivo</span></div>
-      <div class="step"><div class="step-num">4</div><span>Digite <strong style="color:var(--accent)">1080 × 1350</strong></span></div>
-      <div class="step"><div class="step-num">5</div><span><strong style="color:var(--accent)">⋯ → Capturar screenshot</strong></span></div>
+    <div class="section-body" style="gap:10px">
+      <div class="step"><div class="step-num">1</div><span>Escolha um <strong>modelo</strong> e o <strong>formato</strong> (feed, stories ou carrossel).</span></div>
+      <div class="step"><div class="step-num">2</div><span>Edite <strong>texto</strong>, <strong>visual</strong> e <strong>identidade</strong> — a prévia à direita atualiza na hora.</span></div>
+      <div class="step"><div class="step-num">3</div><span>Em <strong>Legenda e IA</strong>, gere e copie a legenda do post.</span></div>
+      <div class="step"><div class="step-num">4</div><span>Clique em <strong>Salvar como imagem</strong> no painel da prévia. O PNG sai em alta resolução (3×); no carrossel, cada slide é salvo separadamente ou em ZIP/PDF.</span></div>
+      <div class="template-hint" style="margin-top:6px">Atalhos: <strong>Ctrl+Z</strong> desfaz e <strong>Ctrl+Y</strong> refaz. O rascunho é salvo automaticamente neste navegador.</div>
     </div>
   </div>
 </div>
+</main>
 
 <!-- PREVIEW -->
-<div class="preview-wrap">
+<aside class="preview-wrap" aria-label="Prévia da postagem">
+  <div class="preview-toolbar">
+    <div class="pt-title"><span class="live-dot" aria-hidden="true"></span>Prévia ao vivo <small id="preview-size">1080 × 1350</small></div>
+    <div class="pt-formats" role="group" aria-label="Trocar formato">
+      <button type="button" data-quick-fmt="quadrado" title="Feed quadrado">1:1</button>
+      <button type="button" data-quick-fmt="retrato" title="Feed retrato">4:5</button>
+      <button type="button" data-quick-fmt="stories" title="Stories / Reels">9:16</button>
+      <button type="button" data-quick-fmt="carrossel" title="Carrossel">Carrossel</button>
+    </div>
+  </div>
+  <div class="preview-stage" id="preview-stage"><div class="post-scaler" id="post-scaler">
   <div class="post" id="post" data-format="retrato">
     <div class="post-background" id="post-background"></div>
     <div class="deco-circle" id="deco-c1"></div>
@@ -1035,7 +1077,19 @@ Terceiro item da lista</textarea></div>
       </div>
     </div>
   </div>
-
+  </div></div>
+  <div class="export-dock" id="export-dock">
+    <button class="btn export-main" id="btn-save-img" onclick="saveImage()">💾 Salvar como imagem</button>
+    <div class="export-grid">
+      <button class="btn secondary carousel-only" id="btn-export-zip" onclick="exportCarouselZip()">📦 Exportar carrossel em ZIP</button>
+      <button class="btn secondary carousel-only" id="btn-export-pdf" onclick="exportCarouselPDF()">📄 Exportar em PDF</button>
+      <button class="btn secondary" onclick="openFullscreen()">🖥️ Tela cheia</button>
+      <button class="btn secondary" onclick="copyHTML()">📋 Copiar HTML</button>
+    </div>
+    <p class="export-hint" id="export-hint">PNG em alta resolução, pronto para o Instagram.</p>
+  </div>
+</aside>
+</div>
 
 <script>
   const THEMES = {
@@ -2237,42 +2291,7 @@ Terceiro item da lista</textarea></div>
 
     return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Post ' + handle + '</title>'
       + '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">'
-      + '<style>' + css + '
-  /* Rebalanceamento desktop: editor amplo e prévia com largura preservada */
-  body{min-width:0}
-  .panel{width:min(1280px,calc(100vw - 390px))!important;min-width:620px!important;max-width:none!important;flex:0 0 auto!important;padding:16px 20px 64px!important;gap:11px!important}
-  .preview-wrap{flex:1 1 390px!important;min-width:350px!important;width:auto!important}
-  .editorial-workspace{width:100%;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr)!important;gap:12px!important;padding:12px!important}
-  .editorial-card{padding:12px!important;gap:9px!important;border-radius:10px}
-  .editorial-card-head{padding-bottom:7px}
-  .editorial-card-head h3{font-size:14px}
-  .editorial-card-head p{font-size:10px}
-  .editorial-fields-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
-  .editorial-fields-grid .field input,.editorial-fields-grid .field select{min-width:0;font-size:12px;padding:8px}
-  .editorial-card .field textarea{min-height:62px;padding:8px 10px}
-  .editorial-card #caption-output{min-height:190px;max-height:34vh;line-height:1.55}
-  .editorial-action-row{gap:7px}
-  .editorial-action-row>.btn{min-width:0;padding:9px 10px;font-size:11px}
-  .editorial-side-stack{gap:10px}
-  .editorial-card-icon{width:30px;height:30px;flex-basis:30px}
-  .editorial-card .btn{padding:9px 10px}
-  .editorial-card .settings-status{font-size:10px;padding:6px 8px}
-  .editorial-workspace .field label{font-size:9px;margin-bottom:4px}
-  @media(min-width:1500px){.panel{width:min(1360px,calc(100vw - 440px))!important}.editorial-workspace{grid-template-columns:minmax(0,1.45fr) minmax(340px,.8fr)!important}.editorial-card #caption-output{min-height:230px}}
-  @media(max-width:1100px) and (min-width:701px){.panel{width:calc(100vw - 340px)!important;min-width:560px!important;padding:14px 12px 48px!important}.preview-wrap{min-width:320px!important}.editorial-workspace{grid-template-columns:minmax(0,1fr)!important}.editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-  @media(max-width:700px){.panel{width:100%!important;min-width:0!important;padding:12px 10px 32px!important}.preview-wrap{min-width:0!important;width:100%!important}.editorial-workspace{padding:9px!important}.editorial-fields-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.editorial-card #caption-output{max-height:none;min-height:170px}}
-  @media(max-width:420px){.editorial-fields-grid{grid-template-columns:1fr!important}}
-
-
-  @media(max-width:900px) and (min-width:701px){
-    body{flex-direction:column;overflow-x:hidden}
-    .panel{width:100%!important;min-width:0!important;max-width:none!important;order:1;padding:14px 16px 36px!important}
-    .preview-wrap{position:relative;top:0;height:auto;min-height:620px;width:100%!important;min-width:0!important;order:2;padding:24px}
-    .editorial-workspace{grid-template-columns:minmax(0,1fr)!important}
-    .editorial-side-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-    .editorial-side-stack>.editorial-card:last-child{grid-column:1/-1}
-  }
-</style></head><body>'
+      + '<style>' + css + '</style></head><body>'
       + '<div class="post"><div class="deco-circle"></div><div class="deco-circle2"></div>'
       + '<div class="content"><div class="title-wrap"><div class="title-l1">' + line1 + '</div><div class="title-l2">' + line2 + '</div></div>'
       + '<div class="divider"></div><p class="description">' + desc + '</p>'
@@ -2421,65 +2440,162 @@ Terceiro item da lista</textarea></div>
   document.querySelectorAll('#btn-tag1-toggle,#btn-tag2-toggle').forEach(el => el.addEventListener('click', autoSaveDraft));
 
 
-  // Monta a navegação sem deixar elementos soltos no grid do painel.
-  (function initSidebarNavigation(){
-    const panel=document.querySelector('.panel');
-    if(!panel || panel.dataset.sidebarReady==='1') return;
-    panel.dataset.sidebarReady='1';
-    const themeToggle=panel.querySelector('#app-theme-btn');
-    const sections=Array.from(panel.querySelectorAll(':scope > .section'));
-    const nav=document.createElement('nav');
-    nav.className='sidebar-nav';
-    nav.setAttribute('aria-label','Categorias do editor');
-    const heading=document.createElement('div');
-    heading.className='sidebar-nav-heading';
-    heading.textContent='FERRAMENTAS';
-    const hint=document.createElement('div');
-    hint.className='sidebar-nav-hint';
-    hint.textContent='Selecione uma área para editar.';
-    nav.append(heading,hint);
-    if(themeToggle) nav.appendChild(themeToggle);
-    const content=document.createElement('div');
-    content.className='panel-sections';
-    sections.forEach(section=>{
-      const title=section.querySelector('.section-title');
-      const button=document.createElement('button');
-      button.type='button';
-      button.className='sidebar-nav-item';
-      button.dataset.target=section.id;
-      button.innerHTML='<span class="nav-indicator" aria-hidden="true"></span><span></span>';
-      button.lastElementChild.textContent=title ? title.textContent.trim() : section.id;
-      button.addEventListener('click',()=>window.setActiveSidebarSection(section.id));
-      nav.appendChild(button);
-      content.appendChild(section);
+  // ═════ Navegação guiada em etapas + prévia escalonada ═════
+  (function initGuidedEditor(){
+    const STEPS=[
+      {id:'sec-modelos',   icon:'🧩', title:'Modelo',       hint:'Ponto de partida', desc:'Escolha um modelo pronto para começar. Depois você personaliza textos, cores e imagem.', group:'Criar postagem'},
+      {id:'sec-formato',   icon:'📐', title:'Formato',      hint:'Feed, stories ou carrossel', desc:'Defina onde o conteúdo será publicado. No carrossel, você cria e organiza vários slides.'},
+      {id:'sec-texto',     icon:'✏️', title:'Texto',        hint:'Título, descrição e lista', desc:'Escreva a mensagem principal. A prévia ao lado atualiza enquanto você digita.'},
+      {id:'sec-visual',    icon:'🎨', title:'Visual',       hint:'Cores, imagem e fundo', desc:'Ajuste o tema de cor, o gradiente, os elementos decorativos e as imagens.'},
+      {id:'sec-ident',     icon:'👤', title:'Identidade',   hint:'@, WhatsApp e fontes', desc:'Inclua seu perfil e contato no rodapé e ajuste a tipografia do post.'},
+      {id:'sec-assistente',icon:'✍️', title:'Legenda e IA', hint:'Legenda, roteiro e revisão', desc:'Gere a legenda, monte roteiros de carrossel e revise o conteúdo antes de publicar.', group:'Publicar'},
+      {id:'sec-hist',      icon:'🗂️', title:'Projetos',     hint:'Salvar e reabrir', desc:'Salve o post atual, busque e reabra projetos anteriores.', group:'Organizar', extra:true},
+      {id:'sec-versoes',   icon:'🧬', title:'Versões',      hint:'Marcos de edição', desc:'Guarde versões de um projeto salvo para comparar ou voltar atrás.', extra:true},
+      {id:'sec-calendario',icon:'🗓️', title:'Planejamento', hint:'Calendário editorial', desc:'Organize as próximas publicações por data e status.', extra:true},
+      {id:'sec-inst',      icon:'❓', title:'Ajuda',        hint:'Como usar', desc:'Um resumo rápido do fluxo de criação e exportação.', extra:true},
+    ].filter(s=>document.getElementById(s.id));
+    const main=STEPS.filter(s=>!s.extra);
+    const nav=document.getElementById('sidebar-nav');
+    const VISITED_KEY='content-generator-visited-steps', ACTIVE_KEY='content-generator-active-section';
+    let visited=new Set();
+    try{visited=new Set(JSON.parse(localStorage.getItem(VISITED_KEY)||'[]'))}catch(e){}
+
+    // Monta o menu
+    STEPS.forEach((step,i)=>{
+      if(step.group){const g=document.createElement('div');g.className='nav-group-title';g.textContent=step.group;nav.appendChild(g);}
+      else if(!step.extra&&i>0){const l=document.createElement('div');l.className='nav-step-line';nav.appendChild(l);}
+      const b=document.createElement('button');
+      b.type='button';b.className='sidebar-nav-item'+(step.extra?' extra':'');b.dataset.target=step.id;
+      const num=step.extra?step.icon:String(main.indexOf(step)+1);
+      b.innerHTML='<span class="nav-num"></span><span class="nav-text"><span></span><small></small></span>';
+      b.querySelector('.nav-num').textContent=num;
+      b.querySelector('.nav-text span').textContent=step.title;
+      b.querySelector('.nav-text small').textContent=step.hint;
+      b.addEventListener('click',()=>goToStep(step.id));
+      nav.appendChild(b);
     });
-    const exportNodes=Array.from(panel.querySelectorAll(':scope > .btn, :scope > .divider'));
-    if(exportNodes.length){
-      const actions=document.createElement('div');
-      actions.className='nav-exports';
-      const actionsTitle=document.createElement('div');
-      actionsTitle.className='nav-exports-title';
-      actionsTitle.textContent='EXPORTAR / AÇÕES';
-      actions.appendChild(actionsTitle);
-      exportNodes.forEach(node=>actions.appendChild(node));
-      nav.appendChild(actions);
-    }
-    panel.replaceChildren(nav,content);
-    window.setActiveSidebarSection=function(id){
-      const target=sections.find(section=>section.id===id);
-      if(!target) return;
-      sections.forEach(section=>section.classList.toggle('active',section===target));
-      nav.querySelectorAll('.sidebar-nav-item').forEach(button=>{
-        const active=button.dataset.target===id;
-        button.classList.toggle('active',active);
-        button.setAttribute('aria-current',active?'page':'false');
+    const foot=document.createElement('div');foot.className='nav-footer';
+    foot.innerHTML='<div class="nav-tip">💡 Siga as etapas na ordem. Tudo é salvo automaticamente neste navegador.</div><button type="button" class="nav-reset" title="Volta tudo ao padrão">↺ Resetar tudo</button>';
+    foot.querySelector('.nav-reset').addEventListener('click',()=>{if(confirm('Resetar todos os campos da postagem atual?'))resetAll();});
+    nav.appendChild(foot);
+
+    // Cabeçalho e rodapé de cada etapa
+    STEPS.forEach(step=>{
+      const sec=document.getElementById(step.id);
+      const mi=main.indexOf(step);
+      const intro=document.createElement('div');intro.className='step-intro';
+      intro.innerHTML='<div class="step-intro-icon"></div><div><div class="step-kicker"></div><h2></h2><p></p></div>';
+      intro.querySelector('.step-intro-icon').textContent=step.icon;
+      intro.querySelector('.step-kicker').textContent=step.extra?'Ferramentas':'Passo '+(mi+1)+' de '+main.length;
+      intro.querySelector('h2').textContent=step.title;
+      intro.querySelector('p').textContent=step.desc;
+      sec.insertBefore(intro,sec.querySelector('.section-body'));
+      const footer=document.createElement('div');footer.className='step-footer';
+      if(step.extra){
+        const back=document.createElement('button');back.type='button';back.className='btn secondary';back.textContent='← Voltar para a criação';
+        back.addEventListener('click',()=>goToStep(lastMainStep||main[0].id));footer.appendChild(back);
+      }else{
+        if(mi>0){const prev=document.createElement('button');prev.type='button';prev.className='btn secondary';prev.textContent='← '+main[mi-1].title;prev.addEventListener('click',()=>goToStep(main[mi-1].id));footer.appendChild(prev);}
+        const next=document.createElement('button');next.type='button';next.className='btn step-next';
+        if(mi<main.length-1){next.textContent='Próximo: '+main[mi+1].title+' →';next.addEventListener('click',()=>goToStep(main[mi+1].id));}
+        else{next.textContent='Concluir e exportar ✓';next.addEventListener('click',highlightExport);}
+        footer.appendChild(next);
+      }
+      sec.appendChild(footer);
+    });
+
+    let lastMainStep='';
+    let navReady=false;
+    function goToStep(id){
+      const step=STEPS.find(s=>s.id===id);if(!step)return;
+      STEPS.forEach(s=>document.getElementById(s.id).classList.toggle('is-active',s.id===id));
+      const sec=document.getElementById(id);sec.classList.add('open');
+      if(!step.extra){lastMainStep=id;visited.add(id);}
+      nav.querySelectorAll('.sidebar-nav-item').forEach(b=>{
+        const on=b.dataset.target===id;
+        b.classList.toggle('active',on);b.classList.toggle('done',!on&&visited.has(b.dataset.target));
+        if(on){b.setAttribute('aria-current','step');if(window.innerWidth<=1000)nav.scrollTo({left:Math.max(0,b.offsetLeft-nav.offsetLeft-12),behavior:'smooth'});else b.scrollIntoView({block:'nearest'});}else b.removeAttribute('aria-current');
       });
-      try{localStorage.setItem('content-generator-active-section',id)}catch(e){}
-      target.classList.add('open');
-    };
-    let saved='';
-    try{saved=localStorage.getItem('content-generator-active-section')||''}catch(e){}
-    window.setActiveSidebarSection(sections.some(section=>section.id===saved)?saved:'sec-assistente');
+      const mi=main.indexOf(step);
+      document.getElementById('hp-step').textContent=step.extra?'Ferramentas':'Passo '+(mi+1)+' de '+main.length;
+      document.getElementById('hp-name').textContent=step.title;
+      document.getElementById('hp-fill').style.width=(step.extra?100:Math.round((mi+1)/main.length*100))+'%';
+      const panel=document.querySelector('.panel');if(panel)panel.scrollTop=0;
+      if(navReady&&window.innerWidth<=1000)document.getElementById('panel-sections').scrollIntoView({block:'start',behavior:'smooth'});
+      try{localStorage.setItem(ACTIVE_KEY,id);localStorage.setItem(VISITED_KEY,JSON.stringify([...visited]));}catch(e){}
+    }
+    window.setActiveSidebarSection=goToStep;
+    window.goToStep=goToStep;
+
+    function highlightExport(){
+      const dock=document.getElementById('export-dock');
+      dock.scrollIntoView({behavior:'smooth',block:'nearest'});
+      dock.classList.remove('flash');void dock.offsetWidth;dock.classList.add('flash');
+      showToast('🎉 Tudo pronto! Salve sua postagem no painel da prévia.');
+    }
+
+    // Depois de escolher um modelo, destaca o próximo passo
+    if(typeof applyTemplate==='function'){
+      const original=applyTemplate;
+      window.applyTemplate=applyTemplate=function(){
+        const r=original.apply(this,arguments);
+        goToStep('sec-modelos');
+        const next=document.querySelector('#sec-modelos .step-next');
+        if(next){next.classList.remove('pulse');void next.offsetWidth;next.classList.add('pulse');}
+        return r;
+      };
+    }
+
+    // Formato rápido na barra da prévia + legenda de dimensões
+    const SIZES={quadrado:'1080 × 1080',retrato:'1080 × 1350',stories:'1080 × 1920',carrossel:'1080 × 1350 · slides'};
+    document.querySelectorAll('[data-quick-fmt]').forEach(b=>b.addEventListener('click',()=>{
+      const target=document.querySelector('.format-btn[data-fmt="'+b.dataset.quickFmt+'"]');if(target)setFormat(target);
+    }));
+    const post=document.getElementById('post');
+    function syncFormatUI(){
+      const mode=post.dataset.mode||post.dataset.format||'retrato';
+      document.querySelectorAll('[data-quick-fmt]').forEach(b=>b.classList.toggle('active',b.dataset.quickFmt===mode));
+      document.body.classList.toggle('carousel-mode',mode==='carrossel');
+      document.getElementById('preview-size').textContent=SIZES[mode]||'';
+      document.getElementById('export-hint').textContent=mode==='carrossel'
+        ?'Cada slide vira um PNG separado — ou exporte tudo em ZIP ou PDF.'
+        :'PNG em alta resolução, pronto para o Instagram.';
+      fitPreview();
+    }
+    new MutationObserver(syncFormatUI).observe(post,{attributes:true,attributeFilter:['data-mode','data-format']});
+
+    // Escala a prévia para caber na coluna, mantendo o tamanho real para exportação
+    const stage=document.getElementById('preview-stage'),scaler=document.getElementById('post-scaler');
+    let exporting=false;
+    function fitPreview(){
+      if(exporting)return;
+      const w=post.offsetWidth,h=post.offsetHeight;if(!w||!h)return;
+      const cs=getComputedStyle(stage);
+      const aw=stage.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+      const ah=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+      const s=Math.max(.2,Math.min(1.25,aw/w,ah/h));
+      post.style.transform='scale('+s+')';
+      scaler.style.width=(w*s)+'px';scaler.style.height=(h*s)+'px';
+    }
+    window.fitPreview=fitPreview;
+    if('ResizeObserver' in window){const ro=new ResizeObserver(()=>fitPreview());ro.observe(stage);ro.observe(post);}
+    window.addEventListener('resize',fitPreview);
+    post.addEventListener('transitionend',fitPreview);
+
+    // Exporta sempre em tamanho real (sem a escala da prévia)
+    if(window.html2canvas){
+      const h2c=window.html2canvas;
+      window.html2canvas=function(el,opts){
+        const prev=post.style.transform;exporting=true;post.style.transform='none';
+        const done=()=>{post.style.transform=prev;exporting=false;fitPreview();};
+        return h2c(el,opts).then(r=>{done();return r;},e=>{done();throw e;});
+      };
+    }
+
+    syncFormatUI();
+    let saved='';try{saved=localStorage.getItem(ACTIVE_KEY)||''}catch(e){}
+    goToStep(STEPS.some(s=>s.id===saved)?saved:main[0].id);
+    navReady=true;
   })();
 
   renderHistory();
