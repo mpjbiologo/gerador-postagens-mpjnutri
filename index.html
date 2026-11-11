@@ -285,6 +285,19 @@
   .image-edit-object.selected { outline:2px solid var(--accent); outline-offset:2px; }
   .image-edit-handle { position:absolute; right:-7px; bottom:-7px; width:16px; height:16px; border:2px solid #fff; border-radius:50%; background:var(--accent); cursor:nwse-resize; touch-action:none; }
   .image-edit-object:not(.selected) .image-edit-handle { display:none; }
+
+  .video-edit-wrap{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:visible}
+  .video-edit-object{position:absolute;left:10%;top:10%;width:80%;height:240px;pointer-events:auto;touch-action:none;cursor:grab;user-select:none}
+  .video-edit-object:active{cursor:grabbing}
+  .video-edit-object video{display:block;width:100%;height:100%;object-fit:cover;border-radius:10px;pointer-events:none;background:#000}
+  .video-edit-object.selected{outline:2px solid var(--accent);outline-offset:2px}
+  .video-edit-object:not(.selected) .video-edit-handle{display:none}
+  .video-edit-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .video-edit-tools .field{min-width:0;margin:0}
+  .video-edit-tools input[type=range],.video-edit-tools select{width:100%}
+  #video-file{display:none}
+  #video-upload-status{font-size:10px;color:var(--app-sub);line-height:1.5;margin-top:6px}
+
   .image-edit-tools { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
   .image-edit-tools .field { min-width:0; margin:0; }
   .image-edit-tools input[type=range] { width:100%; accent-color:var(--accent); }
@@ -1088,6 +1101,7 @@ Terceiro item da lista</textarea></div>
     <svg id="deco-svg-layer" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 600 650" preserveAspectRatio="xMidYMid slice"></svg>
     <div class="carousel-counter" id="carousel-counter">1 / 1</div>
     <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-center-guide guide-v" id="image-guide-v" data-html2canvas-ignore="true"></div><div class="image-center-guide guide-h" id="image-guide-h" data-html2canvas-ignore="true"></div><div class="image-edit-object" id="image-edit-object"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
+    <div class="video-edit-wrap" id="video-edit-wrap"><div class="image-center-guide guide-v" id="video-guide-v"></div><div class="image-center-guide guide-h" id="video-guide-h"></div><div class="video-edit-object" id="video-edit-object" data-html2canvas-ignore="true"><video id="post-video" playsinline muted loop preload="metadata"></video><span class="image-edit-handle" id="video-edit-handle" aria-label="Redimensionar vídeo"></span></div></div>
     <div class="content">
       <div id="preview-title">
         <div id="title-line1">Seu título</div>
@@ -1844,6 +1858,26 @@ Terceiro item da lista</textarea></div>
     if (tab === 'url') { imageEditState.originalSrc='';updateBackgroundRemovalControls();window._uploadedImgSrc = ''; updatePreview(); }
   }
 
+
+  let videoEditState={x:10,y:10,width:80,height:240,fit:'cover',zoom:100,opacity:100,brightness:100,saturation:100,contrast:100};
+  let videoObjectUrl='';
+  const VIDEO_DB='mpjnutri-video-assets',VIDEO_STORE='videos',VIDEO_KEY='active-video';
+  function openVideoDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(VIDEO_DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(VIDEO_STORE))req.result.createObjectStore(VIDEO_STORE);};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+  async function storeVideoBlob(blob){const db=await openVideoDB();await new Promise((resolve,reject)=>{const tx=db.transaction(VIDEO_STORE,'readwrite');tx.objectStore(VIDEO_STORE).put(blob,VIDEO_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();}
+  async function readVideoBlob(){const db=await openVideoDB();const blob=await new Promise((resolve,reject)=>{const tx=db.transaction(VIDEO_STORE,'readonly');const req=tx.objectStore(VIDEO_STORE).get(VIDEO_KEY);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});db.close();return blob;}
+  async function removeVideoBlob(){try{const db=await openVideoDB();await new Promise((resolve,reject)=>{const tx=db.transaction(VIDEO_STORE,'readwrite');tx.objectStore(VIDEO_STORE).delete(VIDEO_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();}catch(e){}}
+  function attachVideoBlob(blob){const video=document.getElementById('post-video');if(videoObjectUrl)URL.revokeObjectURL(videoObjectUrl);videoObjectUrl=URL.createObjectURL(blob);video.src=videoObjectUrl;video.style.display='block';video.load();document.getElementById('video-edit-object')?.classList.remove('selected');document.getElementById('video-upload-status').textContent='Vídeo carregado: '+(blob.name||'arquivo local')+' · '+(blob.size/1048576).toFixed(1)+' MB';applyVideoEdit();autoSaveDraft();}
+  async function handleVideoUpload(input){const file=input.files?.[0];if(!file)return;if(!file.type.startsWith('video/')){showToast('Selecione um arquivo de vídeo.');return;}if(file.size>100*1024*1024){showToast('O limite de upload é 100 MB.');input.value='';return;}const status=document.getElementById('video-upload-status');status.textContent='Salvando vídeo no armazenamento local…';try{await storeVideoBlob(file);attachVideoBlob(file);showToast('Vídeo carregado e salvo neste navegador.');}catch(e){status.textContent='Não foi possível armazenar o vídeo. Verifique o espaço disponível no navegador.';showToast('Falha ao salvar o vídeo.');}}
+  async function restoreSavedVideo(){try{const blob=await readVideoBlob();if(blob)attachVideoBlob(blob);}catch(e){document.getElementById('video-upload-status').textContent='Não foi possível recuperar o vídeo salvo.';}}
+  function applyVideoEdit(){const obj=document.getElementById('video-edit-object'),v=document.getElementById('post-video');if(!obj||!v)return;obj.style.left=videoEditState.x+'%';obj.style.top=videoEditState.y+'%';obj.style.width=videoEditState.width+'%';obj.style.height=videoEditState.height+'px';v.style.objectFit=videoEditState.fit;v.style.transform='scale('+(Number(videoEditState.zoom)||100)/100+')';v.style.transformOrigin='center';v.style.opacity=Math.max(0,Math.min(100,Number(videoEditState.opacity)))/100;v.style.filter='brightness('+videoEditState.brightness+'%) saturate('+videoEditState.saturation+'%) contrast('+videoEditState.contrast+'%)';const post=document.getElementById('post'),cv=videoEditState.x+videoEditState.width/2,ch=videoEditState.y+(videoEditState.height/(post?.clientHeight||650)*100)/2;document.getElementById('video-guide-v')?.classList.toggle('visible',Math.abs(cv-50)<=1.5);document.getElementById('video-guide-h')?.classList.toggle('visible',Math.abs(ch-50)<=1.5);syncVideoEditControls();autoSaveDraft();}
+  function syncVideoEditControls(){const map={fit:'video-fit',width:'video-width',height:'video-height',opacity:'video-opacity',brightness:'video-brightness',saturation:'video-saturation',contrast:'video-contrast'};Object.entries(map).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=videoEditState[k];});const labels={zoom:videoEditState.zoom+'%',width:videoEditState.width+'%',height:videoEditState.height+' px',opacity:videoEditState.opacity+'%',brightness:videoEditState.brightness+'%',saturation:videoEditState.saturation+'%',contrast:videoEditState.contrast+'%'};Object.entries(labels).forEach(([k,v])=>{const el=document.getElementById('video-'+k+'-out');if(el)el.textContent=v;});}
+  function updateVideoEditFromControls(){const n=id=>Number(document.getElementById(id).value);videoEditState={...videoEditState,fit:document.getElementById('video-fit').value,width:n('video-width'),height:n('video-height'),opacity:n('video-opacity'),brightness:n('video-brightness'),saturation:n('video-saturation'),contrast:n('video-contrast')};applyVideoEdit();}
+  function setVideoZoom(d){videoEditState.zoom=Math.max(50,Math.min(250,videoEditState.zoom+d));applyVideoEdit();}
+  function resetVideoEdit(){videoEditState={x:10,y:10,width:80,height:240,fit:'cover',zoom:100,opacity:100,brightness:100,saturation:100,contrast:100};applyVideoEdit();showToast('Ajustes do vídeo redefinidos.');}
+  function toggleVideoPlayback(){const v=document.getElementById('post-video');if(!v?.src){showToast('Envie um vídeo primeiro.');return;}if(v.paused)v.play().catch(()=>showToast('O navegador bloqueou a reprodução.'));else v.pause();}
+  async function deleteVideo(){const v=document.getElementById('post-video');v.pause();v.removeAttribute('src');v.load();if(videoObjectUrl)URL.revokeObjectURL(videoObjectUrl);videoObjectUrl='';document.getElementById('video-edit-object')?.classList.remove('selected');document.getElementById('video-file').value='';document.getElementById('video-upload-status').textContent='Nenhum vídeo carregado.';await removeVideoBlob();autoSaveDraft();showToast('Vídeo apagado.');}
+  function initVideoEditing(){const obj=document.getElementById('video-edit-object'),handle=document.getElementById('video-edit-handle'),post=document.getElementById('post');if(!obj||!handle)return;let g=null;const pt=e=>({x:e.clientX,y:e.clientY});obj.addEventListener('pointerdown',e=>{if(e.target===handle)return;obj.classList.add('selected');const p=pt(e);g={type:'move',x:p.x,y:p.y,sx:videoEditState.x,sy:videoEditState.y,w:post.clientWidth,h:post.clientHeight};obj.setPointerCapture(e.pointerId);e.preventDefault();});handle.addEventListener('pointerdown',e=>{const p=pt(e);g={type:'resize',x:p.x,y:p.y,width:videoEditState.width,height:videoEditState.height,w:post.clientWidth};handle.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();});const move=e=>{if(!g)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(g.type==='move'){videoEditState.x=Math.max(0,Math.min(100-videoEditState.width,g.sx+dx/g.w*100));videoEditState.y=Math.max(0,Math.min(100-videoEditState.height/g.h*100,g.sy+dy/g.h*100));}else{videoEditState.width=Math.max(15,Math.min(100,g.width+dx/g.w*100));videoEditState.height=Math.max(60,Math.min(500,g.height+dy));}applyVideoEdit();};obj.addEventListener('pointermove',move);handle.addEventListener('pointermove',move);const end=()=>{if(g){g=null;autoSaveDraft();}};obj.addEventListener('pointerup',end);obj.addEventListener('pointercancel',end);handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&obj.classList.contains('selected')&&!e.target?.matches?.('input,textarea,[contenteditable="true"]')){e.preventDefault();deleteVideo();}});document.getElementById('preview-stage')?.addEventListener('click',e=>{if(!obj.contains(e.target))obj.classList.remove('selected');});syncVideoEditControls();applyVideoEdit();}
+
   let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,zoom:100,opacity:100,originalSrc:''};
   function currentImageEdit(){return {...imageEditState};}
   function setImageZoom(delta){imageEditState.zoom=Math.max(50,Math.min(250,(Number(imageEditState.zoom)||100)+delta));applyImageEdit();}
@@ -2568,6 +2602,8 @@ Terceiro item da lista</textarea></div>
         showImg:  document.getElementById('toggle-img').checked,
         imgUrl:   document.getElementById('input-img').value,
         imageEdit: currentImageEdit(),
+        videoEdit: videoEditState,
+        videoPresent: !!document.getElementById("post-video")?.src,
         imageData: window._uploadedImgSrc || '',
         backgroundImage: backgroundImageData,
         backgroundFit: document.getElementById('background-fit').value,
@@ -2613,6 +2649,8 @@ Terceiro item da lista</textarea></div>
       if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
       if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
       if(d.imageEdit)imageEditState={...imageEditState,...d.imageEdit};
+      if(d.videoEdit)videoEditState={...videoEditState,...d.videoEdit};
+      if(d.videoPresent)restoreSavedVideo();
       if(d.imageData){window._uploadedImgSrc=d.imageData;const ip=document.getElementById('upload-img-preview');if(ip){ip.src=d.imageData;ip.style.display='block';}}
       if (d.backgroundImage !== undefined) backgroundImageData = d.backgroundImage || '';
       if (d.backgroundFit) document.getElementById('background-fit').value = d.backgroundFit;
@@ -2859,6 +2897,7 @@ Terceiro item da lista</textarea></div>
   initProfessionalProfile();
   initSettingsAutosave();
   initDirectImageEditing();
+  initVideoEditing();
 </script>
 </body>
 </html>
