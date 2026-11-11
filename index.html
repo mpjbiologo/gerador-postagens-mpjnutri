@@ -1971,7 +1971,7 @@ Terceiro item da lista</textarea></div>
       const prompt=buildAICarouselPrompt();let content='';
       if(a.mode==='ollama'){
         const response=await fetch(a.ollamaUrl+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:a.ollamaModel,stream:false,format:'json',messages:[{role:'system',content:'Responda estritamente em JSON válido.'},{role:'user',content:prompt}],options:{temperature:a.temperature,num_predict:a.maxTokens}}),signal:controller.signal});
-        if(!response.ok)throw new Error('Ollama respondeu HTTP '+response.status+'.');
+        if(!response.ok){let detail='';try{detail=(await response.text()).trim();}catch(e){}throw new Error('Ollama respondeu HTTP '+response.status+(detail?': '+detail.slice(0,1200):'.'));}
         const data=await response.json();content=data.message?.content||'';
       }else{
         const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
