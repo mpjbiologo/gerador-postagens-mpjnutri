@@ -265,11 +265,18 @@
   .post[data-format="retrato"]  .img-center-wrap { height: 150px; }
   .post[data-format="quadrado"] .img-center-wrap { height: 130px; }
   .post[data-format="stories"]  .img-center-wrap { height: 180px; }
-  .pen-img {
-    display: block; width: 100%; height: 100%;
-    object-fit: contain; object-position: center;
-    opacity: 0.92; z-index: 2; pointer-events: none; border-radius: 10px;
-  }
+  .image-edit-wrap { position:relative; z-index:3; width:100%; height:190px; flex:0 0 190px; overflow:visible; }
+  .image-edit-object { position:absolute; left:0; top:0; width:100%; height:150px; touch-action:none; cursor:grab; user-select:none; }
+  .image-edit-object:active { cursor:grabbing; }
+  .image-edit-object img.pen-img { display:block; width:100%; height:100%; object-fit:contain; object-position:50% 50%; opacity:.92; pointer-events:none; border-radius:10px; }
+  .image-edit-object.selected { outline:2px solid var(--accent); outline-offset:2px; }
+  .image-edit-handle { position:absolute; right:-7px; bottom:-7px; width:16px; height:16px; border:2px solid #fff; border-radius:50%; background:var(--accent); cursor:nwse-resize; touch-action:none; }
+  .image-edit-object:not(.selected) .image-edit-handle { display:none; }
+  .image-edit-tools { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .image-edit-tools .field { min-width:0; margin:0; }
+  .image-edit-tools input[type=range] { width:100%; accent-color:var(--accent); }
+  .image-edit-tools select { width:100%; }
+  .image-edit-tools output { float:right; color:var(--app-sub); font-size:10px; }
   .upload-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px; background: var(--app-btn-bg); border: 1.5px dashed var(--app-btn-border); border-radius: 7px; color: var(--app-btn-color); font-size: 12px; font-weight: 600; font-family: "DM Sans", sans-serif; cursor: pointer; transition: border-color .2s, color .2s; }
   .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
   #upload-img-file { display: none; }
@@ -876,6 +883,19 @@ Terceiro item da lista</textarea></div>
       </div>
       <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="toggle-row"><label>Cor original da imagem</label><label class="toggle"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="image-edit-tools" id="image-edit-tools">
+        <div class="field"><label for="image-fit">Enquadramento</label><select id="image-fit" onchange="updateImageEditFromControls()"><option value="contain">Imagem inteira</option><option value="cover">Preencher / cortar</option></select></div>
+        <div class="field"><label for="image-width">Largura <output id="image-width-out">100%</output></label><input id="image-width" type="range" min="20" max="100" value="100" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-height">Altura <output id="image-height-out">150 px</output></label><input id="image-height" type="range" min="60" max="320" value="150" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-pos-x">Posição horizontal <output id="image-pos-x-out">0%</output></label><input id="image-pos-x" type="range" min="0" max="100" value="0" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-pos-y">Posição vertical <output id="image-pos-y-out">0%</output></label><input id="image-pos-y" type="range" min="0" max="100" value="0" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-brightness">Brilho <output id="image-brightness-out">100%</output></label><input id="image-brightness" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-saturation">Saturação <output id="image-saturation-out">100%</output></label><input id="image-saturation" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-contrast">Contraste <output id="image-contrast-out">100%</output></label><input id="image-contrast" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-hue">Matiz <output id="image-hue-out">0°</output></label><input id="image-hue" type="range" min="0" max="360" value="0" oninput="updateImageEditFromControls()"></div>
+      </div>
+      <button type="button" class="btn secondary" style="margin-top:8px" onclick="resetImageEdit()">↺ Redefinir ajustes da imagem</button>
+      <div class="template-hint">Dica: clique na imagem para selecioná-la, arraste para mover e use a alça no canto para redimensionar. Ctrl+V cola uma imagem quando o foco não está em um campo de texto.</div>
       <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
         <label>Plano de fundo da postagem</label>
         <label class="upload-btn" for="background-upload">🖼️ Enviar imagem de fundo</label>
@@ -1062,7 +1082,7 @@ Terceiro item da lista</textarea></div>
       <div class="divider-post"></div>
       <p id="preview-desc">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</p>
       <ul id="preview-list"></ul>
-      <img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/>
+      <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-edit-object" id="image-edit-object" data-html2canvas-ignore="true"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
     </div>
     <div class="tag-bottom-wrap">
       <div class="tag-bottom" id="preview-tag1">👇 Leia a legenda</div>
@@ -1581,7 +1601,7 @@ Terceiro item da lista</textarea></div>
   let carouselSlides=[];
   let activeCarouselSlide=0;
   function readCarouselFields(){
-    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content')};
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content')};
   }
   function saveCurrentCarouselSlide(){
     if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
@@ -1596,7 +1616,7 @@ Terceiro item da lista</textarea></div>
     document.getElementById('input-tag1').value=d.tag1||'';document.getElementById('input-tag2').value=d.tag2||'';
     setTagActive(1,!!d.showTag1);setTagActive(2,!!d.showTag2);
     document.getElementById('input-img').value=d.imgUrl||'';document.getElementById('toggle-img').checked=d.showImg!==false;
-    document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';
+    document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';imageEditState={...imageEditState,...(d.imageEdit||{})};syncImageEditControls();
     const prev=document.getElementById('upload-img-preview');if(prev){prev.src=d.image||'';prev.style.display=d.image?'block':'none';}
     updatePreview();renderCarouselTools();
   }
@@ -1715,8 +1735,8 @@ Terceiro item da lista</textarea></div>
     if (showImg && imgUrl) {
       img.src = imgUrl;
       img.style.display = 'block';
-      img.style.filter = imgColor ? 'none' : 'saturate(0) brightness(1.4)';
       if (wrap) wrap.style.display = 'flex';
+      applyImageEdit();
     } else {
       img.style.display = 'none';
       img.src = '';
@@ -1808,6 +1828,80 @@ Terceiro item da lista</textarea></div>
     document.getElementById('img-url-panel').style.display    = tab === 'url'    ? '' : 'none';
     document.getElementById('img-upload-panel').style.display = tab === 'upload' ? '' : 'none';
     if (tab === 'url') { window._uploadedImgSrc = ''; updatePreview(); }
+  }
+
+  let imageEditState={x:0,y:0,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+  function currentImageEdit(){return {...imageEditState};}
+  function syncImageEditControls(){
+    const fields={fit:'image-fit',width:'image-width',height:'image-height',posX:'image-pos-x',posY:'image-pos-y',brightness:'image-brightness',saturation:'image-saturation',contrast:'image-contrast',hue:'image-hue'};
+    Object.entries(fields).forEach(([key,id])=>{const el=document.getElementById(id);if(el)el.value=imageEditState[key];});
+    const labels={width:imageEditState.width+'%',height:imageEditState.height+' px',posX:imageEditState.posX+'%',posY:imageEditState.posY+'%',brightness:imageEditState.brightness+'%',saturation:imageEditState.saturation+'%',contrast:imageEditState.contrast+'%',hue:imageEditState.hue+'°'};
+    Object.entries(labels).forEach(([key,value])=>{const el=document.getElementById('image-'+key+'-out');if(el)el.textContent=value;});
+  }
+  function applyImageEdit(){
+    const obj=document.getElementById('image-edit-object'),img=document.getElementById('pen-img');
+    if(!obj||!img)return;
+    obj.style.left=imageEditState.x+'%';obj.style.top=imageEditState.y+'%';obj.style.width=imageEditState.width+'%';obj.style.height=imageEditState.height+'px';
+    img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';
+    img.style.filter='brightness('+imageEditState.brightness+'%) saturate('+imageEditState.saturation+'%) contrast('+imageEditState.contrast+'%) hue-rotate('+imageEditState.hue+'deg)';
+    syncImageEditControls();
+    if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides.length){carouselSlides[activeCarouselSlide].imageEdit=currentImageEdit();}
+    autoSaveDraft();
+  }
+  function updateImageEditFromControls(){
+    const val=(id,fallback)=>Number(document.getElementById(id)?.value??fallback);
+    imageEditState={...imageEditState,fit:document.getElementById('image-fit')?.value||'contain',width:val('image-width',100),height:val('image-height',150),posX:val('image-pos-x',50),posY:val('image-pos-y',50),brightness:val('image-brightness',100),saturation:val('image-saturation',100),contrast:val('image-contrast',100),hue:val('image-hue',0)};
+    applyImageEdit();
+  }
+  function resetImageEdit(){
+    imageEditState={x:0,y:0,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+    applyImageEdit();showToast('Ajustes da imagem redefinidos.');
+  }
+  function setImageSource(dataUrl){
+    window._uploadedImgSrc=dataUrl;
+    const input=document.getElementById('input-img');if(input)input.value='';
+    const prev=document.getElementById('upload-img-preview');if(prev){prev.src=dataUrl;prev.style.display='block';}
+    const toggle=document.getElementById('toggle-img');if(toggle)toggle.checked=true;
+    switchImgTab('upload');updatePreview();autoSaveDraft();
+  }
+  function initDirectImageEditing(){
+    const stage=document.getElementById('preview-stage'),obj=document.getElementById('image-edit-object'),handle=document.getElementById('image-edit-handle');
+    if(!stage||!obj||!handle)return;
+    document.addEventListener('paste',e=>{
+      if(e.target?.matches?.('input,textarea,[contenteditable="true"]'))return;
+      const items=Array.from(e.clipboardData?.items||[]),item=items.find(x=>x.type&&x.type.startsWith('image/'));
+      if(!item)return;
+      const file=item.getAsFile();if(!file)return;
+      e.preventDefault();const reader=new FileReader();reader.onload=ev=>{setImageSource(ev.target.result);showToast('Imagem colada na postagem.');};reader.readAsDataURL(file);
+    });
+    let gesture=null;
+    const point=e=>({x:e.clientX,y:e.clientY});
+    obj.addEventListener('pointerdown',e=>{
+      if(e.target===handle)return;
+      if(!document.getElementById('toggle-img').checked)return;
+      obj.classList.add('selected');const p=point(e);
+      gesture={type:'move',x:p.x,y:p.y,startX:imageEditState.x,startY:imageEditState.y,parentW:obj.parentElement.clientWidth,parentH:obj.parentElement.clientHeight};
+      obj.setPointerCapture(e.pointerId);e.preventDefault();
+    });
+    handle.addEventListener('pointerdown',e=>{
+      const p=point(e);gesture={type:'resize',x:p.x,y:p.y,width:imageEditState.width,height:imageEditState.height,parentW:obj.parentElement.clientWidth};
+      handle.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();
+    });
+    const move=e=>{
+      if(!gesture)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
+      if(gesture.type==='move'){
+        imageEditState.x=Math.max(0,Math.min(100-imageEditState.width,gesture.startX+dx/gesture.parentW*100));
+        imageEditState.y=Math.max(0,Math.min(100,gesture.startY+dy/gesture.parentH*100));
+      }else{
+        imageEditState.width=Math.max(20,Math.min(100,gesture.width+dx/gesture.parentW*100));
+        imageEditState.height=Math.max(60,Math.min(320,gesture.height+dy));
+      }
+      applyImageEdit();
+    };
+    obj.addEventListener('pointermove',move);handle.addEventListener('pointermove',move);
+    const end=()=>{if(gesture){gesture=null;autoSaveDraft();}};obj.addEventListener('pointerup',end);obj.addEventListener('pointercancel',end);handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
+    stage.addEventListener('click',e=>{if(!obj.contains(e.target))obj.classList.remove('selected');});
+    syncImageEditControls();applyImageEdit();
   }
 
   function handleImgUpload(input) {
@@ -2670,6 +2764,7 @@ Terceiro item da lista</textarea></div>
 
   initProfessionalProfile();
   initSettingsAutosave();
+  initDirectImageEditing();
 </script>
 </body>
 </html>
