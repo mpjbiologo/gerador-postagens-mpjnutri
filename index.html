@@ -2733,10 +2733,15 @@ Terceiro item da lista</textarea></div>
     const fmt=source.dataset.format||'retrato',ratio=fmt==='quadrado'?1:(fmt==='stories'?366/650:4/5);
     clone.classList.add('fullscreen-preview-post');clone.style.setProperty('--preview-ratio',String(ratio));
     clone.style.width='min(92vw, calc(88vh * '+ratio+'))';clone.style.height='auto';
-    const video=clone.querySelector('video'),play=document.getElementById('fullscreen-preview-play');
+    const sourceVideo=source.querySelector('#post-video'),sourceVideoWrap=source.querySelector('#video-edit-wrap');
+    const hasVideo=!!(sourceVideo&&sourceVideoWrap&&
+      getComputedStyle(sourceVideoWrap).display!=='none'&&
+      (sourceVideo.currentSrc||sourceVideo.src));
+    const video=hasVideo?clone.querySelector('#post-video'):null;
+    const play=document.getElementById('fullscreen-preview-play');
     fullscreenPreviewVideo=video||null;
     if(video){video.controls=false;video.muted=false;video.loop=false;video.pause();video.style.pointerEvents='none';play.classList.add('visible');play.classList.remove('playing');play.textContent='▶';}
-    else play.classList.remove('visible');
+    else{play.classList.remove('visible','playing');play.textContent='▶';}
     frame.appendChild(clone);modal.classList.add('open');document.body.style.overflow='hidden';document.addEventListener('keydown',handleFullscreenPreviewKey);
   }
   function closeFullscreenPreview(){
