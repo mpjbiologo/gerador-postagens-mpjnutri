@@ -818,6 +818,9 @@ Terceiro item da lista</textarea></div>
       <div id="scientific-audit" class="template-hint" aria-live="polite"></div>
       <div class="field"><label for="caption-output">Legenda e hashtags</label><textarea id="caption-output" rows="5" placeholder="A legenda será montada a partir do conteúdo atual..."></textarea></div>
       <div class="btn-row"><button class="btn secondary" type="button" onclick="buildCaption()">Gerar legenda</button><button class="btn secondary" type="button" onclick="copyCaption()">Copiar</button></div>
+      <button class="btn" type="button" id="ai-editorial-btn" onclick="generateEditorialPackWithAI()">✨ Criar pacote editorial com IA</button>
+      <div id="ai-editorial-status" class="settings-status" aria-live="polite">Gera opções de título, legenda, hashtags e pontos de atenção usando a IA configurada.</div>
+      <div id="ai-editorial-review" class="template-hint" style="display:none"></div>
     </div>
   </div>
 
@@ -1791,6 +1794,69 @@ Terceiro item da lista</textarea></div>
     document.getElementById('scientific-audit').innerHTML='<strong>Checklist preliminar (heurístico):</strong><ul>'+flags.map(x=>'<li>'+editorialEscape(x)+'</li>').join('')+'</ul><small>Esta ferramenta não consulta bases científicas nem substitui revisão profissional.</small>';
   }
   function saveResearchNotes(){try{localStorage.setItem(RESEARCH_KEY,document.getElementById('research-notes').value);showToast('Referências salvas neste navegador.');}catch(e){showToast('Não foi possível salvar as referências.');}}
+  let stagedAIEditorial=null;
+  async function requestConfiguredAI(prompt,systemPrompt){
+    const a=getAISettings();
+    if(a.mode==='none')throw new Error('Abra Configurações e escolha uma IA externa ou o Ollama.');
+    if(a.mode==='api'&&(!a.apiUrl||!a.model||!(document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY))))throw new Error('Configure endpoint, modelo e chave da API em Configurações.');
+    if(a.mode==='ollama'&&(!a.ollamaUrl||!a.ollamaModel))throw new Error('Configure o endereço e o modelo do Ollama em Configurações.');
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),120000);
+    try{
+      if(a.mode==='ollama'){
+        const response=await fetch(a.ollamaUrl+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:a.ollamaModel,stream:false,format:'json',messages:[{role:'system',content:systemPrompt+' Responda estritamente em JSON válido.'},{role:'user',content:prompt}],options:{temperature:a.temperature,num_predict:a.maxTokens}}),signal:controller.signal});
+        if(!response.ok)throw new Error('Ollama respondeu HTTP '+response.status+'.');
+        const data=await response.json();return parseAIJSON(data.message?.content||'');
+      }
+      const key=document.getElementById('ai-api-key').value.trim()||sessionStorage.getItem(AI_SESSION_KEY)||'';
+      const response=await fetch(a.apiUrl+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:a.model,messages:[{role:'system',content:systemPrompt+' Retorne somente JSON válido, sem markdown.'},{role:'user',content:prompt}],temperature:a.temperature,max_tokens:a.maxTokens}),signal:controller.signal});
+      if(!response.ok){let detail='';try{detail=(await response.json()).error?.message||'';}catch(e){}throw new Error('API respondeu HTTP '+response.status+(detail?': '+detail:''));}
+      const data=await response.json();return parseAIJSON(data.choices?.[0]?.message?.content||'');
+    }catch(e){
+      if(e.name==='AbortError')throw new Error('A solicitação excedeu 2 minutos.');
+      if(a.mode==='ollama'&&(e instanceof TypeError||/failed to fetch|networkerror|load failed/i.test(e.message||'')))throw new Error((e.message||'Falha de rede.')+ollamaBrowserAccessHelp());
+      throw e;
+    }finally{clearTimeout(timeout);}
+  }
+  async function generateEditorialPackWithAI(){
+    const btn=document.getElementById('ai-editorial-btn'),status=document.getElementById('ai-editorial-status'),review=document.getElementById('ai-editorial-review');
+    const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim();
+    const desc=document.getElementById('input-desc').value.trim(),list=document.getElementById('input-list').value.trim();
+    const topic=document.getElementById('editor-topic').value.trim()||title;
+    if(!topic&&!desc&&!list){status.textContent='Informe um tema ou conteúdo antes de gerar.';return;}
+    const audience=document.getElementById('editor-audience').value.trim()||'público geral';
+    const notes=document.getElementById('research-notes').value.trim();
+    const prompt=[
+      'Prepare um pacote editorial para Instagram em português brasileiro.',
+      'Tema: '+topic,'Público: '+audience,'Objetivo: '+document.getElementById('editor-goal').value,
+      'Título atual: '+(title||'(não informado)'),'Texto/descrição atual: '+(desc||'(não informado)'),'Lista atual: '+(list||'(não informada)'),
+      'Referências e observações fornecidas pelo usuário: '+(notes||'(nenhuma)'),
+      'Crie 3 opções curtas de título/chamada; uma legenda clara, útil e coerente com o conteúdo; até 8 hashtags específicas e pertinentes; e uma lista de pontos de atenção científicos/editoriais.',
+      'Não invente estudos, autores, DOI, PMID, estatísticas ou consensos. Não afirme que verificou fontes. Se faltarem referências, deixe isso explícito. Evite promessas, alarmismo, prescrição individual e linguagem absoluta.',
+      'Formato JSON: {"titles":["...","...","..."],"caption":"...","hashtags":["#..."],"review_flags":["..."]}.'
+    ].join('\n\n');
+    btn.disabled=true;btn.textContent='⏳ Preparando...';status.textContent='A IA está elaborando o pacote editorial. O texto atual não será alterado automaticamente.';
+    try{
+      const data=await requestConfiguredAI(prompt,'Você é um assistente editorial para conteúdo de nutrição baseado em evidências.');
+      const titles=Array.isArray(data.titles)?data.titles.map(x=>String(x).trim()).filter(Boolean).slice(0,3):[];
+      const caption=String(data.caption||'').trim();
+      const hashtags=Array.isArray(data.hashtags)?data.hashtags.map(x=>String(x).trim()).filter(Boolean).slice(0,8):[];
+      const flags=Array.isArray(data.review_flags)?data.review_flags.map(x=>String(x).trim()).filter(Boolean).slice(0,10):[];
+      if(!caption&&!titles.length)throw new Error('A resposta não trouxe título nem legenda utilizável.');
+      stagedAIEditorial={titles,caption,hashtags,flags};
+      if(caption)document.getElementById('caption-output').value=[caption,hashtags.join(' ')].filter(Boolean).join('\n\n');
+      review.style.display='block';
+      review.innerHTML='<strong>Opções de título</strong>'+(titles.length?'<ol>'+titles.map((x,i)=>'<li>'+aiEscapeHtml(x)+' <button class="btn secondary" type="button" onclick="useAISuggestedTitle('+i+')">Usar</button></li>').join('')+'</ol>':'<p>Nenhuma opção de título retornada.</p>')+
+        '<strong>Pontos de atenção</strong>'+(flags.length?'<ul>'+flags.map(x=>'<li>'+aiEscapeHtml(x)+'</li>').join('')+'</ul>':'<p>Não foram retornados alertas específicos; isso não comprova a exatidão do conteúdo.</p>')+
+        '<small>A legenda foi colocada no campo acima. Revise tudo antes de publicar. A IA não consultou bases científicas nem verificou as referências.</small>';
+      status.textContent='Pacote editorial gerado. A legenda está disponível para edição e cópia.';
+    }catch(e){status.textContent='Não foi possível gerar: '+(e.message||'erro desconhecido');}
+    finally{btn.disabled=false;btn.textContent='✨ Criar pacote editorial com IA';}
+  }
+  function useAISuggestedTitle(index){
+    const title=stagedAIEditorial?.titles?.[index];if(!title)return;
+    document.getElementById('input-line1').value=title.slice(0,90);document.getElementById('input-line2').value='';
+    updatePreview();autoSaveDraft();showToast('Título aplicado à postagem. Revise a quebra de linha e o layout.');
+  }
   function buildCaption(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim(),desc=document.getElementById('input-desc').value.trim(),list=document.getElementById('input-list').value.split('\n').map(x=>x.trim()).filter(Boolean);
     const topic=(document.getElementById('editor-topic').value||title).trim();
