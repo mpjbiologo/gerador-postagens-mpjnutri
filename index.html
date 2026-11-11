@@ -2130,6 +2130,7 @@ Terceiro item da lista</textarea></div>
   function initDirectImageEditing(){
     const stage=document.getElementById('preview-stage'),obj=document.getElementById('image-edit-object'),handle=document.getElementById('image-edit-handle');
     if(!stage||!obj||!handle)return;
+    const mediaImg=document.getElementById('pen-img');mediaImg?.addEventListener('load',()=>applyImageEdit());
     document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&obj.classList.contains('selected')&&!e.target?.matches?.('input,textarea,[contenteditable="true"]')){e.preventDefault();deleteImage();}});
     document.addEventListener('paste',e=>{
       if(e.target?.matches?.('input,textarea,[contenteditable="true"]'))return;
