@@ -886,7 +886,7 @@ Terceiro item da lista</textarea></div>
         </div>
       </div>
       <div class="toggle-row"><label>Mostrar imagem</label><label class="toggle"><input type="checkbox" id="toggle-img" checked onchange="updatePreview()"><div class="toggle-track"></div></label></div>
-      <div class="toggle-row"><label>Cor original da imagem</label><label class="toggle"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
+      <div class="field"><label>Modo de cor</label><div class="btn-row"><button type="button" class="btn secondary" onclick="setImageColorMode(true)">🌈 Colorida</button><button type="button" class="btn secondary" onclick="setImageColorMode(false)">◐ Preto e branco</button></div><label class="toggle" style="margin-top:6px"><input type="checkbox" id="toggle-img-color" onchange="updatePreview()"><span>Manter cores originais</span><div class="toggle-track"></div></label></div>
       <div class="image-edit-tools" id="image-edit-tools">
         <div class="field"><label for="image-fit">Enquadramento</label><select id="image-fit" onchange="updateImageEditFromControls()"><option value="contain">Imagem inteira</option><option value="cover">Preencher / cortar</option></select></div>
         <div class="field"><label for="image-width">Largura <output id="image-width-out">100%</output></label><input id="image-width" type="range" min="20" max="100" value="100" oninput="updateImageEditFromControls()"></div>
@@ -896,7 +896,7 @@ Terceiro item da lista</textarea></div>
         <div class="field"><label for="image-brightness">Brilho <output id="image-brightness-out">100%</output></label><input id="image-brightness" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-saturation">Saturação <output id="image-saturation-out">100%</output></label><input id="image-saturation" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
         <div class="field"><label for="image-contrast">Contraste <output id="image-contrast-out">100%</output></label><input id="image-contrast" type="range" min="0" max="200" value="100" oninput="updateImageEditFromControls()"></div>
-        <div class="field"><label for="image-hue">Matiz <output id="image-hue-out">0°</output></label><input id="image-hue" type="range" min="0" max="360" value="0" oninput="updateImageEditFromControls()"></div>
+        <div class="field"><label for="image-hue">Matiz <output id="image-hue-out">0°</output></label><input id="image-hue" type="range" min="0" max="360" value="0" oninput="updateImageEditFromControls()"></div><div class="field" style="grid-column:1/-1"><label>Remoção de fundo com IA</label><button type="button" class="btn secondary" id="remove-bg-btn" onclick="removeImageBackground()">✂️ Remover fundo automaticamente</button><button type="button" class="btn secondary" id="restore-bg-btn" style="display:none;margin-top:6px" onclick="restoreImageBackground()">↶ Restaurar imagem original</button><div class="template-hint" id="remove-bg-status">Processamento local no navegador. Na primeira utilização, será necessário baixar o modelo de IA (aproximadamente 40 MB).</div></div>
       </div>
       <div class="btn-row" style="margin-top:8px"><button type="button" class="btn secondary" onclick="resetImageEdit()">↺ Redefinir ajustes</button><button type="button" class="btn secondary" style="color:#ef8b80" onclick="deleteImage()">✕ Apagar imagem</button></div>
       <div class="template-hint">Dica: arraste a imagem livremente pela prévia. As linhas-guia aparecem ao alinhar o centro horizontal ou vertical. Use Delete para apagar a imagem selecionada. Ctrl+V cola uma imagem quando o foco não está em um campo de texto.</div>
@@ -1621,7 +1621,7 @@ Terceiro item da lista</textarea></div>
     document.getElementById('input-tag1').value=d.tag1||'';document.getElementById('input-tag2').value=d.tag2||'';
     setTagActive(1,!!d.showTag1);setTagActive(2,!!d.showTag2);
     document.getElementById('input-img').value=d.imgUrl||'';document.getElementById('toggle-img').checked=d.showImg!==false;
-    document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';imageEditState={...imageEditState,...(d.imageEdit||{})};syncImageEditControls();
+    document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';imageEditState={...imageEditState,...(d.imageEdit||{})};syncImageEditControls();updateBackgroundRemovalControls();
     const prev=document.getElementById('upload-img-preview');if(prev){prev.src=d.image||'';prev.style.display=d.image?'block':'none';}
     updatePreview();renderCarouselTools();
   }
@@ -1835,8 +1835,56 @@ Terceiro item da lista</textarea></div>
     if (tab === 'url') { window._uploadedImgSrc = ''; updatePreview(); }
   }
 
-  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0};
+  let imageEditState={x:0,y:55,width:100,height:150,fit:'contain',posX:50,posY:50,brightness:100,saturation:100,contrast:100,hue:0,originalSrc:''};
   function currentImageEdit(){return {...imageEditState};}
+  function setImageColorMode(color){
+    const toggle=document.getElementById('toggle-img-color');if(toggle)toggle.checked=!!color;
+    applyImageEdit();showToast(color?'Imagem colorida':'Imagem em preto e branco');
+  }
+  function updateBackgroundRemovalControls(){
+    const restore=document.getElementById('restore-bg-btn');
+    if(restore)restore.style.display=imageEditState.originalSrc?'':'none';
+  }
+  async function removeImageBackground(){
+    const img=document.getElementById('pen-img'),btn=document.getElementById('remove-bg-btn'),status=document.getElementById('remove-bg-status');
+    if(!img||!img.src||!img.complete||!img.naturalWidth){showToast('Adicione uma imagem antes de remover o fundo.');return;}
+    if(btn)btn.disabled=true;if(status)status.textContent='Preparando imagem e carregando o modelo de IA...';
+    try{
+      const source=img.src;
+      const response=await fetch(source,{mode:'cors'});
+      if(!response.ok)throw new Error('Não foi possível acessar a imagem. Envie o arquivo pelo botão de upload.');
+      const inputBlob=await response.blob();
+      if(status)status.textContent='Carregando o mecanismo de remoção de fundo...';
+      const module=await import('https://esm.sh/@imgly/background-removal@1.7.0');
+      const remove=module.default||module.removeBackground;
+      if(typeof remove!=='function')throw new Error('O mecanismo de remoção não foi carregado.');
+      if(status)status.textContent='Analisando a imagem e removendo o fundo. Pode levar alguns minutos...';
+      const result=await remove(inputBlob,{model:'small',output:{format:'image/png'},progress:(key,current,total)=>{if(status&&total)status.textContent='Baixando modelo de IA: '+Math.round(current/total*100)+'%';}});
+      const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Falha ao ler a imagem processada.'));reader.readAsDataURL(result);});
+      if(!imageEditState.originalSrc)imageEditState.originalSrc=source;
+      window._uploadedImgSrc=dataUrl;
+      const input=document.getElementById('input-img');if(input)input.value='';
+      img.src=dataUrl;img.style.display='block';
+      const toggle=document.getElementById('toggle-img');if(toggle)toggle.checked=true;
+      const prev=document.getElementById('upload-img-preview');if(prev){prev.src=dataUrl;prev.style.display='block';}
+      updatePreview();updateBackgroundRemovalControls();autoSaveDraft();
+      if(status)status.textContent='Fundo removido. A imagem foi mantida em PNG com transparência.';
+      showToast('Fundo removido com sucesso.');
+    }catch(error){
+      console.error('Background removal:',error);
+      if(status)status.textContent='Não foi possível remover o fundo: '+(error?.message||'erro desconhecido')+'. Tente enviar a imagem como arquivo.';
+      showToast('Falha ao remover o fundo.');
+    }finally{if(btn)btn.disabled=false;}
+  }
+  function restoreImageBackground(){
+    const original=imageEditState.originalSrc;if(!original)return;
+    imageEditState.originalSrc='';window._uploadedImgSrc=original;
+    const input=document.getElementById('input-img');if(input)input.value='';
+    const img=document.getElementById('pen-img');if(img)img.src=original;
+    const prev=document.getElementById('upload-img-preview');if(prev){prev.src=original;prev.style.display='block';}
+    updatePreview();updateBackgroundRemovalControls();autoSaveDraft();showToast('Imagem original restaurada.');
+  }
+
   function syncImageEditControls(){
     const fields={fit:'image-fit',width:'image-width',height:'image-height',posX:'image-pos-x',posY:'image-pos-y',brightness:'image-brightness',saturation:'image-saturation',contrast:'image-contrast',hue:'image-hue'};
     Object.entries(fields).forEach(([key,id])=>{const el=document.getElementById(id);if(el)el.value=imageEditState[key];});
@@ -1855,6 +1903,7 @@ Terceiro item da lista</textarea></div>
     const saturation=colorMode?imageEditState.saturation:0;
     const brightness=colorMode?imageEditState.brightness:Math.min(300,imageEditState.brightness*1.4);
     img.style.filter='brightness('+brightness+'%) saturate('+saturation+'%) contrast('+imageEditState.contrast+'%) hue-rotate('+imageEditState.hue+'deg)';
+    updateBackgroundRemovalControls();
     syncImageEditControls();
     if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides.length){carouselSlides[activeCarouselSlide].imageEdit=currentImageEdit();}
     autoSaveDraft();
@@ -2507,6 +2556,7 @@ Terceiro item da lista</textarea></div>
         showImg:  document.getElementById('toggle-img').checked,
         imgUrl:   document.getElementById('input-img').value,
         imageEdit: currentImageEdit(),
+        imageData: window._uploadedImgSrc || '',
         backgroundImage: backgroundImageData,
         backgroundFit: document.getElementById('background-fit').value,
         fontFamily: document.getElementById('font-family').value,
@@ -2551,6 +2601,7 @@ Terceiro item da lista</textarea></div>
       if (d.showImg !== undefined) document.getElementById('toggle-img').checked = d.showImg;
       if (d.imgUrl !== undefined) document.getElementById('input-img').value    = d.imgUrl;
       if(d.imageEdit)imageEditState={...imageEditState,...d.imageEdit};
+      if(d.imageData){window._uploadedImgSrc=d.imageData;const ip=document.getElementById('upload-img-preview');if(ip){ip.src=d.imageData;ip.style.display='block';}}
       if (d.backgroundImage !== undefined) backgroundImageData = d.backgroundImage || '';
       if (d.backgroundFit) document.getElementById('background-fit').value = d.backgroundFit;
       if (d.fontFamily) document.getElementById('font-family').value = d.fontFamily;
