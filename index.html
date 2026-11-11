@@ -299,6 +299,8 @@
   #video-upload-status{font-size:10px;color:var(--app-sub);line-height:1.5;margin-top:6px}
   .webcam-recorder{margin:8px 0;padding:9px;border:1px solid var(--app-btn-border);border-radius:8px;background:var(--app-btn-bg)}
   #webcam-preview{display:block;width:100%;max-height:220px;aspect-ratio:16/9;object-fit:cover;background:#000;border-radius:7px;margin:8px 0}
+  #webcam-audio-meter{height:8px;background:var(--app-section-border);border-radius:8px;overflow:hidden;margin:5px 0 8px}
+  #webcam-audio-level{height:100%;width:0%;background:#35b56a;transition:width .08s linear}
   #webcam-recorder-panel .btn-row{margin-top:8px}
   #webcam-recorder-panel .btn:disabled{opacity:.4;cursor:not-allowed}
 
@@ -937,6 +939,7 @@ Terceiro item da lista</textarea></div>
           <div id="webcam-recorder-panel" style="display:none">
             <video id="webcam-preview" autoplay muted playsinline></video>
             <div id="webcam-status" class="template-hint">Câmera e microfone prontos para configurar.</div>
+            <div class="template-hint">Nível do microfone</div><div id="webcam-audio-meter"><div id="webcam-audio-level"></div></div>
             <div class="btn-row">
               <button type="button" class="btn" id="webcam-record-btn" onclick="startWebcamRecording()" disabled>● Iniciar gravação</button>
               <button type="button" class="btn secondary" id="webcam-stop-btn" onclick="stopWebcamRecording()" disabled>■ Finalizar</button>
@@ -1915,70 +1918,86 @@ Terceiro item da lista</textarea></div>
   function resetVideoEdit(){videoEditState={x:10,y:10,width:80,height:240,fit:'cover',zoom:100,opacity:100,brightness:100,saturation:100,contrast:100};applyVideoEdit();showToast('Ajustes do vídeo redefinidos.');}
   function toggleVideoPlayback(){const v=document.getElementById('post-video');if(!v?.src){showToast('Envie um vídeo primeiro.');return;}if(v.paused)v.play().catch(()=>showToast('O navegador bloqueou a reprodução.'));else v.pause();}
   async function deleteVideo(){const v=document.getElementById('post-video');v.pause();document.getElementById('video-edit-wrap').style.display='none';document.getElementById('video-export-duration').textContent='Aguardando upload de vídeo';v.removeAttribute('src');v.load();if(videoObjectUrl)URL.revokeObjectURL(videoObjectUrl);videoObjectUrl='';document.getElementById('video-edit-object')?.classList.remove('selected');document.getElementById('video-file').value='';document.getElementById('video-upload-status').textContent='Nenhum vídeo carregado.';await removeVideoBlob();autoSaveDraft();showToast('Vídeo apagado.');}
-  let webcamStream=null,webcamRecorder=null,webcamChunks=[],webcamRecordingStartedAt=0;
+  let webcamStream=null,webcamRecorder=null,webcamChunks=[],webcamAudioContext=null,webcamAnalyser=null,webcamMeterFrame=0;
   async function openWebcamRecorder(){
     const panel=document.getElementById('webcam-recorder-panel'),preview=document.getElementById('webcam-preview'),status=document.getElementById('webcam-status'),openBtn=document.getElementById('webcam-open-btn');
     if(!navigator.mediaDevices?.getUserMedia){showToast('Webcam indisponível. Acesse pelo HTTPS em um navegador compatível.');return;}
     try{
       status.textContent='Solicitando acesso à câmera e ao microfone…';
-      webcamStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1920},height:{ideal:1080},facingMode:'user'},audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-      preview.srcObject=webcamStream;panel.style.display='block';openBtn.style.display='none';
+      if(webcamStream)webcamStream.getTracks().forEach(t=>t.stop());
+      webcamStream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+      const videoTracks=webcamStream.getVideoTracks(),audioTracks=webcamStream.getAudioTracks();
+      if(!videoTracks.length)throw Error('O navegador não forneceu imagem da câmera.');
+      if(!audioTracks.length)throw Error('O navegador não forneceu áudio do microfone. Verifique a permissão e o dispositivo de entrada.');
+      preview.srcObject=webcamStream;preview.muted=true;preview.playsInline=true;preview.autoplay=true;
+      panel.style.display='block';openBtn.style.display='none';preview.style.display='block';
+      await preview.play();
       document.getElementById('webcam-record-btn').disabled=false;
-      status.textContent='Câmera e microfone conectados. Confira o enquadramento e inicie a gravação.';
+      status.textContent='Imagem ao vivo ativa · microfone conectado ('+audioTracks[0].label+'). Fale para testar o medidor.';
+      startWebcamAudioMeter(webcamStream);
+      videoTracks[0].onended=()=>{status.textContent='A câmera foi desconectada. Verifique o dispositivo.';document.getElementById('webcam-record-btn').disabled=true;};
+      audioTracks[0].onended=()=>{status.textContent='O microfone foi desconectado. Reabra a webcam para continuar.';document.getElementById('webcam-record-btn').disabled=true;};
     }catch(error){
-      console.error('Webcam:',error);
-      status.textContent=error?.name==='NotAllowedError'?'Permita o acesso à câmera e ao microfone nas configurações do navegador.':error?.name==='NotFoundError'?'Nenhuma câmera ou microfone foi encontrado.':'Não foi possível abrir a câmera: '+(error?.message||'verifique as permissões e dispositivos conectados.');
-      panel.style.display='block';
+      console.error('Webcam/microfone:',error);
+      if(webcamStream){webcamStream.getTracks().forEach(t=>t.stop());webcamStream=null;}
+      status.textContent=error?.name==='NotAllowedError'?'Acesso negado. Permita câmera e microfone nas permissões do site (ícone ao lado do endereço) e tente novamente.':error?.name==='NotFoundError'?'Câmera ou microfone não encontrados. Conecte os dispositivos e tente novamente.':error?.name==='NotReadableError'?'Câmera ou microfone estão em uso por outro aplicativo. Feche-o e tente novamente.':(error?.message||'Não foi possível iniciar câmera e microfone.');
+      panel.style.display='block';document.getElementById('webcam-record-btn').disabled=true;
     }
+  }
+  function startWebcamAudioMeter(stream){
+    stopWebcamAudioMeter();
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+      webcamAudioContext=new AC();webcamAnalyser=webcamAudioContext.createAnalyser();webcamAnalyser.fftSize=256;
+      const source=webcamAudioContext.createMediaStreamSource(stream);source.connect(webcamAnalyser);
+      const data=new Uint8Array(webcamAnalyser.frequencyBinCount),bar=document.getElementById('webcam-audio-level');
+      const draw=()=>{if(!webcamAnalyser)return;webcamAnalyser.getByteTimeDomainData(data);let sum=0;for(let i=0;i<data.length;i++){const x=(data[i]-128)/128;sum+=x*x;}const rms=Math.sqrt(sum/data.length);bar.style.width=Math.min(100,Math.max(0,rms*360))+'%';webcamMeterFrame=requestAnimationFrame(draw);};
+      webcamAudioContext.resume().then(draw).catch(()=>{});
+    }catch(e){console.warn('Medidor de áudio indisponível:',e);}
+  }
+  function stopWebcamAudioMeter(){
+    if(webcamMeterFrame)cancelAnimationFrame(webcamMeterFrame);webcamMeterFrame=0;webcamAnalyser=null;
+    if(webcamAudioContext){webcamAudioContext.close().catch(()=>{});webcamAudioContext=null;}
+    const bar=document.getElementById('webcam-audio-level');if(bar)bar.style.width='0%';
   }
   function startWebcamRecording(){
     if(!webcamStream){showToast('Abra a webcam antes de gravar.');return;}
+    if(!webcamStream.getVideoTracks().some(t=>t.readyState==='live')||!webcamStream.getAudioTracks().some(t=>t.readyState==='live')){showToast('Câmera ou microfone não estão ativos. Reabra a webcam.');return;}
     if(!window.MediaRecorder){showToast('Este navegador não oferece suporte à gravação.');return;}
-    const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4;codecs=avc1.42E01E','video/mp4'];
+    const types=['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'];
     const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
-    if(!mime){showToast('Formato de gravação não suportado neste navegador.');return;}
+    if(!mime){showToast('Formato de gravação com áudio não suportado neste navegador.');return;}
     try{
       webcamChunks=[];
       webcamRecorder=new MediaRecorder(webcamStream,{mimeType:mime,videoBitsPerSecond:5000000,audioBitsPerSecond:128000});
       webcamRecorder.ondataavailable=e=>{if(e.data?.size)webcamChunks.push(e.data);};
       webcamRecorder.onerror=e=>{document.getElementById('webcam-status').textContent='Erro na gravação: '+(e.error?.message||'tente novamente.');};
       webcamRecorder.onstop=async()=>{
-        const blob=new Blob(webcamChunks,{type:webcamRecorder.mimeType||mime});
-        webcamChunks=[];
-        if(!blob.size){document.getElementById('webcam-status').textContent='A gravação ficou vazia. Tente novamente.';return;}
+        const blob=new Blob(webcamChunks,{type:webcamRecorder.mimeType||mime});webcamChunks=[];
+        if(!blob.size){document.getElementById('webcam-status').textContent='A gravação ficou vazia. Tente novamente.';document.getElementById('webcam-record-btn').disabled=false;document.getElementById('webcam-stop-btn').disabled=true;return;}
         try{
           await storeVideoBlob(blob);attachVideoBlob(blob);
-          const ext=blob.type.includes('mp4')?'mp4':'webm';
-          document.getElementById('video-upload-status').textContent='Gravação da webcam carregada · '+(blob.size/1048576).toFixed(1)+' MB';
-          document.getElementById('webcam-status').textContent='Gravação concluída e aplicada à prévia.';
-          showToast('Vídeo gravado e aplicado à postagem.');
-          window._lastWebcamRecordingType=ext;
-        }catch(error){
-          console.error('Salvar gravação:',error);
-          document.getElementById('webcam-status').textContent='A gravação terminou, mas não foi possível salvá-la neste navegador.';
-        }
-        document.getElementById('webcam-record-btn').disabled=false;
-        document.getElementById('webcam-stop-btn').disabled=true;
+          document.getElementById('video-upload-status').textContent='Gravação da webcam com áudio · '+(blob.size/1048576).toFixed(1)+' MB';
+          document.getElementById('webcam-status').textContent='Gravação concluída. Vídeo e áudio foram aplicados à prévia.';
+          showToast('Vídeo com áudio gravado e aplicado.');
+        }catch(error){console.error('Salvar gravação:',error);document.getElementById('webcam-status').textContent='A gravação terminou, mas não foi possível salvá-la neste navegador.';}
+        document.getElementById('webcam-record-btn').disabled=false;document.getElementById('webcam-stop-btn').disabled=true;
       };
-      webcamRecorder.start(250);webcamRecordingStartedAt=Date.now();
-      document.getElementById('webcam-record-btn').disabled=true;
-      document.getElementById('webcam-stop-btn').disabled=false;
-      document.getElementById('webcam-status').textContent='🔴 Gravando com imagem e áudio. Clique em Finalizar quando terminar.';
+      webcamRecorder.start(1000);
+      document.getElementById('webcam-record-btn').disabled=true;document.getElementById('webcam-stop-btn').disabled=false;
+      document.getElementById('webcam-status').textContent='🔴 Gravando imagem e áudio. Fale próximo ao microfone e clique em Finalizar.';
     }catch(error){showToast('Não foi possível iniciar a gravação: '+(error?.message||''));}
   }
-  function stopWebcamRecording(){
-    if(webcamRecorder&&webcamRecorder.state!=='inactive'){webcamRecorder.stop();document.getElementById('webcam-status').textContent='Finalizando e preparando o vídeo…';}
-  }
+  function stopWebcamRecording(){if(webcamRecorder&&webcamRecorder.state!=='inactive'){webcamRecorder.stop();document.getElementById('webcam-status').textContent='Finalizando e preparando vídeo com áudio…';}}
   function closeWebcamRecorder(){
-    if(webcamRecorder&&webcamRecorder.state!=='inactive')stopWebcamRecording();
+    if(webcamRecorder&&webcamRecorder.state!=='inactive'){showToast('Finalize a gravação antes de fechar a câmera.');return;}
+    stopWebcamAudioMeter();
     if(webcamStream){webcamStream.getTracks().forEach(t=>t.stop());webcamStream=null;}
-    const preview=document.getElementById('webcam-preview');if(preview)preview.srcObject=null;
-    document.getElementById('webcam-recorder-panel').style.display='none';
-    document.getElementById('webcam-open-btn').style.display='';
-    document.getElementById('webcam-record-btn').disabled=true;
-    document.getElementById('webcam-stop-btn').disabled=true;
+    const preview=document.getElementById('webcam-preview');if(preview){preview.pause();preview.srcObject=null;}
+    document.getElementById('webcam-recorder-panel').style.display='none';document.getElementById('webcam-open-btn').style.display='';
+    document.getElementById('webcam-record-btn').disabled=true;document.getElementById('webcam-stop-btn').disabled=true;
   }
-  window.addEventListener('pagehide',()=>{if(webcamStream)webcamStream.getTracks().forEach(t=>t.stop());});
+  window.addEventListener('pagehide',()=>{stopWebcamAudioMeter();if(webcamStream)webcamStream.getTracks().forEach(t=>t.stop());});
 
   function initVideoEditing(){const obj=document.getElementById('video-edit-object'),handle=document.getElementById('video-edit-handle'),post=document.getElementById('post');if(!obj||!handle)return;let g=null;const pt=e=>({x:e.clientX,y:e.clientY});obj.addEventListener('pointerdown',e=>{if(e.target===handle)return;obj.classList.add('selected');const p=pt(e);g={type:'move',x:p.x,y:p.y,sx:videoEditState.x,sy:videoEditState.y,w:post.clientWidth,h:post.clientHeight};obj.setPointerCapture(e.pointerId);e.preventDefault();});handle.addEventListener('pointerdown',e=>{const p=pt(e);g={type:'resize',x:p.x,y:p.y,width:videoEditState.width,height:videoEditState.height,w:post.clientWidth};handle.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();});const move=e=>{if(!g)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(g.type==='move'){videoEditState.x=Math.max(0,Math.min(100-videoEditState.width,g.sx+dx/g.w*100));videoEditState.y=Math.max(0,Math.min(100-videoEditState.height/g.h*100,g.sy+dy/g.h*100));}else{videoEditState.width=Math.max(15,Math.min(100,g.width+dx/g.w*100));videoEditState.height=Math.max(60,Math.min(500,g.height+dy));}applyVideoEdit();};obj.addEventListener('pointermove',move);handle.addEventListener('pointermove',move);const end=()=>{if(g){g=null;autoSaveDraft();}};obj.addEventListener('pointerup',end);obj.addEventListener('pointercancel',end);handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&obj.classList.contains('selected')&&!e.target?.matches?.('input,textarea,[contenteditable="true"]')){e.preventDefault();deleteVideo();}});document.getElementById('preview-stage')?.addEventListener('click',e=>{if(!obj.contains(e.target))obj.classList.remove('selected');});syncVideoEditControls();applyVideoEdit();}
 
@@ -2628,11 +2647,12 @@ Terceiro item da lista</textarea></div>
       wrap.style.display='none';await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
       const base=await html2canvas(p,{scale:1.5,useCORS:true,allowTaint:false,backgroundColor:null,logging:false});wrap.style.display=display;
       const c=document.createElement('canvas');c.width=base.width;c.height=base.height;const ctx=c.getContext('2d',{alpha:false});ctx.drawImage(base,0,0);stream=c.captureStream(30);
-      if(audio&&v.captureStream){v.muted=false;v.captureStream().getAudioTracks().forEach(t=>stream.addTrack(t));}
+      if(audio){v.muted=false;}
       const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],mime=types.find(t=>MediaRecorder.isTypeSupported(t));
       if(!mime)throw Error('Não há formato MP4/WebM disponível neste navegador.');
       const chunks=[];recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});const stopped=new Promise((res,rej)=>{recorder.onstop=res;recorder.onerror=e=>rej(e.error||Error('Erro durante a gravação.'));});recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
       if(v.src){v.loop=false;v.currentTime=0;await v.play();}
+      if(audio&&v.captureStream){const audioStream=v.captureStream();const tracks=audioStream.getAudioTracks();if(!tracks.length)throw Error('O vídeo não disponibilizou faixa de áudio para exportação.');tracks.forEach(t=>stream.addTrack(t));}
       recorder.start(250);const start=performance.now();
       const frame=()=>{ctx.drawImage(base,0,0);drawVideoOnExportCanvas(ctx,c);const elapsed=(performance.now()-start)/1000;status.textContent='Gravando '+Math.min(seconds,Math.floor(elapsed))+' / '+seconds+' s';if(elapsed<seconds)raf=requestAnimationFrame(frame);else if(recorder.state!=='inactive')recorder.stop();};
       raf=requestAnimationFrame(frame);await stopped;cancelAnimationFrame(raf);
