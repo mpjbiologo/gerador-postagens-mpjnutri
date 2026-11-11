@@ -1082,7 +1082,7 @@ Terceiro item da lista</textarea></div>
       <div class="divider-post"></div>
       <p id="preview-desc">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</p>
       <ul id="preview-list"></ul>
-      <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-edit-object" id="image-edit-object" data-html2canvas-ignore="true"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
+      <div class="image-edit-wrap" id="image-edit-wrap"><div class="image-edit-object" id="image-edit-object"><img class="pen-img" id="pen-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ozempic_pens.jpg/320px-Ozempic_pens.jpg" alt="" onerror="this.style.display='none'"/><span class="image-edit-handle" id="image-edit-handle" data-html2canvas-ignore="true" aria-label="Redimensionar imagem"></span></div></div>
     </div>
     <div class="tag-bottom-wrap">
       <div class="tag-bottom" id="preview-tag1">👇 Leia a legenda</div>
@@ -1843,7 +1843,10 @@ Terceiro item da lista</textarea></div>
     if(!obj||!img)return;
     obj.style.left=imageEditState.x+'%';obj.style.top=imageEditState.y+'%';obj.style.width=imageEditState.width+'%';obj.style.height=imageEditState.height+'px';
     img.style.objectFit=imageEditState.fit;img.style.objectPosition=imageEditState.posX+'% '+imageEditState.posY+'%';
-    img.style.filter='brightness('+imageEditState.brightness+'%) saturate('+imageEditState.saturation+'%) contrast('+imageEditState.contrast+'%) hue-rotate('+imageEditState.hue+'deg)';
+    const colorMode=!!document.getElementById('toggle-img-color')?.checked;
+    const saturation=colorMode?imageEditState.saturation:0;
+    const brightness=colorMode?imageEditState.brightness:Math.min(300,imageEditState.brightness*1.4);
+    img.style.filter='brightness('+brightness+'%) saturate('+saturation+'%) contrast('+imageEditState.contrast+'%) hue-rotate('+imageEditState.hue+'deg)';
     syncImageEditControls();
     if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides.length){carouselSlides[activeCarouselSlide].imageEdit=currentImageEdit();}
     autoSaveDraft();
@@ -2736,8 +2739,10 @@ Terceiro item da lista</textarea></div>
     if(window.html2canvas){
       const h2c=window.html2canvas;
       window.html2canvas=function(el,opts){
-        const prev=post.style.transform;exporting=true;post.style.transform='none';
-        const done=()=>{post.style.transform=prev;exporting=false;fitPreview();};
+        const prev=post.style.transform,editObject=document.getElementById('image-edit-object'),wasSelected=!!editObject?.classList.contains('selected');
+        if(wasSelected)editObject.classList.remove('selected');
+        exporting=true;post.style.transform='none';
+        const done=()=>{if(wasSelected)editObject.classList.add('selected');post.style.transform=prev;exporting=false;fitPreview();};
         return h2c(el,opts).then(r=>{done();return r;},e=>{done();throw e;});
       };
     }
