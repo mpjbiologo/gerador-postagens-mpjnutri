@@ -2400,8 +2400,8 @@ Terceiro item da lista</textarea></div>
       else el.style.background=l.color||'#fff';
       if(String(l.id)===String(selectedCustomLayerId)){
         const del=document.createElement('button');del.type='button';del.className='custom-layer-delete';del.textContent='×';del.title='Excluir esta camada';del.setAttribute('aria-label','Excluir esta camada');del.setAttribute('data-html2canvas-ignore','true');
-        del.addEventListener('pointerdown',ev=>{ev.preventDefault();ev.stopPropagation();});
-        del.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();removeCustomLayer(l.id);showToast('Camada excluída.');});
+        del.addEventListener('pointerdown',ev=>{ev.stopPropagation();});
+        del.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();window.removeCustomLayerById?window.removeCustomLayerById(l.id):removeCustomLayer(l.id);});
         el.appendChild(del);
         if(!l.locked){const h=document.createElement('span');h.className='custom-layer-resize';h.dataset.resize='1';h.setAttribute('data-html2canvas-ignore','true');el.appendChild(h);}
       }
@@ -2420,6 +2420,14 @@ Terceiro item da lista</textarea></div>
   function toggleCustomLayerLock(id){const l=customLayers.find(x=>String(x.id)===String(id));if(!l)return;l.locked=!l.locked;renderCustomLayers();autoSaveDraft();}
   function duplicateCustomLayer(id){const l=customLayers.find(x=>String(x.id)===String(id));if(!l)return;const c={...l,id:'layer-'+Date.now()+'-'+Math.floor(Math.random()*10000),x:Math.min(90,l.x+4),y:Math.min(90,l.y+4),z:Math.max(0,...customLayers.map(x=>Number(x.z)||0))+1,locked:false};customLayers.push(c);selectedCustomLayerId=c.id;renderCustomLayers();autoSaveDraft();}
   function duplicateSelectedCustomLayer(){const l=selectedCustomLayer();if(l)duplicateCustomLayer(l.id);else showToast('Selecione uma camada primeiro.');}
+  window.removeCustomLayerById=function(id){
+    const layer=customLayers.find(item=>String(item.id)===String(id));
+    if(!layer){showToast('Camada não encontrada.');return false;}
+    const label=layer.type==='text'?(layer.text||'Texto'):(layer.type==='image'?'Imagem':layer.type==='circle'?'Círculo':layer.type==='line'?'Linha':'Retângulo');
+    const ok=removeCustomLayer(id);
+    if(ok)showToast('Camada “'+String(label).slice(0,30)+'” excluída.');
+    return ok;
+  };
   function removeCustomLayer(id){
     const index=customLayers.findIndex(x=>String(x.id)===String(id));
     if(index<0)return false;
