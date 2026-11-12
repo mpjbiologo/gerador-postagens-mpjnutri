@@ -3371,10 +3371,13 @@ Terceiro item da lista</textarea></div>
     let visited=new Set();
     try{visited=new Set(JSON.parse(localStorage.getItem(VISITED_KEY)||'[]'))}catch(e){}
 
-    // Monta o menu
+    // Monta o menu: cada grupo aparece uma única vez, no início da sequência.
+    let lastNavGroup=null;
     STEPS.forEach((step,i)=>{
-      if(step.group){const g=document.createElement('div');g.className='nav-group-title';g.textContent=step.group;nav.appendChild(g);}
-      else if(!step.extra&&i>0){const l=document.createElement('div');l.className='nav-step-line';nav.appendChild(l);}
+      if(step.group){
+        if(step.group!==lastNavGroup){const g=document.createElement('div');g.className='nav-group-title';g.textContent=step.group;nav.appendChild(g);}
+        lastNavGroup=step.group;
+      }else if(!step.extra&&i>0){const l=document.createElement('div');l.className='nav-step-line';nav.appendChild(l);}
       const b=document.createElement('button');
       b.type='button';b.className='sidebar-nav-item'+(step.extra?' extra':'');b.dataset.target=step.id;
       const num=step.extra?step.icon:String(main.indexOf(step)+1);
