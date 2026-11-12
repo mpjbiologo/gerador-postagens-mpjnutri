@@ -1057,6 +1057,7 @@ Terceiro item da lista</textarea></div>
       <div class="field"><label for="project-email-to">Enviar projeto por e-mail</label><input id="project-email-to" type="email" placeholder="destinatario@email.com"></div>
       <button class="btn secondary" type="button" onclick="sendProjectByEmail()">✉️ Preparar envio por e-mail</button>
       <p class="template-hint">Quando o navegador permitir, será aberto o compartilhamento com o arquivo anexado. Caso contrário, o arquivo será baixado e o aplicativo de e-mail será aberto para você anexá-lo. O sistema não envia mensagens sozinho.</p>
+      <div id="project-email-fallback" aria-live="polite"></div>
       <div id="save-export-content"></div>
     </div>
   </div>
@@ -2370,7 +2371,7 @@ Terceiro item da lista</textarea></div>
   }
   async function sendProjectByEmail(){
     const recipient=(document.getElementById('project-email-to')?.value||'').trim();
-    if(recipient&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
+    if(recipient&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
     try{
       if(document.getElementById('post').dataset.mode==='carrossel')saveCurrentCarouselSlide();
       const snapshot=buildCurrentSnapshot();
@@ -2382,19 +2383,32 @@ Terceiro item da lista</textarea></div>
       snapshot.bodyAlign=document.getElementById('body-align')?.value||'left';
       const packageData={format:'mpjnutri-project',version:1,exportedAt:new Date().toISOString(),name:[snapshot.line1,snapshot.line2].filter(Boolean).join(' ').trim()||'Projeto sem título',snapshot};
       const blob=new Blob([JSON.stringify(packageData,null,2)],{type:'application/json'});
-      const safeName=(packageData.name||'projeto').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'projeto';
+      const safeName=(packageData.name||'projeto').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'projeto';
       const file=new File([blob],safeName+'-mpjnutri.json',{type:'application/json'});
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({title:'Projeto '+packageData.name,text:'Arquivo do projeto criado no Gerador MPJ Nutri.',files:[file]});
-        showToast('Compartilhamento aberto. Escolha seu aplicativo de e-mail.');
+        navigator.share({title:'Projeto '+packageData.name,text:'Arquivo do projeto criado no Gerador MPJ Nutri.',files:[file]}).then(()=>{
+          showToast('Compartilhamento aberto. Escolha seu aplicativo de e-mail.');
+        }).catch(shareError=>{
+          if(shareError?.name==='AbortError')return;
+          console.warn('Compartilhamento nativo indisponível; usando envio manual.',shareError);
+          downloadProjectAndPrepareEmail(blob,file,packageData.name,recipient);
+        });
         return;
       }
-      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-      const subject=encodeURIComponent('Projeto MPJ Nutri: '+packageData.name);
-      const body=encodeURIComponent('Olá!\n\nEstou compartilhando o projeto "'+packageData.name+'".\n\nAnexe a este e-mail o arquivo JSON que acabou de ser baixado. Ele contém os dados editáveis do projeto.\n');
-      window.location.href='mailto:'+encodeURIComponent(recipient)+'?subject='+subject+'&body='+body;
-      showToast('Arquivo do projeto baixado. Anexe-o ao e-mail aberto.');
-    }catch(e){if(e?.name==='AbortError')return;showToast('Não foi possível preparar o compartilhamento: '+(e.message||'erro'));}
+      downloadProjectAndPrepareEmail(blob,file,packageData.name,recipient);
+    }catch(e){
+      console.error('Falha ao preparar projeto para e-mail:',e);
+      showToast('Não foi possível preparar o arquivo: '+(e.message||'erro inesperado'));
+    }
+  }
+  function downloadProjectAndPrepareEmail(blob,file,projectName,recipient){
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+    const subject=encodeURIComponent('Projeto MPJ Nutri: '+projectName);
+    const body=encodeURIComponent('Olá!\\n\\nEstou compartilhando o projeto "'+projectName+'".\\n\\nAnexe a este e-mail o arquivo '+file.name+' que acabou de ser baixado. Ele contém os dados editáveis do projeto.\\n');
+    const mailto='mailto:'+encodeURIComponent(recipient)+'?subject='+subject+'&body='+body;
+    const host=document.getElementById('project-email-fallback');
+    if(host)host.innerHTML='<p class="template-hint" style="margin-top:9px">1. O arquivo do projeto foi baixado. 2. Clique no link abaixo para abrir seu aplicativo de e-mail e anexe o arquivo baixado.</p><a class="btn secondary" style="display:flex;text-decoration:none;margin-top:7px" href="'+mailto.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">✉️ Abrir aplicativo de e-mail</a>';
+    showToast('Projeto baixado. Clique em “Abrir aplicativo de e-mail” e anexe o arquivo.');
   }
   function loadFromHistory(id){
     const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;currentProjectId=e.id;renderProjectVersions();
