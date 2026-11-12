@@ -267,9 +267,27 @@
   .field-counter{display:flex;justify-content:space-between;font-size:9px;color:var(--app-sub);margin-top:4px}
   .field-counter.over{color:#ef8b70}.history-controls{display:flex;gap:6px;margin:8px 0}.history-controls .btn{padding:8px;font-size:11px}
   .carousel-actions .btn.small{min-width:0;padding:8px 6px;font-size:10px}
-  .editorial-plan-item{background:var(--app-btn-bg);border:1px solid var(--app-btn-border);border-radius:7px;padding:8px;font-size:11px;display:flex;justify-content:space-between;gap:8px}
-  .editorial-plan-item small{display:block;color:var(--app-sub);margin-top:3px}
+  .editorial-plan-item{background:var(--app-btn-bg);border:1px solid var(--app-btn-border);border-radius:7px;padding:10px;font-size:11px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .editorial-plan-item small{display:block;color:var(--app-sub);margin-top:3px;line-height:1.5}
   .editorial-plan-item button{background:none;border:0;color:#e08b80;cursor:pointer}
+  .calendar-form{padding:11px;border:1px solid var(--app-section-border);border-radius:10px;background:var(--app-panel-bg);margin:8px 0 12px}
+  .calendar-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .calendar-form-actions,.calendar-toolbar,.calendar-month-nav,.calendar-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .calendar-toolbar{margin:14px 0 8px}.calendar-month-nav{justify-content:flex-start}.calendar-month-nav strong{min-width:130px;text-align:center}
+  .calendar-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0}
+  .calendar-stat{padding:8px;border:1px solid var(--app-section-border);border-radius:8px;background:var(--app-btn-bg);min-width:0}
+  .calendar-stat strong{display:block;font-size:17px;color:var(--accent)}.calendar-stat span{font-size:9px;color:var(--app-sub)}
+  .editorial-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  .calendar-weekday{text-align:center;color:var(--app-sub);font-size:9px;padding:5px 0;font-weight:700}
+  .calendar-day{min-height:65px;padding:4px;border:1px solid var(--app-section-border);border-radius:7px;background:var(--app-panel-bg);min-width:0;overflow:hidden}
+  .calendar-day.is-outside{opacity:.4}.calendar-day.is-today{border-color:var(--accent)}.calendar-day.is-selected{box-shadow:inset 0 0 0 1px var(--accent)}
+  .calendar-day-number{font-size:10px;color:var(--app-sub);display:block;margin-bottom:3px}
+  .calendar-event{display:block;width:100%;border:0;border-radius:4px;padding:3px;margin:2px 0;text-align:left;font-size:8px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--app-btn-bg);color:var(--app-input-color);cursor:pointer;border-left:3px solid var(--accent)}
+  .calendar-event[data-status="Publicado"]{border-left-color:#45a66b}.calendar-event[data-status="Em revisão"]{border-left-color:#d7a94c}.calendar-event[data-status="Agendado"]{border-left-color:#6d9ed6}
+  .calendar-more{font-size:8px;color:var(--app-sub)}
+  .calendar-item-main{flex:1;min-width:0}.calendar-item-actions{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}.calendar-item-actions button{padding:4px 6px;border:1px solid var(--app-btn-border);border-radius:5px;background:var(--app-btn-bg);font-size:10px}
+  .calendar-item-status{font-size:9px;color:var(--app-sub);margin-top:4px}
+  @media(max-width:520px){.calendar-fields-grid{grid-template-columns:1fr}.calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-day{min-height:55px;padding:3px}.calendar-event{font-size:7px;padding:2px}.calendar-month-nav strong{min-width:105px}}
 
 
 
@@ -1260,10 +1278,28 @@ Terceiro item da lista</textarea></div>
   <div class="section" id="sec-calendario">
     <div class="section-header" onclick="toggleSection('sec-calendario')"><div class="section-title">🗓️ Planejamento editorial</div><div class="section-arrow">▼</div></div>
     <div class="section-body">
-      <div class="field"><label for="calendar-date">Data prevista</label><input type="date" id="calendar-date"/></div>
-      <div class="field"><label for="calendar-title">Tema / título</label><input id="calendar-title" placeholder="Tema da próxima publicação"/></div>
-      <div class="field"><label for="calendar-status">Status</label><select id="calendar-status"><option>Ideia</option><option>Em produção</option><option>Em revisão</option><option>Agendado</option><option>Publicado</option></select></div>
-      <button class="btn" type="button" onclick="addEditorialPlan()">＋ Adicionar ao calendário</button>
+      <p class="template-hint">Organize pautas, formatos, horários e andamento das publicações. O calendário fica salvo neste navegador e entra no backup completo.</p>
+      <div class="calendar-summary" id="calendar-summary"></div>
+      <div class="calendar-form">
+        <div class="field"><label for="calendar-title">Tema / título</label><input id="calendar-title" placeholder="Ex.: 5 sinais de baixa ingestão de fibras"/></div>
+        <div class="calendar-fields-grid">
+          <div class="field"><label for="calendar-date">Data prevista</label><input type="date" id="calendar-date"/></div>
+          <div class="field"><label for="calendar-time">Horário (opcional)</label><input type="time" id="calendar-time"/></div>
+          <div class="field"><label for="calendar-platform">Canal</label><select id="calendar-platform"><option>Instagram</option><option>Facebook</option><option>TikTok</option><option>LinkedIn</option><option>Blog / site</option><option>YouTube</option><option>Outro</option></select></div>
+          <div class="field"><label for="calendar-format">Formato</label><select id="calendar-format"><option>Post</option><option>Carrossel</option><option>Reels</option><option>Stories</option><option>Vídeo</option><option>Live</option><option>Artigo</option><option>Outro</option></select></div>
+          <div class="field"><label for="calendar-status">Status</label><select id="calendar-status"><option>Ideia</option><option>Em produção</option><option>Em revisão</option><option>Agendado</option><option>Publicado</option></select></div>
+          <div class="field"><label for="calendar-project">Projeto relacionado</label><select id="calendar-project"><option value="">Sem projeto vinculado</option></select></div>
+        </div>
+        <div class="field"><label for="calendar-notes">Notas / briefing (opcional)</label><textarea id="calendar-notes" rows="2" placeholder="Gancho, objetivo, referências, CTA ou observações..."></textarea></div>
+        <input type="hidden" id="calendar-edit-id" value="">
+        <div class="calendar-form-actions"><button class="btn" id="calendar-save-btn" type="button" onclick="addEditorialPlan()">＋ Adicionar ao calendário</button><button class="btn secondary" id="calendar-cancel-edit" type="button" style="display:none" onclick="cancelEditorialPlanEdit()">Cancelar edição</button></div>
+      </div>
+      <div class="calendar-toolbar">
+        <div class="calendar-month-nav"><button class="btn secondary small" type="button" onclick="moveEditorialCalendar(-1)">←</button><strong id="calendar-month-label"></strong><button class="btn secondary small" type="button" onclick="moveEditorialCalendar(1)">→</button><button class="btn secondary small" type="button" onclick="goToEditorialCalendarToday()">Hoje</button></div>
+        <button class="btn secondary small" type="button" onclick="exportEditorialCalendarCSV()">⬇ Exportar CSV</button>
+      </div>
+      <div class="editorial-calendar-grid" id="editorial-calendar-grid"></div>
+      <div class="calendar-list-head"><strong>Publicações planejadas</strong><select id="calendar-filter-status" aria-label="Filtrar publicações" onchange="renderEditorialPlan()"><option value="">Todos os status</option><option>Ideia</option><option>Em produção</option><option>Em revisão</option><option>Agendado</option><option>Publicado</option></select></div>
       <div id="editorial-plan-list" class="history-list"></div>
     </div>
   </div>
@@ -3148,10 +3184,48 @@ Terceiro item da lista</textarea></div>
     document.getElementById('caption-output').value=caption;showToast('Legenda simples montada. Revise e personalize antes de publicar.');
   }
   function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
-  function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
-  function renderEditorialPlan(){const el=document.getElementById('editorial-plan-list');if(!el)return;const items=getEditorialPlan();el.innerHTML=items.length?items.map((x,i)=>'<div class="editorial-plan-item"><div><strong>'+editorialEscape(x.title)+'</strong><small>'+editorialEscape(x.date)+' · '+editorialEscape(x.status)+'</small></div><button onclick="deleteEditorialPlan('+i+')" title="Excluir">✕</button></div>').join(''):'<div class="history-empty">Nenhuma publicação planejada.</div>';}
-  function addEditorialPlan(){const title=document.getElementById('calendar-title').value.trim(),date=document.getElementById('calendar-date').value,status=document.getElementById('calendar-status').value;if(!title||!date){showToast('Informe tema e data.');return;}const a=getEditorialPlan();a.push({title,date,status});localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));document.getElementById('calendar-title').value='';renderEditorialPlan();showToast('Publicação adicionada ao planejamento.');}
-  function deleteEditorialPlan(index){const a=getEditorialPlan();a.splice(index,1);localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(a));renderEditorialPlan();}
+  let editorialCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a.map((x,i)=>({...x,id:String(x.id||('plan-'+Date.now()+'-'+i)),platform:x.platform||'Instagram',format:x.format||'Post',time:x.time||'',notes:x.notes||'',projectId:x.projectId||''})):[];}catch(e){return [];}}
+  function saveEditorialPlan(items){try{localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(items));return true;}catch(e){showToast('Não foi possível salvar o calendário. Exporte um backup e libere espaço.');return false;}}
+  function renderEditorialPlan(){
+    const items=getEditorialPlan().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
+    const filter=document.getElementById('calendar-filter-status')?.value||'';
+    const visible=items.filter(x=>!filter||x.status===filter);
+    const today=new Date();today.setHours(0,0,0,0);
+    const counts=[['Total',items.length],['Em produção',items.filter(x=>x.status==='Em produção').length],['Agendadas',items.filter(x=>x.status==='Agendado').length],['Publicadas',items.filter(x=>x.status==='Publicado').length]];
+    const summary=document.getElementById('calendar-summary');if(summary)summary.innerHTML=counts.map(x=>'<div class="calendar-stat"><strong>'+x[1]+'</strong><span>'+x[0]+'</span></div>').join('');
+    const projectSelect=document.getElementById('calendar-project');
+    if(projectSelect){const chosen=projectSelect.value;projectSelect.innerHTML='<option value="">Sem projeto vinculado</option>'+getHistory().map(p=>'<option value="'+editorialEscape(p.id)+'">'+editorialEscape(p.name)+'</option>').join('');projectSelect.value=chosen;}
+    const grid=document.getElementById('editorial-calendar-grid');
+    if(grid){
+      const y=editorialCalendarMonth.getFullYear(),m=editorialCalendarMonth.getMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,start=new Date(y,m,1-offset),monthLabel=document.getElementById('calendar-month-label');
+      if(monthLabel)monthLabel.textContent=editorialCalendarMonth.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+      const weekdays=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+      let html=weekdays.map(d=>'<div class="calendar-weekday">'+d+'</div>').join('');
+      for(let i=0;i<42;i++){const day=new Date(start);day.setDate(start.getDate()+i);const iso=day.getFullYear()+'-'+String(day.getMonth()+1).padStart(2,'0')+'-'+String(day.getDate()).padStart(2,'0'),dayItems=items.filter(x=>x.date===iso),classes=['calendar-day',day.getMonth()!==m?'is-outside':'',day.getTime()===today.getTime()?'is-today':''].filter(Boolean).join(' ');html+='<div class="'+classes+'" data-date="'+iso+'" onclick="selectEditorialCalendarDate(\''+iso+'\')"><span class="calendar-day-number">'+day.getDate()+'</span>'+dayItems.slice(0,3).map(x=>'<button type="button" class="calendar-event" data-status="'+editorialEscape(x.status)+'" title="'+editorialEscape(x.title)+'" onclick="event.stopPropagation();editEditorialPlan(\''+editorialEscape(x.id)+'\')">'+(x.time?editorialEscape(x.time)+' ':'')+editorialEscape(x.title)+'</button>').join('')+(dayItems.length>3?'<span class="calendar-more">+'+(dayItems.length-3)+' mais</span>':'')+'</div>';}
+      grid.innerHTML=html;
+    }
+    const el=document.getElementById('editorial-plan-list');if(!el)return;
+    el.innerHTML=visible.length?visible.map(x=>{const project=getHistory().find(p=>String(p.id)===String(x.projectId));return '<div class="editorial-plan-item"><div class="calendar-item-main"><strong>'+editorialEscape(x.title)+'</strong><small>'+editorialEscape(new Date(x.date+'T00:00:00').toLocaleDateString('pt-BR'))+(x.time?' · '+editorialEscape(x.time):'')+' · '+editorialEscape(x.platform)+' · '+editorialEscape(x.format)+(project?' · Projeto: '+editorialEscape(project.name):'')+'</small>'+(x.notes?'<small>'+editorialEscape(x.notes)+'</small>':'')+'<div class="calendar-item-status">'+editorialEscape(x.status)+'</div></div><div class="calendar-item-actions"><button type="button" onclick="editEditorialPlan(\''+editorialEscape(x.id)+'\')">Editar</button><button type="button" onclick="setEditorialPlanStatus(\''+editorialEscape(x.id)+'\',\'Publicado\')">✓ Publicado</button><button type="button" onclick="deleteEditorialPlan(\''+editorialEscape(x.id)+'\')">✕</button></div></div>';}).join(''):'<div class="history-empty">Nenhuma publicação para este filtro.</div>';
+  }
+  function moveEditorialCalendar(delta){editorialCalendarMonth=new Date(editorialCalendarMonth.getFullYear(),editorialCalendarMonth.getMonth()+delta,1);renderEditorialPlan();}
+  function goToEditorialCalendarToday(){const d=new Date();editorialCalendarMonth=new Date(d.getFullYear(),d.getMonth(),1);renderEditorialPlan();}
+  function selectEditorialCalendarDate(date){const input=document.getElementById('calendar-date');if(input)input.value=date;document.querySelectorAll('.calendar-day.is-selected').forEach(x=>x.classList.remove('is-selected'));document.querySelector('.calendar-day[data-date="'+date+'"]')?.classList.add('is-selected');}
+  function addEditorialPlan(){
+    const title=document.getElementById('calendar-title').value.trim(),date=document.getElementById('calendar-date').value,status=document.getElementById('calendar-status').value;
+    if(!title||!date){showToast('Informe tema e data.');return;}
+    const a=getEditorialPlan(),editId=document.getElementById('calendar-edit-id').value;
+    const item={id:editId||('plan-'+Date.now()+'-'+Math.floor(Math.random()*100000)),title,date,status,time:document.getElementById('calendar-time').value,platform:document.getElementById('calendar-platform').value,format:document.getElementById('calendar-format').value,projectId:document.getElementById('calendar-project').value,notes:document.getElementById('calendar-notes').value.trim(),updatedAt:Date.now()};
+    const index=a.findIndex(x=>String(x.id)===String(editId));
+    if(index>=0)a[index]={...a[index],...item};else a.push(item);
+    if(!saveEditorialPlan(a))return;
+    cancelEditorialPlanEdit();editorialCalendarMonth=new Date(Number(date.slice(0,4)),Number(date.slice(5,7))-1,1);renderEditorialPlan();showToast(index>=0?'Publicação atualizada.':'Publicação adicionada ao calendário.');
+  }
+  function editEditorialPlan(id){const x=getEditorialPlan().find(p=>String(p.id)===String(id));if(!x)return;document.getElementById('calendar-edit-id').value=x.id;document.getElementById('calendar-title').value=x.title||'';document.getElementById('calendar-date').value=x.date||'';document.getElementById('calendar-time').value=x.time||'';document.getElementById('calendar-platform').value=x.platform||'Instagram';document.getElementById('calendar-format').value=x.format||'Post';document.getElementById('calendar-status').value=x.status||'Ideia';document.getElementById('calendar-project').value=x.projectId||'';document.getElementById('calendar-notes').value=x.notes||'';document.getElementById('calendar-save-btn').textContent='Salvar alterações';document.getElementById('calendar-cancel-edit').style.display='';document.getElementById('calendar-title').focus();}
+  function cancelEditorialPlanEdit(){['calendar-edit-id','calendar-title','calendar-date','calendar-time','calendar-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.getElementById('calendar-status').value='Ideia';document.getElementById('calendar-platform').value='Instagram';document.getElementById('calendar-format').value='Post';document.getElementById('calendar-project').value='';document.getElementById('calendar-save-btn').textContent='＋ Adicionar ao calendário';document.getElementById('calendar-cancel-edit').style.display='none';}
+  function setEditorialPlanStatus(id,status){const a=getEditorialPlan(),x=a.find(p=>String(p.id)===String(id));if(!x)return;x.status=status;x.updatedAt=Date.now();if(saveEditorialPlan(a)){renderEditorialPlan();showToast('Status atualizado.');}}
+  function deleteEditorialPlan(id){const a=getEditorialPlan(),index=a.findIndex(x=>String(x.id)===String(id));if(index<0)return;if(!confirm('Excluir esta publicação do planejamento?'))return;a.splice(index,1);if(saveEditorialPlan(a)){renderEditorialPlan();showToast('Publicação excluída.');}}
+  function exportEditorialCalendarCSV(){const rows=[['Data','Horário','Tema','Canal','Formato','Status','Projeto','Notas'],...getEditorialPlan().sort((a,b)=>a.date.localeCompare(b.date)).map(x=>[x.date,x.time,x.title,x.platform,x.format,x.status,getHistory().find(p=>String(p.id)===String(x.projectId))?.name||'',x.notes])];const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='calendario-editorial-mpjnutri.csv';a.click();URL.revokeObjectURL(url);showToast('Calendário exportado em CSV.');}
   function saveProjectVersion(){
     if(!currentProjectId){showToast('Carregue ou salve um projeto antes de criar versões.');return;}
     const h=getHistory(),e=h.find(x=>String(x.id)===String(currentProjectId));if(!e)return;
