@@ -4027,7 +4027,7 @@ Terceiro item da lista</textarea></div>
     if(!client){supabaseStatus('Configure e conecte a URL e a chave pública do Supabase antes de entrar com GitHub.');return;}
     supabaseStatus('Redirecionando para a autenticação segura do GitHub…');
     try{
-      const redirectTo=window.location.origin+window.location.pathname+window.location.search;
+      const redirectTo='https://mpjbiologo.github.io/gerador-postagens-mpjnutri/gerador.html';
       const {error}=await client.auth.signInWithOAuth({
         provider:'github',
         options:{redirectTo,scopes:'read:user user:email'}
