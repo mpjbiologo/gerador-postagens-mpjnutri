@@ -790,6 +790,8 @@ body:not(.carousel-mode) .carousel-only{display:none}
 
       </div>
       <div class="template-hint">Escolher um modelo substitui os textos e o estilo visual do post atual. Sua identificação, WhatsApp e imagem permanecem preservados.</div>
+      <button type="button" class="btn secondary" onclick="applyCurrentSettingsToAllSlides('model')">🧩 Aplicar modelo e estilo a todos os slides</button>
+      <div class="carousel-note">No carrossel, aplica o tema, gradiente, cores, decorações e configuração de lista do slide atual, sem substituir os textos individuais.</div>
     </div>
   </div>
 
@@ -1058,6 +1060,8 @@ Terceiro item da lista</textarea></div>
         <button class="format-btn" data-fmt="stories" onclick="setFormat(this)"><div class="format-icon" style="width:16px;height:28px;"></div>9:16<span class="fmt-desc">Stories e Reels</span></button>
         <button class="format-btn" data-fmt="carrossel" onclick="setFormat(this)"><div class="format-icon" style="width:22px;height:28px;border-style:dashed;"></div>Carrossel<span class="fmt-desc">Vários slides</span></button>
       </div>
+      <button type="button" class="btn secondary" style="margin-top:9px" onclick="applyCurrentSettingsToAllSlides('format')">📐 Aplicar formato a todos os slides</button>
+      <div class="carousel-note">No carrossel, o formato escolhido será aplicado a todos os slides, mantendo o conteúdo e o estilo de cada um.</div>
       <div class="carousel-tools" id="carousel-tools">
         <label>Slides do carrossel</label>
         <div class="field"><label for="slide-type">Tipo do slide selecionado</label><select id="slide-type" onchange="setCarouselSlideType(this.value)" style="width:100%;padding:8px;border-radius:7px;background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border)"><option value="cover">Capa</option><option value="content">Conteúdo</option><option value="list">Lista</option><option value="comparison">Comparação</option><option value="tip">Dica</option><option value="closing">Encerramento</option></select></div>
@@ -1465,7 +1469,8 @@ Terceiro item da lista</textarea></div>
     const gradientButton = document.querySelector('.grad-swatch[data-grad="' + model.grad + '"]');
     if (gradientButton) setGrad(gradientButton);
     const portraitButton = document.querySelector('.format-btn[data-fmt="retrato"]');
-    if (portraitButton) setFormat(portraitButton);
+    // Fora do carrossel, o modelo inicia em retrato. Dentro dele, preserva o formato do slide.
+    if (portraitButton && document.getElementById('post').dataset.mode !== 'carrossel') setFormat(portraitButton);
 
     updatePreview();
     autoSaveDraft();
@@ -1880,6 +1885,8 @@ Terceiro item da lista</textarea></div>
       if(i===activeCarouselSlide)return slide;
       const next={...slide};
       if(kind==='visual')copy(next,['slideTheme','slideGrad','slideGradIntensity','slideDecos','slideCustomColors']);
+      else if(kind==='model')copy(next,['slideTheme','slideGrad','slideGradIntensity','slideDecos','slideCustomColors','listNum']);
+      else if(kind==='format')copy(next,['slideFormat']);
       else if(kind==='typography')copy(next,['slideFontFamily','slideTitleSize','slideBodySize','slideTitleAlign','slideBodyAlign']);
       else if(kind==='background')copy(next,['slideBackground','slideBackgroundFit']);
       else if(kind==='image'){
@@ -1893,7 +1900,7 @@ Terceiro item da lista</textarea></div>
     });
     applyCarouselSlide(activeCarouselSlide);
     autoSaveDraft();
-    const label={visual:'estilo visual',typography:'tipografia e alinhamento',background:'plano de fundo',image:'ajustes de imagem'}[kind]||'configurações';
+    const label={visual:'estilo visual',model:'modelo e estilo',format:'formato',typography:'tipografia e alinhamento',background:'plano de fundo',image:'ajustes de imagem'}[kind]||'configurações';
     showToast(updated?label.charAt(0).toUpperCase()+label.slice(1)+' aplicado a '+updated+' slide(s).':'Nenhum outro slide elegível para receber esses ajustes.');
   }
 
