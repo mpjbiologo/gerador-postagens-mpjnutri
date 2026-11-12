@@ -1056,7 +1056,16 @@ Terceiro item da lista</textarea></div>
       <div class="divider" style="border-top:1px solid var(--app-section-border);margin:8px 0"></div>
       <div class="field"><label for="project-email-to">Enviar projeto por e-mail</label><input id="project-email-to" type="email" placeholder="destinatario@email.com"></div>
       <button class="btn secondary" type="button" onclick="sendProjectByEmail()">✉️ Preparar envio por e-mail</button>
-      <p class="template-hint">Quando o navegador permitir, será aberto o compartilhamento com o arquivo anexado. Caso contrário, o arquivo será baixado e o aplicativo de e-mail será aberto para você anexá-lo. O sistema não envia mensagens sozinho.</p>
+      <div id="email-app-settings" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--app-section-border);border-radius:9px;background:var(--app-btn-bg)">
+        <strong style="display:block;font-size:12px;color:var(--accent);margin-bottom:8px">Configurar aplicativo de e-mail (primeiro uso)</strong>
+        <div class="field"><label for="email-app-choice">Como deseja abrir o e-mail?</label><select id="email-app-choice" style="width:100%;padding:9px;border-radius:7px;background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border)">
+          <option value="mailto">Aplicativo padrão do dispositivo</option><option value="gmail">Gmail (navegador)</option><option value="outlook">Outlook / Hotmail (navegador)</option><option value="yahoo">Yahoo Mail (navegador)</option><option value="custom">URL personalizada</option>
+        </select></div>
+        <div class="field" id="email-custom-url-wrap" style="display:none"><label for="email-custom-url">URL do aplicativo de e-mail</label><input id="email-custom-url" type="url" placeholder="https://exemplo.com/compose?to={to}&subject={subject}&body={body}"><small class="template-hint">Use {to}, {subject} e {body} para inserir os dados. Sem marcadores, serão acrescentados os parâmetros to, subject e body.</small></div>
+        <button class="btn" type="button" onclick="saveEmailAppPreference()">Salvar preferência</button>
+        <p class="template-hint" style="margin-top:7px">Você poderá alterar essa escolha quando quiser. A configuração fica salva somente neste navegador.</p>
+      </div>
+      <p class="template-hint">O projeto será baixado como arquivo JSON. Depois, o aplicativo escolhido será aberto para você anexá-lo. O sistema não envia mensagens sozinho.</p>
       <div id="project-email-fallback" aria-live="polite"></div>
       <div id="save-export-content"></div>
     </div>
@@ -2369,9 +2378,38 @@ Terceiro item da lista</textarea></div>
     const e={id:Date.now(),name:datedName,snapshot:snap,versions:[],line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
     const h=getHistory();h.unshift(e);saveHistory(h);currentProjectId=e.id;renderHistory();renderProjectVersions();if(nameInput)nameInput.value=cleanName;const status=document.getElementById('save-project-status');if(status)status.textContent='Projeto salvo: '+datedName;showToast('✅ Projeto salvo!');
   }
+  const EMAIL_APP_PREF_KEY='mpjnutri-email-app-preference';
+  function readEmailAppPreference(){try{return JSON.parse(localStorage.getItem(EMAIL_APP_PREF_KEY)||'null');}catch(e){return null;}}
+  function toggleCustomEmailUrl(){const choice=document.getElementById('email-app-choice')?.value;const wrap=document.getElementById('email-custom-url-wrap');if(wrap)wrap.style.display=choice==='custom'?'block':'none';}
+  function saveEmailAppPreference(){
+    const choice=document.getElementById('email-app-choice')?.value||'mailto';
+    const customUrl=(document.getElementById('email-custom-url')?.value||'').trim();
+    if(choice==='custom'&&(!/^https?:\/\//i.test(customUrl)||!customUrl)){showToast('Informe uma URL http ou https válida.');return;}
+    try{localStorage.setItem(EMAIL_APP_PREF_KEY,JSON.stringify({choice,customUrl}));document.getElementById('email-app-settings').style.display='none';showToast('Aplicativo de e-mail salvo neste navegador.');}
+    catch(e){showToast('Não foi possível salvar a preferência neste navegador.');}
+  }
+  function getConfiguredEmailUrl(recipient,subject,body){
+    const pref=readEmailAppPreference();if(!pref)return '';
+    const q={to:encodeURIComponent(recipient||''),subject:encodeURIComponent(subject),body:encodeURIComponent(body)};
+    if(pref.choice==='gmail')return 'https://mail.google.com/mail/?view=cm&fs=1&to='+q.to+'&su='+q.subject+'&body='+q.body;
+    if(pref.choice==='outlook')return 'https://outlook.live.com/mail/0/deeplink/compose?to='+q.to+'&subject='+q.subject+'&body='+q.body;
+    if(pref.choice==='yahoo')return 'https://compose.mail.yahoo.com/?to='+q.to+'&subject='+q.subject+'&body='+q.body;
+    if(pref.choice==='custom'){
+      let url=pref.customUrl||'';const hasTokens=/\{(?:to|subject|body)\}/.test(url);
+      url=url.replace(/\{to\}/g,q.to).replace(/\{subject\}/g,q.subject).replace(/\{body\}/g,q.body);
+      if(!hasTokens)url+=(url.includes('?')?'&':'?')+'to='+q.to+'&subject='+q.subject+'&body='+q.body;
+      return url;
+    }
+    return 'mailto:'+encodeURIComponent(recipient||'')+'?subject='+q.subject+'&body='+q.body;
+  }
   async function sendProjectByEmail(){
     const recipient=(document.getElementById('project-email-to')?.value||'').trim();
-    if(recipient&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
+    if(!recipient||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
+    if(!readEmailAppPreference()){
+      const panel=document.getElementById('email-app-settings');if(panel)panel.style.display='block';
+      const choice=document.getElementById('email-app-choice');if(choice)choice.value='mailto';toggleCustomEmailUrl();
+      showToast('Escolha como deseja abrir seu e-mail e salve a preferência.');return;
+    }
     try{
       if(document.getElementById('post').dataset.mode==='carrossel')saveCurrentCarouselSlide();
       const snapshot=buildCurrentSnapshot();
@@ -2401,14 +2439,24 @@ Terceiro item da lista</textarea></div>
       showToast('Não foi possível preparar o arquivo: '+(e.message||'erro inesperado'));
     }
   }
+  function openConfiguredEmailApp(){
+    const url=window._mpjPendingEmailUrl||'';if(!url){showToast('Prepare o projeto novamente para abrir o e-mail.');return;}
+    if(url.startsWith('mailto:')){window.location.href=url;return;}
+    const win=window.open(url,'_blank','noopener');if(!win)showToast('O navegador bloqueou a janela. Permita pop-ups para este site e tente novamente.');
+  }
+  function initEmailAppSettings(){
+    const pref=readEmailAppPreference(),choice=document.getElementById('email-app-choice'),custom=document.getElementById('email-custom-url');
+    if(pref&&choice){choice.value=pref.choice||'mailto';if(custom)custom.value=pref.customUrl||'';}
+    choice?.addEventListener('change',toggleCustomEmailUrl);toggleCustomEmailUrl();
+  }
   function downloadProjectAndPrepareEmail(blob,file,projectName,recipient){
     const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-    const subject=encodeURIComponent('Projeto MPJ Nutri: '+projectName);
-    const body=encodeURIComponent('Olá!\\n\\nEstou compartilhando o projeto "'+projectName+'".\\n\\nAnexe a este e-mail o arquivo '+file.name+' que acabou de ser baixado. Ele contém os dados editáveis do projeto.\\n');
-    const mailto='mailto:'+encodeURIComponent(recipient)+'?subject='+subject+'&body='+body;
+    const subject='Projeto MPJ Nutri: '+projectName;
+    const body='Olá!\n\nEstou compartilhando o projeto "'+projectName+'".\n\nAnexe a este e-mail o arquivo '+file.name+' que acabou de ser baixado. Ele contém os dados editáveis do projeto.\n';
+    window._mpjPendingEmailUrl=getConfiguredEmailUrl(recipient,subject,body);
     const host=document.getElementById('project-email-fallback');
-    if(host)host.innerHTML='<p class="template-hint" style="margin-top:9px">1. O arquivo do projeto foi baixado. 2. Clique no link abaixo para abrir seu aplicativo de e-mail e anexe o arquivo baixado.</p><a class="btn secondary" style="display:flex;text-decoration:none;margin-top:7px" href="'+mailto.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">✉️ Abrir aplicativo de e-mail</a>';
-    showToast('Projeto baixado. Clique em “Abrir aplicativo de e-mail” e anexe o arquivo.');
+    if(host)host.innerHTML='<p class="template-hint" style="margin-top:9px">1. O arquivo do projeto foi baixado. 2. Abra o aplicativo escolhido e anexe o arquivo baixado.</p><button class="btn secondary" type="button" style="margin-top:7px" onclick="openConfiguredEmailApp()">✉️ Abrir aplicativo de e-mail</button>';
+    showToast('Projeto baixado. Clique para abrir o aplicativo de e-mail e anexe o arquivo.');
   }
   function loadFromHistory(id){
     const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;currentProjectId=e.id;renderProjectVersions();
@@ -3367,6 +3415,7 @@ Terceiro item da lista</textarea></div>
   window.addEventListener('resize', () => { requestAnimationFrame(fitTitleFonts); });
 
   initProfessionalProfile();
+  initEmailAppSettings();
   initSettingsAutosave();
   restoreSavedAISettings();
   initDirectImageEditing();
