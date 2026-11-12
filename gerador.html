@@ -293,6 +293,7 @@
   .custom-layer{position:absolute;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:auto;touch-action:none;user-select:none;cursor:grab;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere}
   .custom-layer:active{cursor:grabbing}.custom-layer.selected{outline:1px dashed #fff;outline-offset:2px;filter:drop-shadow(0 0 2px #000)}
   .custom-layer.locked{cursor:default;pointer-events:none}.custom-layer img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+  .custom-layer-delete{position:absolute;top:-12px;right:-12px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;background:#d93636;color:#fff;font:700 18px/1 Arial,sans-serif;cursor:pointer;z-index:20;pointer-events:auto;box-shadow:0 1px 5px rgba(0,0,0,.55);padding:0}.custom-layer-delete:hover{background:#b91c1c;transform:scale(1.08)}.fullscreen-preview-post .custom-layer-delete{display:none!important}
   .custom-layer-resize{position:absolute;right:-7px;bottom:-7px;width:15px;height:15px;border:2px solid #fff;border-radius:50%;background:var(--accent);z-index:3;cursor:nwse-resize;pointer-events:auto}
   .custom-layer:not(.selected) .custom-layer-resize,.custom-layer.locked .custom-layer-resize{display:none}
   .fullscreen-preview-post .custom-layer-stage{pointer-events:none}.fullscreen-preview-post .custom-layer{outline:none!important;cursor:default!important}.fullscreen-preview-post .custom-layer-resize{display:none!important}
@@ -2397,8 +2398,14 @@ Terceiro item da lista</textarea></div>
       else if(l.type==='circle'){el.style.background=l.color||'#fff';el.style.borderRadius='50%';}
       else if(l.type==='line'){el.style.background=l.color||'#fff';el.style.height=Math.max(1,Number(l.height)||1.5)+'%';}
       else el.style.background=l.color||'#fff';
-      if(String(l.id)===String(selectedCustomLayerId)&&!l.locked){const h=document.createElement('span');h.className='custom-layer-resize';h.dataset.resize='1';h.setAttribute('data-html2canvas-ignore','true');el.appendChild(h);}
-      if(!l.locked)el.addEventListener('pointerdown',ev=>startCustomLayerDrag(ev,l.id,!!ev.target.closest('[data-resize]')));
+      if(String(l.id)===String(selectedCustomLayerId)){
+        const del=document.createElement('button');del.type='button';del.className='custom-layer-delete';del.textContent='×';del.title='Excluir esta camada';del.setAttribute('aria-label','Excluir esta camada');del.setAttribute('data-html2canvas-ignore','true');
+        del.addEventListener('pointerdown',ev=>{ev.preventDefault();ev.stopPropagation();});
+        del.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();removeCustomLayer(l.id);showToast('Camada excluída.');});
+        el.appendChild(del);
+        if(!l.locked){const h=document.createElement('span');h.className='custom-layer-resize';h.dataset.resize='1';h.setAttribute('data-html2canvas-ignore','true');el.appendChild(h);}
+      }
+      if(!l.locked)el.addEventListener('pointerdown',ev=>{if(ev.target.closest('.custom-layer-delete'))return;startCustomLayerDrag(ev,l.id,!!ev.target.closest('[data-resize]'));});
       el.addEventListener('click',ev=>{ev.stopPropagation();selectCustomLayer(l.id);});stage.appendChild(el);
     });renderCustomLayerPanel();
   }
@@ -2427,24 +2434,16 @@ Terceiro item da lista</textarea></div>
     return true;
   }
   window.deleteSelectedCustomLayer=function(){
-    const id=selectedCustomLayerId;
-    if(id===null||id===undefined){showToast('Selecione uma camada na lista ou na prévia.');return false;}
-    const index=customLayers.findIndex(layer=>String(layer.id)===String(id));
-    if(index<0){selectedCustomLayerId=null;renderCustomLayers();showToast('A camada selecionada não foi encontrada.');return false;}
-    const layer=customLayers[index];
+    const previewSelected=document.querySelector('#custom-layer-stage .custom-layer.selected');
+    const listSelected=document.querySelector('#custom-layer-list .layer-list-row.active');
+    const id=previewSelected?.dataset.layerId||listSelected?.dataset.layerId||selectedCustomLayerId;
+    if(id===null||id===undefined){showToast('Selecione uma camada na prévia ou na lista.');return false;}
+    const layer=customLayers.find(item=>String(item.id)===String(id));
+    if(!layer){selectedCustomLayerId=null;renderCustomLayers();showToast('A camada selecionada não foi encontrada.');return false;}
     const label=layer.type==='text'?(layer.text||'Texto'):(layer.type==='image'?'Imagem':layer.type==='circle'?'Círculo':layer.type==='line'?'Linha':'Retângulo');
-    customLayers.splice(index,1);
-    selectedCustomLayerId=null;
-    const stage=document.getElementById('custom-layer-stage');
-    const node=stage?.querySelector('[data-layer-id="'+CSS.escape(String(id))+'"]');
-    node?.remove();
-    if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides[activeCarouselSlide]){
-      carouselSlides[activeCarouselSlide]={...carouselSlides[activeCarouselSlide],customLayers:customLayerClone()};
-    }
-    renderCustomLayerPanel();
-    autoSaveDraft();
-    showToast('Camada “'+String(label).slice(0,30)+'” excluída.');
-    return true;
+    const removed=removeCustomLayer(layer.id);
+    if(removed)showToast('Camada “'+String(label).slice(0,30)+'” excluída.');
+    return removed;
   };
   function deleteSelectedCustomLayer(){return window.deleteSelectedCustomLayer();}
   function bindCustomLayerDeleteButton(){
