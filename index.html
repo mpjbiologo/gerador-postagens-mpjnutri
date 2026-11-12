@@ -1393,9 +1393,26 @@ Terceiro item da lista</textarea></div>
   function openSettings(){
     const p=(()=>{try{return JSON.parse(localStorage.getItem(SETTINGS_PROFILE_KEY)||'null')||getBrandProfile()||{};}catch(e){return getBrandProfile()||{};}})();
     ['name','role','instagram','whatsapp','email','site'].forEach(k=>{const el=document.getElementById('profile-'+k);if(el)el.value=p[k]|| (k==='instagram'?p.handle||'':k==='whatsapp'?p.wa||'':'');});
-    let a={};try{a=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}');}catch(e){}
-    document.getElementById('ai-mode').value=a.mode||'none';document.getElementById('ai-provider').value=AI_PROVIDER_PRESETS[a.provider]?a.provider:'custom';document.getElementById('ai-api-url').value=a.apiUrl||'https://api.openai.com/v1';document.getElementById('ai-api-model').value=a.model||'';document.getElementById('ai-temperature').value=a.temperature??0.5;document.getElementById('ai-max-tokens').value=String(a.maxTokens||3000);document.getElementById('ai-temperature-value').textContent=Number(a.temperature??0.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});document.getElementById('ollama-url').value=a.ollamaUrl||'http://localhost:11434';document.getElementById('ollama-model').value=a.ollamaModel||'';document.getElementById('ai-api-key').value=sessionStorage.getItem(AI_SESSION_KEY)||'';applyAIProviderPreset();if(a.apiUrl)document.getElementById('ai-api-url').value=a.apiUrl;
+    restoreSavedAISettings();
     updateAISettingsVisibility();document.getElementById('settings-overlay').classList.add('open');document.body.style.overflow='hidden';
+  }
+  function restoreSavedAISettings(){
+    let a={};try{a=JSON.parse(localStorage.getItem(AI_SETTINGS_KEY)||'{}')||{};}catch(e){}
+    const set=(id,value)=>{const el=document.getElementById(id);if(el&&value!==undefined&&value!==null)el.value=value;};
+    set('ai-mode',a.mode||'none');
+    set('ai-provider',AI_PROVIDER_PRESETS[a.provider]?a.provider:'custom');
+    set('ai-api-url',a.apiUrl||'https://api.openai.com/v1');
+    set('ai-api-model',a.model||'');
+    set('ai-temperature',a.temperature??0.5);
+    set('ai-max-tokens',String(a.maxTokens||3000));
+    const temp=document.getElementById('ai-temperature-value');
+    if(temp)temp.textContent=Number(a.temperature??0.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+    set('ollama-url',a.ollamaUrl||'http://localhost:11434');
+    set('ollama-model',a.ollamaModel||'');
+    set('ai-api-key',sessionStorage.getItem(AI_SESSION_KEY)||'');
+    applyAIProviderPreset();
+    if(a.apiUrl)set('ai-api-url',a.apiUrl);
+    updateAISettingsVisibility();
   }
   function closeSettings(){document.getElementById('settings-overlay').classList.remove('open');document.body.style.overflow='';}
   function switchSettingsTab(tab){document.querySelectorAll('.settings-tab').forEach(b=>b.classList.toggle('active',b.dataset.pane===tab));document.querySelectorAll('.settings-pane').forEach(p=>p.classList.toggle('active',p.id==='settings-pane-'+tab));}
@@ -3166,6 +3183,7 @@ Terceiro item da lista</textarea></div>
 
   initProfessionalProfile();
   initSettingsAutosave();
+  restoreSavedAISettings();
   initDirectImageEditing();
   initVideoEditing();
   refreshVideoFolderStatus();
