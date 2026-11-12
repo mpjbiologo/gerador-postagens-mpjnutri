@@ -3185,7 +3185,7 @@ Terceiro item da lista</textarea></div>
   }
   function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
   let editorialCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-  function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a.map((x,i)=>({...x,id:String(x.id||('plan-'+Date.now()+'-'+i)),platform:x.platform||'Instagram',format:x.format||'Post',time:x.time||'',notes:x.notes||'',projectId:x.projectId||''})):[];}catch(e){return [];}}
+  function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a.map((x,i)=>{const raw=String(x.id||'');const id=/^[A-Za-z0-9_-]{1,100}$/.test(raw)?raw:'legacy-'+i+'-'+String(x.date||'').replace(/[^0-9]/g,'')+'-'+String(x.title||'').replace(/[^A-Za-z0-9]/g,'').slice(0,20);return {...x,id,platform:x.platform||'Instagram',format:x.format||'Post',time:x.time||'',notes:x.notes||'',projectId:x.projectId||''};}):[];}catch(e){return [];}}
   function saveEditorialPlan(items){try{localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(items));return true;}catch(e){showToast('Não foi possível salvar o calendário. Exporte um backup e libere espaço.');return false;}}
   function renderEditorialPlan(){
     const items=getEditorialPlan().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
