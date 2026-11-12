@@ -2371,7 +2371,7 @@ Terceiro item da lista</textarea></div>
   }
   async function sendProjectByEmail(){
     const recipient=(document.getElementById('project-email-to')?.value||'').trim();
-    if(recipient&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
+    if(recipient&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
     try{
       if(document.getElementById('post').dataset.mode==='carrossel')saveCurrentCarouselSlide();
       const snapshot=buildCurrentSnapshot();
