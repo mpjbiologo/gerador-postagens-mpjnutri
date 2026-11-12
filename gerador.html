@@ -1096,7 +1096,7 @@ Terceiro item da lista</textarea></div>
         </div>
         <div class="layer-add-grid"><button type="button" onclick="moveSelectedCustomLayer(-1)">↓ Enviar atrás</button><button type="button" onclick="moveSelectedCustomLayer(1)">↑ Trazer frente</button></div>
       </div>
-      <button type="button" id="btn-delete-selected-layer" class="btn secondary" style="width:100%;margin:8px 0" disabled>✕ Excluir camada selecionada</button>
+      <button type="button" id="btn-delete-selected-layer" class="btn secondary" style="width:100%;margin:8px 0">✕ Excluir camada selecionada</button>
       <p class="template-hint">Cada slide do carrossel mantém suas próprias camadas. Os elementos originais (título, descrição, imagem e vídeo principal) continuam sendo editados nas respectivas etapas.</p>
     </div>
   </div>
@@ -3764,7 +3764,6 @@ Terceiro item da lista</textarea></div>
     }
   }
   bindCustomLayerDeleteButton();
-  document.getElementById('btn-delete-selected-layer')?.removeAttribute('disabled');
   recordEditorState();
   updatePreview();
   renderDecos();
