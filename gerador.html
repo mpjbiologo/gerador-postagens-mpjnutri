@@ -374,6 +374,7 @@
   .tag-quick-btn:hover { border-color: var(--accent); color: var(--accent); }
   .tag-quick-btn.active { border-color: var(--accent); background: rgba(126,219,126,0.1); color: var(--accent); }
 
+  .post.identity-top .footer{order:-1;border-top:0;border-bottom:1px solid rgba(126,219,126,0.2)}
   .footer { position: relative; z-index: 2; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(126,219,126,0.2); padding: 9px 22px; display: flex; align-items: center; justify-content: space-between; }
   .post[data-format="stories"] .footer { padding: 7px 14px; }
   .footer-left { display: flex; flex-direction: column; gap: 3px; }
@@ -842,6 +843,7 @@ Terceiro item da lista</textarea></div>
       <div class="section-arrow">▼</div>
     </div>
     <div class="section-body">
+      <div class="field"><label for="identity-position">Posição da barra de identidade na postagem</label><select id="identity-position" onchange="setIdentityPosition(this.value)"><option value="bottom">Embaixo (padrão)</option><option value="top">Em cima</option></select><small class="template-hint">A barra com Instagram, WhatsApp e ícones será posicionada no topo ou no rodapé da arte.</small></div>
       <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
       <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
       <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
@@ -2027,6 +2029,15 @@ Terceiro item da lista</textarea></div>
     requestAnimationFrame(fitTitleFonts);autoSaveDraft();
   }
 
+  function setIdentityPosition(position){
+    const value=position==='top'?'top':'bottom';
+    const post=document.getElementById('post');
+    if(post)post.classList.toggle('identity-top',value==='top');
+    const control=document.getElementById('identity-position');
+    if(control&&control.value!==value)control.value=value;
+    autoSaveDraft();
+  }
+
   function updatePreview() {
     const line1  = document.getElementById('input-line1').value;
     const line2  = document.getElementById('input-line2').value;
@@ -2036,6 +2047,7 @@ Terceiro item da lista</textarea></div>
     const showTag1 = document.getElementById('btn-tag1-toggle').classList.contains('active');
     const showTag2 = document.getElementById('btn-tag2-toggle').classList.contains('active');
     const handle = document.getElementById('input-handle').value;
+    document.getElementById('post').classList.toggle('identity-top',document.getElementById('identity-position')?.value==='top');
     const wa     = document.getElementById('input-wa').value;
     const showWa  = document.getElementById('toggle-wa').checked;
     const showIco = document.getElementById('toggle-icons').checked;
@@ -3281,6 +3293,8 @@ Terceiro item da lista</textarea></div>
         showTag1: document.getElementById('btn-tag1-toggle').classList.contains('active'),
         showTag2: document.getElementById('btn-tag2-toggle').classList.contains('active'),
         handle:   document.getElementById('input-handle').value,
+
+        identityPosition: document.getElementById('identity-position')?.value || 'bottom',
         wa:       document.getElementById('input-wa').value,
         showWa:   document.getElementById('toggle-wa').checked,
         showIco:  document.getElementById('toggle-icons').checked,
@@ -3334,6 +3348,7 @@ Terceiro item da lista</textarea></div>
       if (d.showTag1 !== undefined) setTagActive(1, d.showTag1);
       if (d.showTag2 !== undefined) setTagActive(2, d.showTag2);
       if (restoreIdentity) {
+        if(d.identityPosition)document.getElementById('identity-position').value=d.identityPosition;
         if (d.handle !== undefined) document.getElementById('input-handle').value = d.handle;
         if (d.wa     !== undefined) document.getElementById('input-wa').value     = d.wa;
         if (d.showWa !== undefined) document.getElementById('toggle-wa').checked  = d.showWa;
