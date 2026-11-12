@@ -1714,7 +1714,7 @@ Terceiro item da lista</textarea></div>
   let carouselSlides=[];
   let activeCarouselSlide=0;
   function readCarouselFields(){
-    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content')};
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content'),slideFormat:document.getElementById('post').dataset.format||'retrato',slideTheme:currentTheme,slideGrad:currentGradStyle,slideDecos:Array.from(activeDecos),slideFontFamily:document.getElementById('font-family').value,slideTitleSize:document.getElementById('title-size').value,slideBodySize:document.getElementById('body-size').value,slideBackground:backgroundImageData,slideBackgroundFit:document.getElementById('background-fit')?.value||'cover'};
   }
   function saveCurrentCarouselSlide(){
     if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
@@ -1723,6 +1723,18 @@ Terceiro item da lista</textarea></div>
   }
   function applyCarouselSlide(i){
     const d=carouselSlides[i];if(!d)return;activeCarouselSlide=i;
+    currentTheme=THEMES[d.slideTheme]?d.slideTheme:'verde';
+    currentGradStyle=d.slideGrad||'padrao';
+    activeDecos.clear();(Array.isArray(d.slideDecos)?d.slideDecos:['circulos']).forEach(x=>activeDecos.add(x));
+    document.querySelectorAll('.theme-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===currentTheme));
+    document.querySelectorAll('.grad-swatch').forEach(b=>b.classList.toggle('active',b.dataset.grad===currentGradStyle));
+    document.querySelectorAll('.deco-btn').forEach(b=>b.classList.toggle('active',activeDecos.has(b.dataset.deco)));
+    document.getElementById('font-family').value=d.slideFontFamily||"'Playfair Display', Georgia, serif";
+    document.getElementById('title-size').value=d.slideTitleSize||52;document.getElementById('body-size').value=d.slideBodySize||16;
+    if(d.slideBackground!==undefined)backgroundImageData=d.slideBackground||'';
+    if(d.slideBackgroundFit)document.getElementById('background-fit').value=d.slideBackgroundFit;
+    const format=d.slideFormat||'retrato';document.getElementById('post').dataset.format=format;
+    document.querySelectorAll('.format-btn').forEach(b=>b.classList.toggle('active',b.dataset.fmt===format));
     document.getElementById('input-line1').value=d.line1||'';document.getElementById('input-line2').value=d.line2||'';
     document.getElementById('input-desc').value=d.desc||'';document.getElementById('input-list').value=d.list||'';
     document.getElementById('toggle-list-num').checked=!!d.listNum;
@@ -1731,6 +1743,7 @@ Terceiro item da lista</textarea></div>
     document.getElementById('input-img').value=d.imgUrl||'';document.getElementById('toggle-img').checked=d.showImg!==false;
     document.getElementById('toggle-img-color').checked=!!d.imgColor;window._uploadedImgSrc=d.image||'';imageEditState={...imageEditState,...(d.imageEdit||{})};syncImageEditControls();updateBackgroundRemovalControls();
     const prev=document.getElementById('upload-img-preview');if(prev){prev.src=d.image||'';prev.style.display=d.image?'block':'none';}
+    updateBackground();renderDecos();applyPostGradient(THEMES[currentTheme]);applyTypography();
     updatePreview();renderCarouselTools();
   }
   function syncCarouselPreviewControls(){
@@ -1784,13 +1797,20 @@ Terceiro item da lista</textarea></div>
     [carouselSlides[activeCarouselSlide],carouselSlides[to]]=[carouselSlides[to],carouselSlides[activeCarouselSlide]];activeCarouselSlide=to;applyCarouselSlide(to);autoSaveDraft();
   }
   function setFormat(el){
-    const p=document.getElementById('post');if(p.dataset.mode==='carrossel')saveCurrentCarouselSlide();
+    const p=document.getElementById('post'),fmt=el.dataset.fmt;
+    if(p.dataset.mode==='carrossel'&&fmt!=='carrossel'){
+      saveCurrentCarouselSlide();p.dataset.format=fmt;
+      document.querySelectorAll('.format-btn').forEach(b=>b.classList.toggle('active',b===el));
+      if(carouselSlides[activeCarouselSlide])carouselSlides[activeCarouselSlide].slideFormat=fmt;
+      updatePreview();autoSaveDraft();return;
+    }
+    if(p.dataset.mode==='carrossel')saveCurrentCarouselSlide();
     document.querySelectorAll('.format-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
-    if(el.dataset.fmt==='carrossel'){
+    if(fmt==='carrossel'){
       p.dataset.format='retrato';p.dataset.mode='carrossel';if(!carouselSlides.length)carouselSlides=[readCarouselFields()];
       document.getElementById('carousel-tools').classList.add('visible');applyCarouselSlide(Math.min(activeCarouselSlide,carouselSlides.length-1));
     }else{
-      p.dataset.format=el.dataset.fmt;p.dataset.mode=el.dataset.fmt;document.getElementById('carousel-tools').classList.remove('visible');
+      p.dataset.format=fmt;p.dataset.mode=fmt;document.getElementById('carousel-tools').classList.remove('visible');
       p.classList.remove('is-carousel','carousel-cover','carousel-content');
     }
     requestAnimationFrame(fitTitleFonts);autoSaveDraft();
@@ -1872,6 +1892,7 @@ Terceiro item da lista</textarea></div>
     document.getElementById('title-size-label').textContent=titleSize+' px';
     document.getElementById('body-size-label').textContent=bodySize+' px';
     requestAnimationFrame(fitTitleFonts);
+    if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides.length)saveCurrentCarouselSlide();
   }
 
   let backgroundImageData = '';
