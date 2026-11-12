@@ -698,6 +698,67 @@ body:not(.carousel-mode) .carousel-only{display:none}
   .step-intro-icon{display:none}
   .pt-formats button{padding:6px 8px}
 }
+
+.account-summary{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--app-section-border);border-radius:10px;background:var(--app-btn-bg);margin:8px 0 12px;min-width:0}
+.account-indicator{width:11px;height:11px;flex:0 0 11px;border-radius:50%;background:#9b9b9b;box-shadow:0 0 0 4px #9992}
+.account-indicator.is-connected{background:#35a66b;box-shadow:0 0 0 4px #35a66b25}
+.account-summary-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.account-summary-copy strong{font-size:12px;color:var(--app-text)}
+.account-summary-copy span{font-size:11px;color:var(--app-sub);overflow-wrap:anywhere;line-height:1.45}
+#account-logout:disabled{opacity:.45;cursor:not-allowed}
+#account-login-github[hidden]{display:none!important}
+@media (min-width:1600px){.app-shell{grid-template-columns:250px minmax(0,1fr) clamp(420px,32vw,620px)}}
+@media (min-width:1001px) and (max-width:1180px){.app-shell{grid-template-columns:180px minmax(0,1fr) 330px}.panel-sections{padding-left:14px;padding-right:14px}.preview-stage{padding:10px}}
+@media (max-width:1180px){
+ html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+ .app-shell{position:static;display:flex;flex-direction:column;min-height:0}
+ .sidebar-nav{order:-2;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--app-panel-border);overscroll-behavior-x:contain}
+ .nav-group-title,.nav-step-line,.nav-tip{display:none}
+ .sidebar-nav-item{width:auto;flex:0 0 auto;white-space:nowrap}
+ .nav-footer{margin:0;padding:0;flex-direction:row}
+ .preview-wrap{order:-1;border-left:0;border-bottom:1px solid var(--app-panel-border)}
+ .panel{overflow:visible;min-width:0}
+ .panel-sections{padding:18px clamp(12px,2.5vw,28px) 30px}
+ .preview-stage{height:min(52vw,480px);min-height:250px;flex:none}
+ .app-header{position:sticky;top:0;z-index:100;min-height:var(--header-h)}
+}
+@media (max-width:760px){
+ .app-header{grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:9px 10px}
+ .brand-title{font-size:16px}.header-actions{gap:5px}
+ .theme-app-toggle,.settings-open-btn{height:34px;padding:0 9px;font-size:11px}
+ .header-progress{grid-column:1/-1;grid-row:2}
+ .sidebar-nav{padding:7px 9px}
+ .sidebar-nav-item{padding:6px 8px;font-size:11px}
+ .preview-stage{height:min(68vw,410px);min-height:220px;padding:10px}
+ .panel-sections{padding:12px 9px 24px}
+ .panel-sections>.section.is-active>.section-body{padding:12px}
+ .btn-row,.project-toolbar,.calendar-month-nav{flex-wrap:wrap}
+ .settings-overlay{padding:7px;align-items:flex-end}
+ .settings-dialog{width:100%;max-height:94dvh;border-radius:14px 14px 8px 8px;padding:14px}
+ .settings-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+ .settings-tab{flex:0 0 auto}
+ .settings-grid{grid-template-columns:minmax(0,1fr)}
+ .editorial-workspace{grid-template-columns:minmax(0,1fr)!important}
+ .audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px){
+ .brand-mark{display:none}.brand-title{font-size:14px}
+ .theme-app-toggle,.settings-open-btn{font-size:0;width:35px;justify-content:center}
+ .settings-open-btn::before{content:"⚙";font-size:16px}
+ .sidebar-nav-item{font-size:10px;padding:5px 7px}
+ .sidebar-nav-item .nav-num{width:21px;height:21px;flex-basis:21px}
+ .preview-stage{min-height:190px}
+ .panel-sections>.section.is-active>.section-body{padding:9px}
+ .audit-grid{grid-template-columns:1fr 1fr}
+ .settings-dialog{padding:11px}.settings-top h2{font-size:17px}
+}
+@media (max-width:360px){
+ .app-header{grid-template-columns:minmax(0,1fr) auto}
+ .header-actions{gap:4px}
+ .theme-app-toggle,.settings-open-btn{width:32px;height:32px;padding:0}
+ .sidebar-nav-item .nav-text{font-size:9px}
+ .preview-stage{height:190px}
+}
 </style>
 </head>
 <body>
@@ -777,7 +838,8 @@ body:not(.carousel-mode) .carousel-only{display:none}
       <div class="settings-note">Use somente a chave pública do cliente. Nunca cole aqui a chave <code>service_role</code> ou qualquer segredo do projeto. A segurança dos dados será aplicada pelas políticas RLS do banco.</div>
       <div class="divider" style="border-top:1px solid var(--app-section-border);margin:12px 0"></div>
       <h3>Conta</h3>
-      <button class="btn" type="button" onclick="supabaseSignInWithGitHub()" style="background:#24292f;color:#fff;border:1px solid #444"><span aria-hidden="true">◉</span> Entrar com GitHub</button>
+      <div class="account-summary" id="account-summary" aria-live="polite"><span class="account-indicator" id="account-indicator" aria-hidden="true"></span><div class="account-summary-copy"><strong id="account-state-title">Verificando conta…</strong><span id="account-state-detail">O estado da sessão será exibido aqui.</span></div></div>
+      <button class="btn" id="account-login-github" type="button" onclick="supabaseSignInWithGitHub()" style="background:#24292f;color:#fff;border:1px solid #444"><span aria-hidden="true">◉</span> Entrar com GitHub</button>
       <p class="settings-note">Use a mesma conta GitHub que você já utiliza. Na primeira utilização, é necessário habilitar o provedor GitHub no Supabase (instruções abaixo).</p>
       <details style="border:1px solid var(--app-section-border);border-radius:8px;padding:9px">
         <summary style="cursor:pointer;font-size:11px;color:var(--app-label);font-weight:700">Outras formas de acesso (e-mail e senha)</summary>
@@ -785,7 +847,7 @@ body:not(.carousel-mode) .carousel-only{display:none}
         <div class="field"><label for="supabase-password">Senha</label><input id="supabase-password" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="current-password"></div>
         <div class="btn-row"><button class="btn" type="button" onclick="supabaseSignIn()">Entrar</button><button class="btn secondary" type="button" onclick="supabaseSignUp()">Criar conta</button></div>
       </details>
-      <div class="btn-row"><button class="btn secondary" type="button" onclick="supabaseSignOut()">Sair da conta</button><button class="btn secondary" type="button" onclick="testSupabaseConnection()">Testar conexão</button><button class="btn" type="button" onclick="syncCloudData(false)">⟳ Sincronizar agora</button></div>
+      <div class="btn-row"><button class="btn secondary" id="account-logout" type="button" onclick="supabaseSignOut()" disabled>Sair da conta</button><button class="btn secondary" type="button" onclick="testSupabaseConnection()">Testar conexão</button><button class="btn" type="button" onclick="syncCloudData(false)">⟳ Sincronizar agora</button></div>
       <div id="supabase-status" class="settings-status" aria-live="polite">Ainda não configurado. Crie seu projeto Supabase e informe a URL e a chave pública.</div>
       <p class="settings-note">O login GitHub autentica você no gerador por meio do Supabase Auth. Ele não altera seu acesso ao painel do Supabase nem concede permissões administrativas ao aplicativo.</p>
     </section>
@@ -4031,6 +4093,7 @@ Terceiro item da lista</textarea></div>
   function readSupabaseConfig(){try{return JSON.parse(localStorage.getItem(SUPABASE_CONFIG_KEY)||'null');}catch(e){return null;}}
   function supabaseStatus(message){const el=document.getElementById('supabase-status');if(el)el.textContent=message;}
   function getSupabaseClient(){return window.mpjSupabase||null;}
+  function updateAccountSummary(session){const root=document.getElementById("account-summary"),title=document.getElementById("account-state-title"),detail=document.getElementById("account-state-detail"),indicator=document.getElementById("account-indicator"),login=document.getElementById("account-login-github"),logout=document.getElementById("account-logout"),user=session?.user||null,active=!!user,meta=user?.user_metadata||{},name=meta.full_name||meta.name||meta.user_name||meta.preferred_username||"Conta GitHub";if(root)root.classList.toggle("is-connected",active);if(indicator)indicator.classList.toggle("is-connected",active);if(title)title.textContent=active?"Conta conectada":"Nenhuma conta conectada";if(detail)detail.textContent=active?name+(user.email?" · "+user.email:""):"Entre com GitHub para autenticar sua conta. Seus projetos locais continuam neste navegador.";if(login)login.hidden=active;if(logout)logout.disabled=!active;}
   function initSupabaseIntegration(){
     const cfg=readSupabaseConfig();
     if(cfg){const u=document.getElementById('supabase-project-url'),k=document.getElementById('supabase-anon-key');if(u)u.value=cfg.url||'';if(k)k.value=cfg.key||'';connectSupabase(cfg,false);}
@@ -4047,6 +4110,7 @@ Terceiro item da lista</textarea></div>
       if(!client._mpjAuthListener){
         client._mpjAuthListener=true;
         client.auth.onAuthStateChange((event,session)=>{
+          updateAccountSummary(session);
           supabaseStatus(session?'Conta conectada: '+(session.user.email||'usuário autenticado')+'.':'Projeto conectado, sem sessão ativa.');
           if(session&&['SIGNED_IN','INITIAL_SESSION','TOKEN_REFRESHED','USER_UPDATED'].includes(event))window.setTimeout(()=>syncCloudData(true),0);
         });
@@ -4056,6 +4120,7 @@ Terceiro item da lista</textarea></div>
       if(window.location.hash&&/(?:access_token|refresh_token|provider_token|provider_refresh_token|error)=/.test(window.location.hash)){
         window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
       }
+      updateAccountSummary(data.session);
       supabaseStatus(data.session?'Conectado como '+data.session.user.email+'.':'Projeto conectado. Entre ou crie sua conta.');
       if(data.session)window.setTimeout(()=>syncCloudData(true),0);
       if(notify)showToast('Conexão Supabase configurada.');
@@ -4071,7 +4136,7 @@ Terceiro item da lista</textarea></div>
   }
   async function testSupabaseConnection(){
     const client=getSupabaseClient();if(!client){supabaseStatus('Configure e conecte o projeto primeiro.');return;}
-    try{const {data,error}=await client.auth.getSession();if(error)throw error;supabaseStatus('Conexão com Supabase Auth funcionando. '+(data.session?'Sessão ativa: '+data.session.user.email+'.':'Nenhuma conta autenticada.'));showToast('Conexão testada.');}
+    try{const {data,error}=await client.auth.getSession();if(error)throw error;updateAccountSummary(data.session);supabaseStatus('Conexão com Supabase Auth funcionando. '+(data.session?'Sessão ativa: '+data.session.user.email+'.':'Nenhuma conta autenticada.'));showToast('Conexão testada.');}
     catch(e){supabaseStatus('Erro ao testar conexão: '+(e.message||'erro desconhecido'));}
   }
   async function supabaseSignUp(){
@@ -4108,7 +4173,7 @@ Terceiro item da lista</textarea></div>
   }
   async function supabaseSignOut(){
     const client=getSupabaseClient();if(!client){supabaseStatus('Nenhuma conexão Supabase ativa.');return;}
-    try{const {error}=await client.auth.signOut();if(error)throw error;supabaseStatus('Você saiu da conta. Os dados locais permanecem neste navegador.');}
+    try{const {error}=await client.auth.signOut();if(error)throw error;updateAccountSummary(null);supabaseStatus('Você saiu da conta. Os dados locais permanecem neste navegador.');}
     catch(e){supabaseStatus('Não foi possível sair: '+(e.message||'erro desconhecido'));}
   }
 
