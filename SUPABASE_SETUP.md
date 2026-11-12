@@ -17,8 +17,8 @@ Guarde a senha do banco em um gerenciador de senhas. Ela não é necessária no 
 1. Abra o projeto no Supabase.
 2. Entre em **SQL Editor** e crie uma consulta.
 3. Copie todo o conteúdo de `supabase/schema.sql` deste repositório, cole no editor e clique em **Run**.
-4. O script cria as tabelas de projetos e calendário, ativa Row Level Security (RLS) e cria o bucket privado de imagens e vídeos.
-5. Confira em **Table Editor** se existem `mpjnutri_projects` e `mpjnutri_editorial_plan`, e em **Storage** se existe `mpjnutri-assets` como bucket privado.
+4. O script cria as tabelas de projetos, calendário e marcadores de exclusão, ativa Row Level Security (RLS) e cria o bucket privado de imagens e vídeos.
+5. Confira em **Table Editor** se existem `mpjnutri_projects` e `mpjnutri_editorial_plan`, e `mpjnutri_sync_tombstones`, e em **Storage** se existe `mpjnutri-assets` como bucket privado.
 
 As políticas limitam leitura e gravação ao usuário autenticado dono dos registros e arquivos. Não desative RLS.
 
@@ -41,9 +41,11 @@ A URL e a chave pública são usadas no navegador. A segurança depende das pol�
 
 A configuração pública fica salva apenas neste navegador. A senha não é armazenada pelo gerador; o Supabase Auth mantém a sessão.
 
-## Estado desta entrega
+## Estado da integração
 
-Esta etapa entrega a base de conexão e autenticação. A sincronização dos projetos, calendário, rascunhos e upload/recuperação de mídia ainda não está ativada. Os dados locais não são apagados nem enviados automaticamente nesta etapa.
+A integração já permite autenticação e sincronização bidirecional de projetos e calendário. A sincronização mescla os registros por identificador e data de atualização, sem apagar registros por conflito. Exclusões feitas depois de vincular a conta são propagadas por marcadores próprios, protegidos por RLS. A sincronização automática ocorre após alterações locais quando há sessão e conexão; também existe o botão **Sincronizar agora**.
+
+A mídia de vídeo armazenada no IndexedDB ainda não é enviada ao Storage. Imagens incorporadas aos dados do projeto podem aumentar bastante o tamanho dos registros; o envio de arquivos para o bucket privado será concluído em etapa própria. A sincronização requer que o SQL atualizado deste repositório seja executado no projeto Supabase. Os dados locais continuam sendo preservados.
 
 ## Segurança e recuperação
 
