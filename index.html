@@ -2606,7 +2606,7 @@ Terceiro item da lista</textarea></div>
   }
   function localInstagramAudit(data){
     const issues=[],text=data.allText,caption=data.caption,slides=data.slides,words=text.trim()?text.trim().split(/\s+/).length:0;
-    const scores={gancho:15,clareza:15,estrutura:15,linguagem:10,legenda:10,visual:15,acao:5,confiabilidade:15};
+    const scores={gancho:100,clareza:100,estrutura:100,linguagem:100,legenda:100,visual:100,acao:100,confiabilidade:100};
     const add=(key,points,severity,title,detail)=>{scores[key]=Math.max(0,scores[key]-points);issues.push({severity,title,detail});};
     const cover=slides[0]?.text||'';
     if(!cover)add('gancho',8,'high','Capa sem texto','Inclua uma promessa ou ideia central que deixe claro por que continuar.');
@@ -2626,7 +2626,8 @@ Terceiro item da lista</textarea></div>
     if(/\b(estudo comprova|pesquisas comprovam|cientificamente provado|segundo a ciência|\d+(?:[,.]\d+)?\s?%)\b/i.test(text)&&!data.refs.trim())add('confiabilidade',5,'high','Afirmação que exige fonte','Inclua referência identificável e confira população, método, data e limites da evidência.');
     if(!data.refs.trim()&&/\b(estudo|pesquisa|evidência|científico|comprovado|percentual|mg|kcal)\b/i.test(text))add('confiabilidade',3,'medium','Referências não informadas','Adicione fontes verificáveis quando houver alegações técnicas ou números.');
     if(!issues.length)issues.push({severity:'good',title:'Nenhum alerta automático encontrado',detail:'Isso não comprova exatidão, adequação ética ou desempenho. Faça a leitura final.'});
-    const total=Object.values(scores).reduce((a,b)=>a+b,0);
+    const weights={gancho:15,clareza:15,estrutura:15,linguagem:10,legenda:10,visual:15,acao:5,confiabilidade:15};
+    const total=Math.round(Object.entries(scores).reduce((sum,[k,v])=>sum+v*weights[k],0)/100);
     return {scores,total,issues};
   }
   function renderInstagramAudit(report,mode){
@@ -2649,7 +2650,7 @@ Terceiro item da lista</textarea></div>
       const scores={...local.scores};['gancho','clareza','estrutura','linguagem','legenda','acao','confiabilidade'].forEach(k=>{const n=Number(ai.scores?.[k]);if(Number.isFinite(n))scores[k]=Math.round(Math.max(0,Math.min(100,(scores[k]+n)/2)));});
       const issues=[...local.issues.filter(x=>x.severity!=='good'),...(Array.isArray(ai.issues)?ai.issues.slice(0,8).map(x=>({severity:x.severity==='alta'?'high':x.severity==='baixa'?'low':'medium',title:String(x.title||'Ponto de atenção'),detail:String(x.detail||'')})):[])];
       if(ai.summary)issues.unshift({severity:'good',title:'Síntese editorial da IA',detail:String(ai.summary)});
-      const report={scores,total:Object.values(scores).reduce((a,b)=>a+b,0),issues};
+      const weights={gancho:15,clareza:15,estrutura:15,linguagem:10,legenda:10,visual:15,acao:5,confiabilidade:15};const report={scores,total:Math.round(Object.entries(scores).reduce((sum,[k,v])=>sum+v*weights[k],0)/100),issues};
       lastInstagramAudit={date:new Date().toISOString(),mode:'hybrid',total:report.total,scores,issues};
       renderInstagramAudit(report,'ai');status.textContent='Avaliação híbrida concluída. As sugestões não alteram a postagem; ajuste manualmente e reavalie.';
     }catch(e){lastInstagramAudit={date:new Date().toISOString(),mode:'local-fallback',total:local.total,scores:local.scores,issues:local.issues};renderInstagramAudit(local,'local');status.textContent='A revisão por IA não foi concluída: '+(e.message||e)+' A avaliação local foi mantida.';}
