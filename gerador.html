@@ -2758,7 +2758,7 @@ Terceiro item da lista</textarea></div>
     try { const a=JSON.parse(localStorage.getItem('mpjnutri_hist')||'[]'); return Array.isArray(a)?a.map((e,i)=>({...e,name:e.name||[e.line1,e.line2].filter(Boolean).join(' ').trim()||'Projeto sem título',id:e.id||Date.now()+i})):[]; }
     catch(e){return [];}
   }
-  function saveHistory(h){try{localStorage.setItem('mpjnutri_hist',JSON.stringify(h));if(!window._mpjApplyingCloudSync&&window.scheduleCloudSync)window.scheduleCloudSync();return true;}catch(e){showToast('Armazenamento cheio ou indisponível. Exporte um backup e libere espaço.');return false;}}
+  function saveHistory(h){try{const previous=JSON.parse(localStorage.getItem('mpjnutri_hist')||'[]');if(!window._mpjApplyingCloudSync&&window.recordCloudDeletions)window.recordCloudDeletions('project',Array.isArray(previous)?previous:[],h);localStorage.setItem('mpjnutri_hist',JSON.stringify(h));if(!window._mpjApplyingCloudSync&&window.scheduleCloudSync)window.scheduleCloudSync();return true;}catch(e){showToast('Armazenamento cheio ou indisponível. Exporte um backup e libere espaço.');return false;}}
   function saveToHistory(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
     const nameInput=document.getElementById('project-name-input');
@@ -3262,7 +3262,7 @@ Terceiro item da lista</textarea></div>
   function copyCaption(){const v=document.getElementById('caption-output').value;if(!v){showToast('Gere ou escreva uma legenda primeiro.');return;}navigator.clipboard.writeText(v).then(()=>showToast('Legenda copiada.')).catch(()=>showToast('Não foi possível copiar.'));}
   let editorialCalendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
   function getEditorialPlan(){try{const a=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');return Array.isArray(a)?a.map((x,i)=>{const raw=String(x.id||'');const id=/^[A-Za-z0-9_-]{1,100}$/.test(raw)?raw:'legacy-'+i+'-'+String(x.date||'').replace(/[^0-9]/g,'')+'-'+String(x.title||'').replace(/[^A-Za-z0-9]/g,'').slice(0,20);return {...x,id,platform:x.platform||'Instagram',format:x.format||'Post',time:x.time||'',notes:x.notes||'',projectId:x.projectId||''};}):[];}catch(e){return [];}}
-  function saveEditorialPlan(items){try{const previous=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');const oldById=new Map((Array.isArray(previous)?previous:[]).map(x=>[String(x.id),x]));const normalized=items.map(item=>{const old=oldById.get(String(item.id));const comparable=x=>{const c={...x};delete c.updatedAt;return JSON.stringify(c);};return {...item,updatedAt:old&&comparable(old)===comparable(item)?(item.updatedAt||old.updatedAt||Date.now()):Date.now()};});localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(normalized));if(!window._mpjApplyingCloudSync&&window.scheduleCloudSync)window.scheduleCloudSync();return true;}catch(e){showToast('Não foi possível salvar o calendário. Exporte um backup e libere espaço.');return false;}}
+  function saveEditorialPlan(items){try{const previous=JSON.parse(localStorage.getItem(EDITORIAL_PLAN_KEY)||'[]');const oldItems=Array.isArray(previous)?previous:[];const oldById=new Map(oldItems.map(x=>[String(x.id),x]));const comparable=x=>{const c={...x};delete c.updatedAt;return JSON.stringify(c);};const normalized=items.map(item=>{const old=oldById.get(String(item.id));return {...item,updatedAt:old&&comparable(old)===comparable(item)?(item.updatedAt||old.updatedAt||Date.now()):Date.now()};});if(!window._mpjApplyingCloudSync&&window.recordCloudDeletions)window.recordCloudDeletions('calendar',oldItems,normalized);localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(normalized));if(!window._mpjApplyingCloudSync&&window.scheduleCloudSync)window.scheduleCloudSync();return true;}catch(e){showToast('Não foi possível salvar o calendário. Exporte um backup e libere espaço.');return false;}}
   function renderEditorialPlan(){
     const items=getEditorialPlan().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'').localeCompare(b.time||''));
     const filter=document.getElementById('calendar-filter-status')?.value||'';
@@ -4035,7 +4035,31 @@ Terceiro item da lista</textarea></div>
   // Sincronização bidirecional: mescla por ID e data de atualização, sem excluir registros.
   const SUPABASE_SYNC_OWNER_KEY='mpjnutri_cloud_sync_owner_v1';
   const SUPABASE_SYNC_LAST_KEY='mpjnutri_cloud_sync_last_v1';
+  const SUPABASE_TOMBSTONES_KEY='mpjnutri_cloud_tombstones_v1';
   let cloudSyncBusy=false,cloudSyncTimer=null;
+  function readCloudTombstones(){try{const a=JSON.parse(localStorage.getItem(SUPABASE_TOMBSTONES_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+  function recordCloudDeletions(type,previous,current){
+    const owner=localStorage.getItem(SUPABASE_SYNC_OWNER_KEY);if(!owner)return;
+    const live=new Set((Array.isArray(current)?current:[]).map(x=>String(x.id)));
+    const removed=(Array.isArray(previous)?previous:[]).filter(x=>!live.has(String(x.id)));
+    if(!removed.length)return;
+    const map=new Map(readCloudTombstones().map(x=>[type+':'+String(x.local_id),x]));
+    removed.forEach(item=>{const key=type+':'+String(item.id);map.set(key,{record_type:type,local_id:String(item.id),deleted_at:new Date().toISOString()});});
+    try{localStorage.setItem(SUPABASE_TOMBSTONES_KEY,JSON.stringify([...map.values()]));}catch(e){console.warn('Não foi possível registrar exclusões pendentes para a nuvem.',e);}
+  }
+  function mergeCloudTombstones(localRows,remoteRows){
+    const map=new Map();
+    [...(localRows||[]),...(remoteRows||[])].forEach(row=>{
+      if(!row?.record_type||row.local_id===undefined)return;
+      const key=row.record_type+':'+String(row.local_id),old=map.get(key);
+      if(!old||cloudTimestamp(row.deleted_at)>cloudTimestamp(old.deleted_at))map.set(key,row);
+    });
+    return [...map.values()];
+  }
+  function filterDeletedCloudRecords(records,type,tombstones){
+    const deleted=new Map((tombstones||[]).filter(x=>x.record_type===type).map(x=>[String(x.local_id),cloudTimestamp(x.deleted_at)]));
+    return (records||[]).filter(item=>{const at=deleted.get(String(item.id));return !at||at<cloudRecordTimestamp(item);});
+  }
   function cloudTimestamp(value){if(value===null||value===undefined||value==='')return 0;const n=Number(value);if(Number.isFinite(n)&&n>0)return n;const d=Date.parse(value);return Number.isFinite(d)?d:0;}
   function cloudRecordTimestamp(record){return cloudTimestamp(record?.updatedAt)||cloudTimestamp(record?.createdAt)||0;}
   function mergeCloudRecords(localRecords,remoteRows){
@@ -4068,20 +4092,38 @@ Terceiro item da lista</textarea></div>
       }
       if(!boundOwner)localStorage.setItem(SUPABASE_SYNC_OWNER_KEY,user.id);
       supabaseStatus('Sincronizando projetos e calendário…');
-      const [remoteProjectsResult,remotePlanResult]=await Promise.all([
+      const [remoteProjectsResult,remotePlanResult,remoteTombstonesResult]=await Promise.all([
         client.from('mpjnutri_projects').select('local_id,name,payload,created_at,updated_at'),
-        client.from('mpjnutri_editorial_plan').select('local_id,payload,created_at,updated_at')
+        client.from('mpjnutri_editorial_plan').select('local_id,payload,created_at,updated_at'),
+        client.from('mpjnutri_sync_tombstones').select('record_type,local_id,deleted_at')
       ]);
       if(remoteProjectsResult.error)throw remoteProjectsResult.error;
       if(remotePlanResult.error)throw remotePlanResult.error;
+      if(remoteTombstonesResult.error)throw remoteTombstonesResult.error;
+      const tombstones=mergeCloudTombstones(readCloudTombstones(),remoteTombstonesResult.data||[]);
       const localProjects=getHistory(),localPlan=getEditorialPlan();
-      const mergedProjects=mergeCloudRecords(localProjects,remoteProjectsResult.data||[]);
-      const mergedPlan=mergeCloudRecords(localPlan,remotePlanResult.data||[]);
+      const mergedProjects=filterDeletedCloudRecords(mergeCloudRecords(localProjects,remoteProjectsResult.data||[]),'project',tombstones);
+      const mergedPlan=filterDeletedCloudRecords(mergeCloudRecords(localPlan,remotePlanResult.data||[]),'calendar',tombstones);
       window._mpjApplyingCloudSync=true;
       try{
         if(!saveHistory(mergedProjects))throw Error('Não foi possível salvar a mesclagem de projetos no armazenamento local.');
         if(!saveEditorialPlan(mergedPlan))throw Error('Não foi possível salvar a mesclagem do calendário no armazenamento local.');
       }finally{window._mpjApplyingCloudSync=false;}
+      if(tombstones.length){
+        for(let i=0;i<tombstones.length;i+=40){
+          const {error}=await client.from('mpjnutri_sync_tombstones').upsert(tombstones.slice(i,i+40).map(x=>({...x,owner_id:user.id})),{onConflict:'owner_id,record_type,local_id'});
+          if(error)throw error;
+        }
+        for(const type of ['project','calendar']){
+          const ids=tombstones.filter(x=>x.record_type===type).map(x=>String(x.local_id));
+          for(let i=0;i<ids.length;i+=40){
+            const table=type==='project'?'mpjnutri_projects':'mpjnutri_editorial_plan';
+            const {error}=await client.from(table).delete().in('local_id',ids.slice(i,i+40));
+            if(error)throw error;
+          }
+        }
+      }
+      try{localStorage.setItem(SUPABASE_TOMBSTONES_KEY,JSON.stringify(tombstones));}catch(e){}
       const projectRows=mergedProjects.map(item=>({
         owner_id:user.id,local_id:String(item.id),name:String(item.name||'Projeto sem título'),
         payload:item,created_at:new Date(cloudTimestamp(item.createdAt)||Date.now()).toISOString(),
