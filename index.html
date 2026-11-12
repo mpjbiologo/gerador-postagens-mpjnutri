@@ -1056,6 +1056,7 @@ Terceiro item da lista</textarea></div>
       <div class="divider" style="border-top:1px solid var(--app-section-border);margin:8px 0"></div>
       <div class="field"><label for="project-email-to">Enviar projeto por e-mail</label><input id="project-email-to" type="email" placeholder="destinatario@email.com"></div>
       <button class="btn secondary" type="button" onclick="sendProjectByEmail()">✉️ Preparar envio por e-mail</button>
+      <button class="btn secondary" type="button" style="margin-top:6px" onclick="openEmailAppSettings()">⚙️ Alterar aplicativo de e-mail</button>
       <div id="email-app-settings" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--app-section-border);border-radius:9px;background:var(--app-btn-bg)">
         <strong style="display:block;font-size:12px;color:var(--accent);margin-bottom:8px">Configurar aplicativo de e-mail (primeiro uso)</strong>
         <div class="field"><label for="email-app-choice">Como deseja abrir o e-mail?</label><select id="email-app-choice" style="width:100%;padding:9px;border-radius:7px;background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border)">
@@ -2380,6 +2381,7 @@ Terceiro item da lista</textarea></div>
   }
   const EMAIL_APP_PREF_KEY='mpjnutri-email-app-preference';
   function readEmailAppPreference(){try{return JSON.parse(localStorage.getItem(EMAIL_APP_PREF_KEY)||'null');}catch(e){return null;}}
+  function openEmailAppSettings(){const panel=document.getElementById('email-app-settings');if(panel)panel.style.display='block';const pref=readEmailAppPreference();const choice=document.getElementById('email-app-choice'),custom=document.getElementById('email-custom-url');if(pref&&choice){choice.value=pref.choice||'mailto';if(custom)custom.value=pref.customUrl||'';}toggleCustomEmailUrl();}
   function toggleCustomEmailUrl(){const choice=document.getElementById('email-app-choice')?.value;const wrap=document.getElementById('email-custom-url-wrap');if(wrap)wrap.style.display=choice==='custom'?'block':'none';}
   function saveEmailAppPreference(){
     const choice=document.getElementById('email-app-choice')?.value||'mailto';
