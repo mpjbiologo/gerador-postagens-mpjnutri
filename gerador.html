@@ -292,7 +292,7 @@
   .custom-layer-stage{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden}
   .custom-layer{position:absolute;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:auto;touch-action:none;user-select:none;cursor:grab;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere}
   .custom-layer:active{cursor:grabbing}.custom-layer.selected{outline:1px dashed #fff;outline-offset:2px;filter:drop-shadow(0 0 2px #000)}
-  .custom-layer.locked{cursor:default;pointer-events:none}.custom-layer img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+  .custom-layer.locked{cursor:default;pointer-events:none}.custom-layer.locked .custom-layer-delete{pointer-events:auto}.custom-layer img{width:100%;height:100%;object-fit:contain;pointer-events:none}
   .custom-layer-delete{position:absolute;top:-12px;right:-12px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;background:#d93636;color:#fff;font:700 18px/1 Arial,sans-serif;cursor:pointer;z-index:20;pointer-events:auto;box-shadow:0 1px 5px rgba(0,0,0,.55);padding:0}.custom-layer-delete:hover{background:#b91c1c;transform:scale(1.08)}.fullscreen-preview-post .custom-layer-delete{display:none!important}
   .custom-layer-resize{position:absolute;right:-7px;bottom:-7px;width:15px;height:15px;border:2px solid #fff;border-radius:50%;background:var(--accent);z-index:3;cursor:nwse-resize;pointer-events:auto}
   .custom-layer:not(.selected) .custom-layer-resize,.custom-layer.locked .custom-layer-resize{display:none}
@@ -1097,7 +1097,7 @@ Terceiro item da lista</textarea></div>
         </div>
         <div class="layer-add-grid"><button type="button" onclick="moveSelectedCustomLayer(-1)">↓ Enviar atrás</button><button type="button" onclick="moveSelectedCustomLayer(1)">↑ Trazer frente</button></div>
       </div>
-      <button type="button" id="btn-delete-selected-layer" class="btn secondary" style="width:100%;margin:8px 0" onclick="window.deleteSelectedCustomLayer()">✕ Excluir camada selecionada</button>
+      <button type="button" id="btn-delete-selected-layer" class="btn secondary" data-delete-selected-layer="1" style="width:100%;margin:8px 0">✕ Excluir camada selecionada</button>
       <p class="template-hint">Cada slide do carrossel mantém suas próprias camadas. Os elementos originais (título, descrição, imagem e vídeo principal) continuam sendo editados nas respectivas etapas.</p>
     </div>
   </div>
@@ -2401,18 +2401,18 @@ Terceiro item da lista</textarea></div>
       if(String(l.id)===String(selectedCustomLayerId)){
         const del=document.createElement('button');del.type='button';del.className='custom-layer-delete';del.textContent='×';del.title='Excluir esta camada';del.setAttribute('aria-label','Excluir esta camada');del.setAttribute('data-html2canvas-ignore','true');
         del.addEventListener('pointerdown',ev=>{ev.stopPropagation();});
-        del.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();window.removeCustomLayerById?window.removeCustomLayerById(l.id):removeCustomLayer(l.id);});
+        del.dataset.layerDeleteId=String(l.id);
         el.appendChild(del);
         if(!l.locked){const h=document.createElement('span');h.className='custom-layer-resize';h.dataset.resize='1';h.setAttribute('data-html2canvas-ignore','true');el.appendChild(h);}
       }
       if(!l.locked)el.addEventListener('pointerdown',ev=>{if(ev.target.closest('.custom-layer-delete'))return;startCustomLayerDrag(ev,l.id,!!ev.target.closest('[data-resize]'));});
-      el.addEventListener('click',ev=>{ev.stopPropagation();selectCustomLayer(l.id);});stage.appendChild(el);
+      el.addEventListener('click',ev=>{if(ev.target.closest('.custom-layer-delete'))return;ev.stopPropagation();selectCustomLayer(l.id);});stage.appendChild(el);
     });renderCustomLayerPanel();
   }
   function renderCustomLayerPanel(){
     const list=document.getElementById('custom-layer-list'),panel=document.getElementById('custom-layer-properties');if(!list||!panel)return;
     if(!customLayers.length){list.innerHTML='<div class="layer-empty">Nenhuma camada adicional. Adicione texto, imagem ou forma.</div>';panel.hidden=true;return;}
-    list.innerHTML=customLayers.slice().sort((a,b)=>(b.z||0)-(a.z||0)).map(l=>'<div class="layer-list-row'+(String(l.id)===String(selectedCustomLayerId)?' active':'')+'" data-layer-id="'+escapeProjectText(l.id)+'"><button class="layer-list-name" type="button" onclick="selectCustomLayer(\''+escapeProjectText(l.id)+'\')">'+(l.type==='text'?'T':l.type==='image'?'▧':l.type==='circle'?'○':l.type==='line'?'—':'□')+' '+escapeProjectText(l.type==='text'?(l.text||'Texto').slice(0,26):l.type==='image'?'Imagem':l.type==='circle'?'Círculo':l.type==='line'?'Linha':'Retângulo')+'</button><div class="layer-list-tools"><button title="'+(l.visible===false?'Mostrar':'Ocultar')+'" onclick="toggleCustomLayerVisible(\''+escapeProjectText(l.id)+'\')">'+(l.visible===false?'◉':'◌')+'</button><button title="'+(l.locked?'Desbloquear':'Bloquear')+'" onclick="toggleCustomLayerLock(\''+escapeProjectText(l.id)+'\')">'+(l.locked?'🔒':'🔓')+'</button><button title="Duplicar" onclick="duplicateCustomLayer(\''+escapeProjectText(l.id)+'\')">⧉</button><button title="Excluir" onclick="removeCustomLayer(\''+escapeProjectText(l.id)+'\')">✕</button></div></div>').join('');
+    list.innerHTML=customLayers.slice().sort((a,b)=>(b.z||0)-(a.z||0)).map(l=>'<div class="layer-list-row'+(String(l.id)===String(selectedCustomLayerId)?' active':'')+'" data-layer-id="'+escapeProjectText(l.id)+'"><button class="layer-list-name" type="button" onclick="selectCustomLayer(\''+escapeProjectText(l.id)+'\')">'+(l.type==='text'?'T':l.type==='image'?'▧':l.type==='circle'?'○':l.type==='line'?'—':'□')+' '+escapeProjectText(l.type==='text'?(l.text||'Texto').slice(0,26):l.type==='image'?'Imagem':l.type==='circle'?'Círculo':l.type==='line'?'Linha':'Retângulo')+'</button><div class="layer-list-tools"><button title="'+(l.visible===false?'Mostrar':'Ocultar')+'" onclick="toggleCustomLayerVisible(\''+escapeProjectText(l.id)+'\')">'+(l.visible===false?'◉':'◌')+'</button><button title="'+(l.locked?'Desbloquear':'Bloquear')+'" onclick="toggleCustomLayerLock(\''+escapeProjectText(l.id)+'\')">'+(l.locked?'🔒':'🔓')+'</button><button title="Duplicar" onclick="duplicateCustomLayer(\''+escapeProjectText(l.id)+'\')">⧉</button><button type="button" title="Excluir" data-layer-delete-id="'+escapeProjectText(l.id)+'">✕</button></div></div>').join('');
     const l=selectedCustomLayer();panel.hidden=!l;if(!l)return;document.getElementById('custom-layer-selected-label').textContent='Elemento selecionado: '+(l.type==='text'?'Texto':l.type==='image'?'Imagem':l.type==='circle'?'Círculo':l.type==='line'?'Linha':'Retângulo');document.getElementById('custom-layer-text-field').hidden=l.type!=='text';document.getElementById('custom-layer-text').value=l.text||'';document.getElementById('custom-layer-color').value=/^#[0-9a-f]{6}$/i.test(l.color||'')?l.color:'#ffffff';document.getElementById('custom-layer-font-size').value=l.fontSize||28;document.getElementById('custom-layer-opacity').value=l.opacity??100;document.getElementById('custom-layer-radius').value=l.radius??0;
   }
   function updateSelectedCustomLayer(k,v){const l=selectedCustomLayer();if(!l)return;if(k==='fontSize')l.fontSize=Math.max(8,Math.min(120,Number(v)||28));else if(k==='opacity')l.opacity=Math.max(0,Math.min(100,Number(v)||0));else if(k==='radius')l.radius=Math.max(0,Math.min(100,Number(v)||0));else l[k]=v;updateCustomLayerElement(l);if(k==='text'){const n=document.querySelector('.layer-list-row.active .layer-list-name');if(n)n.textContent='T '+(l.text||'Texto').slice(0,26);}autoSaveDraft();}
@@ -2428,6 +2428,30 @@ Terceiro item da lista</textarea></div>
     if(ok)showToast('Camada “'+String(label).slice(0,30)+'” excluída.');
     return ok;
   };
+  // Exclusão delegada em captura: lista, prévia e teclado.
+  const handledLayerDeletePointers=new WeakSet();
+  function handleLayerDeleteAction(ev){
+    const target=ev.target;
+    const button=target&&target.closest?target.closest('[data-layer-delete-id],[data-delete-selected-layer],.custom-layer-delete'):null;
+    if(!button)return;
+    if(ev.type==='click'&&handledLayerDeletePointers.has(button)){
+      handledLayerDeletePointers.delete(button);
+      ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();return;
+    }
+    if(ev.type==='pointerup')handledLayerDeletePointers.add(button);
+    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    let id=button.dataset.layerDeleteId;
+    if(button.hasAttribute('data-delete-selected-layer')){
+      const previewSelected=document.querySelector('#custom-layer-stage .custom-layer.selected');
+      const listSelected=document.querySelector('#custom-layer-list .layer-list-row.active');
+      id=previewSelected?.dataset.layerId||listSelected?.dataset.layerId||selectedCustomLayerId;
+    }
+    if(id===null||id===undefined||id===''){showToast('Selecione uma camada na prévia ou na lista.');return;}
+    window.removeCustomLayerById(String(id));
+  }
+  document.addEventListener('pointerup',handleLayerDeleteAction,true);
+  document.addEventListener('click',handleLayerDeleteAction,true);
+
   function removeCustomLayer(id){
     const index=customLayers.findIndex(x=>String(x.id)===String(id));
     if(index<0)return false;
