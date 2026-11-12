@@ -810,6 +810,7 @@ body:not(.carousel-mode) .carousel-only{display:none}
         <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
         <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
       </div>
+      <button type="button" class="btn secondary" style="width:100%;margin:8px 0" onclick="applyCurrentSettingsToAllSlides('typography')">↗ Aplicar tipografia e alinhamento a todos os slides do carrossel</button>
       <div class="field"><label>Lista de itens (1 por linha)</label><textarea id="input-list" oninput="updatePreview()" placeholder="Um item por linha...">Primeiro item da lista
 Segundo item da lista
 Terceiro item da lista</textarea></div>
@@ -1036,6 +1037,13 @@ Terceiro item da lista</textarea></div>
         <button type="button" class="btn secondary" onclick="clearBackground()">✕ Remover plano de fundo</button>
       </div>
     </div>
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:14px;margin-top:14px">
+        <label>Aplicação em todo o carrossel</label>
+        <button type="button" class="btn secondary" style="width:100%;margin-bottom:7px" onclick="applyCurrentSettingsToAllSlides('visual')">🎨 Aplicar tema, gradiente, cores e decorações a todos os slides</button>
+        <button type="button" class="btn secondary" style="width:100%;margin-bottom:7px" onclick="applyCurrentSettingsToAllSlides('background')">🖼️ Aplicar plano de fundo a todos os slides</button>
+        <button type="button" class="btn secondary" style="width:100%" onclick="applyCurrentSettingsToAllSlides('image')">✧ Aplicar ajustes de imagem aos slides que já possuem imagem</button>
+        <div class="template-hint">Os textos e as imagens individuais de cada slide são preservados. Os ajustes de imagem são aplicados somente aos slides que já têm uma imagem.</div>
+      </div>
   </div>
 
   <div class="section open" id="sec-formato">
@@ -1827,7 +1835,7 @@ Terceiro item da lista</textarea></div>
   let carouselSlides=[];
   let activeCarouselSlide=0;
   function readCarouselFields(){
-    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content'),slideFormat:document.getElementById('post').dataset.format||'retrato',slideTheme:currentTheme,slideGrad:currentGradStyle,slideDecos:Array.from(activeDecos),slideCustomColors:customColors?{...customColors}:null,slideFontFamily:document.getElementById('font-family').value,slideTitleSize:document.getElementById('title-size').value,slideBodySize:document.getElementById('body-size').value,slideTitleAlign:document.getElementById('title-align')?.value||'center',slideBodyAlign:document.getElementById('body-align')?.value||'left',slideBackground:backgroundImageData,slideBackgroundFit:document.getElementById('background-fit')?.value||'cover'};
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content'),slideFormat:document.getElementById('post').dataset.format||'retrato',slideTheme:currentTheme,slideGrad:currentGradStyle,slideGradIntensity:Number(document.getElementById('slider-grad')?.value||100),slideDecos:Array.from(activeDecos),slideCustomColors:customColors?{...customColors}:null,slideFontFamily:document.getElementById('font-family').value,slideTitleSize:document.getElementById('title-size').value,slideBodySize:document.getElementById('body-size').value,slideTitleAlign:document.getElementById('title-align')?.value||'center',slideBodyAlign:document.getElementById('body-align')?.value||'left',slideBackground:backgroundImageData,slideBackgroundFit:document.getElementById('background-fit')?.value||'cover'};
   }
   function saveCurrentCarouselSlide(){
     if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
@@ -1839,6 +1847,7 @@ Terceiro item da lista</textarea></div>
     currentTheme=THEMES[d.slideTheme]?d.slideTheme:'verde';
     customColors=d.slideCustomColors?{...d.slideCustomColors}:null;syncCustomColorInputs();
     currentGradStyle=d.slideGrad||'padrao';
+    const gradIntensity=document.getElementById('slider-grad');if(gradIntensity){gradIntensity.value=d.slideGradIntensity??100;document.getElementById('grad-val').textContent=gradIntensity.value+'%';}
     activeDecos.clear();(Array.isArray(d.slideDecos)?d.slideDecos:['circulos']).forEach(x=>activeDecos.add(x));
     document.querySelectorAll('.theme-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===currentTheme));
     document.querySelectorAll('.grad-swatch').forEach(b=>b.classList.toggle('active',b.dataset.grad===currentGradStyle));
@@ -1861,6 +1870,33 @@ Terceiro item da lista</textarea></div>
     updateBackground();renderDecos();applyPostGradient(THEMES[currentTheme]);applyTypography();applyTextAlignment();
     updatePreview();renderCarouselTools();
   }
+  function applyCurrentSettingsToAllSlides(kind){
+    if(document.getElementById('post')?.dataset.mode!=='carrossel'||!carouselSlides.length){showToast('Esta opção está disponível no modo carrossel.');return;}
+    saveCurrentCarouselSlide();
+    const source=carouselSlides[activeCarouselSlide]||readCarouselFields();
+    let updated=0;
+    const copy=(target,keys)=>{keys.forEach(k=>{if(source[k]!==undefined)target[k]=Array.isArray(source[k])?[...source[k]]:(source[k]&&typeof source[k]==='object'?{...source[k]}:source[k]);});};
+    carouselSlides=carouselSlides.map((slide,i)=>{
+      if(i===activeCarouselSlide)return slide;
+      const next={...slide};
+      if(kind==='visual')copy(next,['slideTheme','slideGrad','slideGradIntensity','slideDecos','slideCustomColors']);
+      else if(kind==='typography')copy(next,['slideFontFamily','slideTitleSize','slideBodySize','slideTitleAlign','slideBodyAlign']);
+      else if(kind==='background')copy(next,['slideBackground','slideBackgroundFit']);
+      else if(kind==='image'){
+        if(!(slide.image||slide.imgUrl))return slide;
+        const props=source.imageEdit||{};
+        const allowed=['x','y','width','height','fit','posX','posY','brightness','saturation','contrast','hue','zoom','opacity'];
+        const edit={...(slide.imageEdit||{})};allowed.forEach(k=>{if(props[k]!==undefined)edit[k]=props[k];});
+        next.imageEdit=edit;if(source.imgColor!==undefined)next.imgColor=source.imgColor;
+      }
+      updated++;return next;
+    });
+    applyCarouselSlide(activeCarouselSlide);
+    autoSaveDraft();
+    const label={visual:'estilo visual',typography:'tipografia e alinhamento',background:'plano de fundo',image:'ajustes de imagem'}[kind]||'configurações';
+    showToast(updated?label.charAt(0).toUpperCase()+label.slice(1)+' aplicado a '+updated+' slide(s).':'Nenhum outro slide elegível para receber esses ajustes.');
+  }
+
   function setCarouselSlideCount(value){
     const count=Math.max(2,Math.min(12,Number(value)||6));
     const p=document.getElementById('post');
