@@ -1096,7 +1096,7 @@ Terceiro item da lista</textarea></div>
         </div>
         <div class="layer-add-grid"><button type="button" onclick="moveSelectedCustomLayer(-1)">↓ Enviar atrás</button><button type="button" onclick="moveSelectedCustomLayer(1)">↑ Trazer frente</button></div>
       </div>
-      <button type="button" id="btn-delete-selected-layer" class="btn secondary" style="width:100%;margin:8px 0">✕ Excluir camada selecionada</button>
+      <button type="button" id="btn-delete-selected-layer" class="btn secondary" style="width:100%;margin:8px 0" onclick="window.deleteSelectedCustomLayer()">✕ Excluir camada selecionada</button>
       <p class="template-hint">Cada slide do carrossel mantém suas próprias camadas. Os elementos originais (título, descrição, imagem e vídeo principal) continuam sendo editados nas respectivas etapas.</p>
     </div>
   </div>
@@ -2426,27 +2426,32 @@ Terceiro item da lista</textarea></div>
     autoSaveDraft();
     return true;
   }
-  function deleteSelectedCustomLayer(ev){
-    if(ev){ev.preventDefault();ev.stopPropagation();}
+  window.deleteSelectedCustomLayer=function(){
     const id=selectedCustomLayerId;
-    if(id==null){showToast('Selecione uma camada na lista ou diretamente na prévia.');return false;}
-    const target=customLayers.find(x=>String(x.id)===String(id));
-    if(!target){selectedCustomLayerId=null;renderCustomLayers();showToast('A camada selecionada não existe mais.');return false;}
-    const label=target.type==='text'?(target.text||'Texto'):(target.type==='image'?'Imagem':target.type==='circle'?'Círculo':target.type==='line'?'Linha':'Retângulo');
-    const removed=removeCustomLayer(id);
-    showToast(removed?'Camada “'+String(label).slice(0,30)+'” excluída.':'Não foi possível excluir a camada.');
-    return removed;
-  }
+    if(id===null||id===undefined){showToast('Selecione uma camada na lista ou na prévia.');return false;}
+    const index=customLayers.findIndex(layer=>String(layer.id)===String(id));
+    if(index<0){selectedCustomLayerId=null;renderCustomLayers();showToast('A camada selecionada não foi encontrada.');return false;}
+    const layer=customLayers[index];
+    const label=layer.type==='text'?(layer.text||'Texto'):(layer.type==='image'?'Imagem':layer.type==='circle'?'Círculo':layer.type==='line'?'Linha':'Retângulo');
+    customLayers.splice(index,1);
+    selectedCustomLayerId=null;
+    const stage=document.getElementById('custom-layer-stage');
+    const node=stage?.querySelector('[data-layer-id="'+CSS.escape(String(id))+'"]');
+    node?.remove();
+    if(document.getElementById('post')?.dataset.mode==='carrossel'&&carouselSlides[activeCarouselSlide]){
+      carouselSlides[activeCarouselSlide]={...carouselSlides[activeCarouselSlide],customLayers:customLayerClone()};
+    }
+    renderCustomLayerPanel();
+    autoSaveDraft();
+    showToast('Camada “'+String(label).slice(0,30)+'” excluída.');
+    return true;
+  };
+  function deleteSelectedCustomLayer(){return window.deleteSelectedCustomLayer();}
   function bindCustomLayerDeleteButton(){
-    if(document.documentElement.dataset.layerDeleteBound==='1')return;
-    document.documentElement.dataset.layerDeleteBound='1';
-    document.addEventListener('click',function(ev){
-      const button=ev.target.closest('#btn-delete-selected-layer');
-      if(!button)return;
-      deleteSelectedCustomLayer(ev);
-    },true);
+    const button=document.getElementById('btn-delete-selected-layer');
+    if(button)button.onclick=()=>window.deleteSelectedCustomLayer();
   }
-  function moveSelectedCustomLayer(delta){const l=selectedCustomLayer();if(!l)return;const max=Math.max(0,...customLayers.map(x=>Number(x.z)||0));l.z=Math.max(1,Math.min(max+1,(Number(l.z)||1)+delta));renderCustomLayers();autoSaveDraft();}
+    function moveSelectedCustomLayer(delta){const l=selectedCustomLayer();if(!l)return;const max=Math.max(0,...customLayers.map(x=>Number(x.z)||0));l.z=Math.max(1,Math.min(max+1,(Number(l.z)||1)+delta));renderCustomLayers();autoSaveDraft();}
   function startCustomLayerDrag(ev,id,resize){const l=customLayers.find(x=>String(x.id)===String(id));if(!l||l.locked||l.visible===false)return;ev.preventDefault();ev.stopPropagation();selectedCustomLayerId=l.id;customLayerDrag={id:l.id,resize,startX:ev.clientX,startY:ev.clientY,x:l.x,y:l.y,width:l.width,height:l.height};const move=e=>{if(!customLayerDrag||customLayerDrag.id!==l.id)return;const r=document.getElementById('custom-layer-stage').getBoundingClientRect(),dx=(e.clientX-customLayerDrag.startX)/r.width*100,dy=(e.clientY-customLayerDrag.startY)/r.height*100;if(customLayerDrag.resize){l.width=Math.max(5,Math.min(100-customLayerDrag.x,customLayerDrag.width+dx));l.height=Math.max(2,Math.min(100-customLayerDrag.y,customLayerDrag.height+dy));}else{l.x=Math.max(0,Math.min(100-l.width,customLayerDrag.x+dx));l.y=Math.max(0,Math.min(100-l.height,customLayerDrag.y+dy));}updateCustomLayerElement(l);};const up=()=>{if(!customLayerDrag)return;document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);customLayerDrag=null;renderCustomLayers();autoSaveDraft();};document.addEventListener('pointermove',move);document.addEventListener('pointerup',up,{once:true});renderCustomLayerPanel();}
   function moveCustomLayer(id,delta){selectedCustomLayerId=id;moveSelectedCustomLayer(delta);}
   function currentImageEdit(){return {...imageEditState};}
