@@ -3964,7 +3964,6 @@ Terceiro item da lista</textarea></div>
   initDirectImageEditing();
   initVideoEditing();
   refreshVideoFolderStatus();
-  initSupabaseIntegration();
 
   // SUPABASE: configuração pública e autenticação inicial
   const SUPABASE_CONFIG_KEY='mpjnutri_supabase_config_v1';
@@ -4036,7 +4035,7 @@ Terceiro item da lista</textarea></div>
   const SUPABASE_SYNC_OWNER_KEY='mpjnutri_cloud_sync_owner_v1';
   const SUPABASE_SYNC_LAST_KEY='mpjnutri_cloud_sync_last_v1';
   const SUPABASE_TOMBSTONES_KEY='mpjnutri_cloud_tombstones_v1';
-  let cloudSyncBusy=false,cloudSyncTimer=null;
+  let cloudSyncBusy=false,cloudSyncTimer=null,cloudSyncPending=false;
   function readCloudTombstones(){try{const a=JSON.parse(localStorage.getItem(SUPABASE_TOMBSTONES_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
   function recordCloudDeletions(type,previous,current){
     const owner=localStorage.getItem(SUPABASE_SYNC_OWNER_KEY);if(!owner)return;
@@ -4073,7 +4072,8 @@ Terceiro item da lista</textarea></div>
     return [...merged.values()];
   }
   function scheduleCloudSync(){
-    if(window._mpjApplyingCloudSync||cloudSyncBusy||!getSupabaseClient())return;
+    if(window._mpjApplyingCloudSync||!getSupabaseClient())return;
+    if(cloudSyncBusy){cloudSyncPending=true;return;}
     if(cloudSyncTimer)clearTimeout(cloudSyncTimer);
     cloudSyncTimer=setTimeout(()=>{cloudSyncTimer=null;syncCloudData(true);},1800);
   }
@@ -4153,8 +4153,13 @@ Terceiro item da lista</textarea></div>
       console.error('Falha na sincronização Supabase:',e);
       supabaseStatus('Falha na sincronização: '+(e.message||'erro desconhecido')+'. Seus dados locais foram preservados.');
       if(!silent)showToast('Não foi possível sincronizar. Consulte o status da nuvem.');
-    }finally{cloudSyncBusy=false;}
+    }finally{
+      cloudSyncBusy=false;
+      if(cloudSyncPending){cloudSyncPending=false;scheduleCloudSync();}
+    }
   }
+  // Executa a inicialização depois que todas as constantes de integração foram declaradas.
+  initSupabaseIntegration();
 </script>
 </body>
 </html>
