@@ -3996,6 +3996,10 @@ Terceiro item da lista</textarea></div>
         });
       }
       const {data,error}=await client.auth.getSession();if(error)throw error;
+      // O Supabase já processou e persistiu a sessão do retorno OAuth. Remove somente os parâmetros sensíveis do fragmento, sem recarregar a página.
+      if(window.location.hash&&/(?:access_token|refresh_token|provider_token|provider_refresh_token|error)=/.test(window.location.hash)){
+        window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
+      }
       supabaseStatus(data.session?'Conectado como '+data.session.user.email+'.':'Projeto conectado. Entre ou crie sua conta.');
       if(data.session)window.setTimeout(()=>syncCloudData(true),0);
       if(notify)showToast('Conexão Supabase configurada.');
