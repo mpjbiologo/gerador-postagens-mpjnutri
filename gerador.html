@@ -4107,9 +4107,12 @@ Terceiro item da lista</textarea></div>
     if(cloudSyncBusy)return;
     cloudSyncBusy=true;
     try{
-      const {data:userData,error:userError}=await client.auth.getUser();
-      if(userError)throw userError;
-      const user=userData?.user;if(!user){supabaseStatus('Entre na sua conta antes de sincronizar.');return;}
+      // Verifica a sessão local antes de consultar o usuário. getUser() sem sessão gera AuthSessionMissingError.
+      const {data:sessionData,error:sessionError}=await client.auth.getSession();
+      if(sessionError)throw sessionError;
+      const session=sessionData?.session;
+      if(!session?.user){supabaseStatus('Supabase conectado, mas nenhuma conta está autenticada. Entre com GitHub para iniciar a sincronização. Seus dados locais continuam disponíveis.');return;}
+      const user=session.user;
       const boundOwner=localStorage.getItem(SUPABASE_SYNC_OWNER_KEY);
       if(boundOwner&&boundOwner!==user.id){
         supabaseStatus('Proteção de conta: este navegador já está vinculado a outro usuário. Para evitar misturar dados pessoais, a sincronização foi bloqueada. Use o perfil de navegador original ou faça backup e limpe os dados locais antes de configurar outra conta.');
