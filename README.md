@@ -15,6 +15,12 @@ O site é publicado automaticamente pelo GitHub Actions sempre que houver altera
 
 O aplicativo utiliza armazenamento local do navegador (`localStorage`) para preferências, histórico e conteúdo salvo. Esses dados permanecem no navegador/dispositivo em que foram criados; não há sincronização em nuvem entre dispositivos nesta versão.
 
+## Integração em nuvem (em implantação)
+
+A base de conexão e autenticação Supabase está disponível em **Configurações → Nuvem**. A configuração exige um projeto Supabase próprio. O passo a passo está em [SUPABASE_SETUP.md](SUPABASE_SETUP.md), e o SQL inicial com tabelas, RLS e bucket privado está em [supabase/schema.sql](supabase/schema.sql).
+
+Nesta primeira etapa, login e cadastro estão preparados; a sincronização de projetos, calendário e arquivos ainda não está ativada. Os dados locais permanecem no navegador.
+
 ## Desenvolvimento
 
 Abra `index.html` em um navegador ou sirva a pasta com qualquer servidor HTTP estático.
