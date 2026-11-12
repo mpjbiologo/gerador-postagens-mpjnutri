@@ -39,7 +39,7 @@ A URL e a chave pública são usadas no navegador. A segurança depende das pol�
 4. Informe seu e-mail e senha para criar a conta. Se a confirmação de e-mail estiver ativa, confirme o cadastro na mensagem recebida.
 5. Depois, entre com suas credenciais.
 
-A configuração pública fica salva apenas neste navegador. A senha não é armazenada pelo gerador; o Supabase Auth mantém a sessão.
+A configuração pública fica salva apenas neste navegador. A senha não é armazenada pelo gerador; o Supabase Auth mantém a sessão. Para evitar misturar dados de contas diferentes, o perfil do navegador fica vinculado ao primeiro usuário autenticado. Para usar outra conta, utilize outro perfil de navegador ou faça backup e limpe os dados locais antes de trocar.
 
 ## Estado da integração
 
