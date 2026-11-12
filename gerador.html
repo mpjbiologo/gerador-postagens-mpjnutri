@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -716,6 +717,7 @@ body:not(.carousel-mode) .carousel-only{display:none}
     <div class="settings-tabs">
       <button class="settings-tab active" data-pane="profile" onclick="switchSettingsTab('profile')">👤 Perfil</button>
       <button class="settings-tab" data-pane="ai" onclick="switchSettingsTab('ai')">🤖 Inteligência artificial</button>
+      <button class="settings-tab" data-pane="cloud" onclick="switchSettingsTab('cloud')">☁️ Nuvem</button>
     </div>
     <section class="settings-pane active" id="settings-pane-profile">
       <p class="settings-note">Os dados do perfil ficam somente neste navegador. Eles não serão aplicados automaticamente: você decide quando carregar a identidade em uma postagem.</p>
@@ -765,6 +767,22 @@ body:not(.carousel-mode) .carousel-only{display:none}
       </div>
       <div class="btn-row"><button class="btn" onclick="saveAISettings()">💾 Salvar configuração de IA</button><button class="btn secondary" onclick="testAIConnection()">Testar conexão</button></div>
       <div id="ai-connection-status" class="settings-status" aria-live="polite">Configure um provedor e teste a conexão.</div>
+    </section>
+    <section class="settings-pane" id="settings-pane-cloud">
+      <h3>☁️ Sincronização em nuvem — Supabase</h3>
+      <p class="settings-note">Esta é a primeira etapa da integração. Configure o projeto Supabase e entre na sua conta. Nesta etapa, o login fica pronto; a sincronização dos projetos, calendário e arquivos será ativada na próxima etapa. Seus dados locais não serão apagados.</p>
+      <div class="field"><label for="supabase-project-url">URL do projeto Supabase</label><input id="supabase-project-url" type="url" placeholder="https://xxxxxxxxxxxx.supabase.co" autocomplete="url"></div>
+      <div class="field"><label for="supabase-anon-key">Chave pública (publishable / anon)</label><input id="supabase-anon-key" type="password" autocomplete="off" placeholder="sb_publishable_... ou chave anon legada"></div>
+      <div class="btn-row"><button class="btn" type="button" onclick="saveSupabaseConfig()">Salvar e conectar</button><a class="btn secondary" href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Abrir Supabase ↗</a></div>
+      <div class="settings-note">Use somente a chave pública do cliente. Nunca cole aqui a chave <code>service_role</code> ou qualquer segredo do projeto. A segurança dos dados será aplicada pelas políticas RLS do banco.</div>
+      <div class="divider" style="border-top:1px solid var(--app-section-border);margin:12px 0"></div>
+      <h3>Conta</h3>
+      <div class="field"><label for="supabase-email">E-mail</label><input id="supabase-email" type="email" placeholder="seu@email.com" autocomplete="email"></div>
+      <div class="field"><label for="supabase-password">Senha</label><input id="supabase-password" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="current-password"></div>
+      <div class="btn-row"><button class="btn" type="button" onclick="supabaseSignIn()">Entrar</button><button class="btn secondary" type="button" onclick="supabaseSignUp()">Criar conta</button></div>
+      <div class="btn-row"><button class="btn secondary" type="button" onclick="supabaseSignOut()">Sair da conta</button><button class="btn secondary" type="button" onclick="testSupabaseConnection()">Testar conexão</button></div>
+      <div id="supabase-status" class="settings-status" aria-live="polite">Ainda não configurado. Crie seu projeto Supabase e informe a URL e a chave pública.</div>
+      <p class="settings-note">Se a confirmação de e-mail estiver ativada no Supabase, confirme a mensagem recebida antes de entrar. A senha não é salva pelo gerador; a sessão é gerenciada pelo Supabase Auth.</p>
     </section>
   </div>
 </div>
@@ -3946,6 +3964,68 @@ Terceiro item da lista</textarea></div>
   initDirectImageEditing();
   initVideoEditing();
   refreshVideoFolderStatus();
+  initSupabaseIntegration();
+
+  // SUPABASE: configuração pública e autenticação inicial
+  const SUPABASE_CONFIG_KEY='mpjnutri_supabase_config_v1';
+  function readSupabaseConfig(){try{return JSON.parse(localStorage.getItem(SUPABASE_CONFIG_KEY)||'null');}catch(e){return null;}}
+  function supabaseStatus(message){const el=document.getElementById('supabase-status');if(el)el.textContent=message;}
+  function getSupabaseClient(){return window.mpjSupabase||null;}
+  function initSupabaseIntegration(){
+    const cfg=readSupabaseConfig();
+    if(cfg){const u=document.getElementById('supabase-project-url'),k=document.getElementById('supabase-anon-key');if(u)u.value=cfg.url||'';if(k)k.value=cfg.key||'';connectSupabase(cfg,false);}
+    else supabaseStatus('Ainda não configurado. Crie seu projeto Supabase e informe a URL e a chave pública.');
+  }
+  async function connectSupabase(cfg,notify=true){
+    if(!window.supabase?.createClient){supabaseStatus('Biblioteca Supabase não carregou. Verifique a conexão com a internet e recarregue a página.');return false;}
+    if(!cfg?.url||!cfg?.key){supabaseStatus('Informe a URL do projeto e a chave pública.');return false;}
+    try{
+      const url=new URL(cfg.url);
+      if(url.protocol!=='https:'||!url.hostname.endsWith('.supabase.co'))throw Error('Use a URL HTTPS do projeto Supabase (https://…supabase.co).');
+      const client=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      window.mpjSupabase=client;
+      client.auth.onAuthStateChange((event,session)=>{
+        supabaseStatus(session?'Conectado como '+session.user.email+'. Evento: '+event+'. A sincronização será habilitada na próxima etapa.':'Projeto conectado, mas nenhuma conta está autenticada.');
+      });
+      const {data,error}=await client.auth.getSession();if(error)throw error;
+      supabaseStatus(data.session?'Conectado como '+data.session.user.email+'.':'Projeto conectado. Entre ou crie sua conta.');
+      if(notify)showToast('Conexão Supabase configurada.');
+      return true;
+    }catch(e){window.mpjSupabase=null;supabaseStatus('Falha na conexão: '+(e.message||'verifique URL e chave pública.'));return false;}
+  }
+  async function saveSupabaseConfig(){
+    const url=(document.getElementById('supabase-project-url')?.value||'').trim().replace(/\/$/,'');
+    const key=(document.getElementById('supabase-anon-key')?.value||'').trim();
+    if(!url||!key){supabaseStatus('Preencha a URL e a chave pública do Supabase.');return;}
+    try{localStorage.setItem(SUPABASE_CONFIG_KEY,JSON.stringify({url,key}));await connectSupabase({url,key},true);}
+    catch(e){supabaseStatus('Não foi possível salvar a configuração neste navegador: '+(e.message||'erro de armazenamento.'));}
+  }
+  async function testSupabaseConnection(){
+    const client=getSupabaseClient();if(!client){supabaseStatus('Configure e conecte o projeto primeiro.');return;}
+    try{const {data,error}=await client.auth.getSession();if(error)throw error;supabaseStatus('Conexão com Supabase Auth funcionando. '+(data.session?'Sessão ativa: '+data.session.user.email+'.':'Nenhuma conta autenticada.'));showToast('Conexão testada.');}
+    catch(e){supabaseStatus('Erro ao testar conexão: '+(e.message||'erro desconhecido'));}
+  }
+  async function supabaseSignUp(){
+    const client=getSupabaseClient(),email=(document.getElementById('supabase-email')?.value||'').trim(),password=document.getElementById('supabase-password')?.value||'';
+    if(!client){supabaseStatus('Configure a conexão Supabase antes de criar uma conta.');return;}
+    if(!email||password.length<6){supabaseStatus('Informe um e-mail válido e uma senha com pelo menos 6 caracteres.');return;}
+    supabaseStatus('Criando conta…');
+    try{const {data,error}=await client.auth.signUp({email,password});if(error)throw error;document.getElementById('supabase-password').value='';supabaseStatus(data.session?'Conta criada e sessão iniciada: '+data.user.email+'.':'Conta criada. Verifique seu e-mail para confirmar o cadastro e depois entre.');}
+    catch(e){supabaseStatus('Não foi possível criar a conta: '+(e.message||'erro desconhecido'));}
+  }
+  async function supabaseSignIn(){
+    const client=getSupabaseClient(),email=(document.getElementById('supabase-email')?.value||'').trim(),password=document.getElementById('supabase-password')?.value||'';
+    if(!client){supabaseStatus('Configure a conexão Supabase antes de entrar.');return;}
+    if(!email||!password){supabaseStatus('Informe e-mail e senha.');return;}
+    supabaseStatus('Entrando…');
+    try{const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;document.getElementById('supabase-password').value='';supabaseStatus('Autenticado como '+data.user.email+'. A sincronização de dados será habilitada na próxima etapa.');}
+    catch(e){supabaseStatus('Falha no login: '+(e.message||'verifique e-mail e senha.'));}
+  }
+  async function supabaseSignOut(){
+    const client=getSupabaseClient();if(!client){supabaseStatus('Nenhuma conexão Supabase ativa.');return;}
+    try{const {error}=await client.auth.signOut();if(error)throw error;supabaseStatus('Você saiu da conta. Seus projetos locais continuam neste navegador.');}
+    catch(e){supabaseStatus('Não foi possível sair: '+(e.message||'erro desconhecido'));}
+  }
 </script>
 </body>
 </html>
