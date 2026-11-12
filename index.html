@@ -3007,6 +3007,12 @@ Terceiro item da lista</textarea></div>
         researchNotes: document.getElementById('research-notes')?.value || '',
       };
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      // Mantém a identidade profissional disponível entre rascunhos e sessões.
+      const identityHandle=(draft.handle||'').trim(),identityWa=(draft.wa||'').trim();
+      if(identityHandle||identityWa){
+        const prior=getBrandProfile()||{};
+        localStorage.setItem(BRAND_PROFILE_KEY,JSON.stringify({...prior,handle:identityHandle||prior.handle||'',wa:identityWa||prior.wa||'',showWa:draft.showWa,showIcons:draft.showIco,theme:currentTheme}));
+      }
     } catch(e) {}
   }
 
@@ -3277,9 +3283,18 @@ Terceiro item da lista</textarea></div>
   renderEditorialPlan();
   setupTextCounters();
   document.getElementById('research-notes')?.addEventListener('input',autoSaveDraft);
-  const draftLoaded = loadDraft(false);
+  const draftLoaded = loadDraft(true);
+  // Se o rascunho ainda não tinha identidade, recupera a última identidade usada.
+  if(!document.getElementById('input-handle').value.trim()&&!document.getElementById('input-wa').value.trim()){
+    const savedIdentity=getBrandProfile();
+    if(savedIdentity&&(savedIdentity.handle||savedIdentity.wa)){
+      document.getElementById('input-handle').value=savedIdentity.handle||'';
+      document.getElementById('input-wa').value=savedIdentity.wa||'';
+      document.getElementById('toggle-wa').checked=!!savedIdentity.showWa&&!!savedIdentity.wa;
+      document.getElementById('toggle-icons').checked=!!savedIdentity.showIcons;
+    }
+  }
   recordEditorState();
-  // Identidade salva só é carregada quando o usuário solicitar nas configurações.
   updatePreview();
   renderDecos();
   applyPostGradient(THEMES[currentTheme]);
