@@ -1190,6 +1190,7 @@ Terceiro item da lista</textarea></div>
 <aside class="preview-wrap" aria-label="Prévia da postagem">
   <div class="preview-toolbar">
     <div class="pt-title"><span class="live-dot" aria-hidden="true"></span>Prévia ao vivo <small id="preview-size">1080 × 1350</small></div>
+    <button class="btn secondary" id="btn-inline-preview" type="button" style="padding:7px 11px;font-size:11px;white-space:nowrap" onclick="openInlinePreview();return false;">⛶ Ver em tela cheia</button>
     <div class="pt-formats" role="group" aria-label="Trocar formato">
       <button type="button" data-quick-fmt="quadrado" title="Feed quadrado">1:1</button>
       <button type="button" data-quick-fmt="retrato" title="Feed retrato">4:5</button>
@@ -1255,7 +1256,6 @@ Terceiro item da lista</textarea></div>
     <div class="export-grid">
       <button class="btn secondary carousel-only" id="btn-export-zip" onclick="exportCarouselZip()">📦 Exportar carrossel em ZIP</button>
       <button class="btn secondary carousel-only" id="btn-export-pdf" onclick="exportCarouselPDF()">📄 Exportar em PDF</button>
-      <button class="btn secondary" id="btn-inline-preview" type="button" onclick="openInlinePreview();return false;">🖥️ Tela cheia</button>
       <button class="btn secondary" onclick="copyHTML()">📋 Copiar HTML</button>
     </div>
     <p class="export-hint" id="export-hint">PNG em alta resolução, pronto para o Instagram.</p>
