@@ -2385,7 +2385,7 @@ Terceiro item da lista</textarea></div>
     const choice=document.getElementById('email-app-choice')?.value||'mailto';
     const customUrl=(document.getElementById('email-custom-url')?.value||'').trim();
     if(choice==='custom'&&(!/^https?:\/\//i.test(customUrl)||!customUrl)){showToast('Informe uma URL http ou https válida.');return;}
-    try{localStorage.setItem(EMAIL_APP_PREF_KEY,JSON.stringify({choice,customUrl}));document.getElementById('email-app-settings').style.display='none';showToast('Aplicativo de e-mail salvo neste navegador.');}
+    try{localStorage.setItem(EMAIL_APP_PREF_KEY,JSON.stringify({choice,customUrl}));document.getElementById('email-app-settings').style.display='none';showToast('Preferência salva. Preparando o projeto…');sendProjectByEmail();}
     catch(e){showToast('Não foi possível salvar a preferência neste navegador.');}
   }
   function getConfiguredEmailUrl(recipient,subject,body){
@@ -2423,16 +2423,6 @@ Terceiro item da lista</textarea></div>
       const blob=new Blob([JSON.stringify(packageData,null,2)],{type:'application/json'});
       const safeName=(packageData.name||'projeto').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'projeto';
       const file=new File([blob],safeName+'-mpjnutri.json',{type:'application/json'});
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-        navigator.share({title:'Projeto '+packageData.name,text:'Arquivo do projeto criado no Gerador MPJ Nutri.',files:[file]}).then(()=>{
-          showToast('Compartilhamento aberto. Escolha seu aplicativo de e-mail.');
-        }).catch(shareError=>{
-          if(shareError?.name==='AbortError')return;
-          console.warn('Compartilhamento nativo indisponível; usando envio manual.',shareError);
-          downloadProjectAndPrepareEmail(blob,file,packageData.name,recipient);
-        });
-        return;
-      }
       downloadProjectAndPrepareEmail(blob,file,packageData.name,recipient);
     }catch(e){
       console.error('Falha ao preparar projeto para e-mail:',e);
