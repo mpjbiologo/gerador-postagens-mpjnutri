@@ -19,7 +19,7 @@ O aplicativo utiliza armazenamento local do navegador (`localStorage`) para pref
 
 A base de conexão e autenticação Supabase está disponível em **Configurações → Nuvem**. A configuração exige um projeto Supabase próprio. O passo a passo está em [SUPABASE_SETUP.md](SUPABASE_SETUP.md), e o SQL inicial com tabelas, RLS e bucket privado está em [supabase/schema.sql](supabase/schema.sql).
 
-Nesta primeira etapa, login e cadastro estão preparados; a sincronização de projetos, calendário e arquivos ainda não está ativada. Os dados locais permanecem no navegador.
+A autenticação e a sincronização bidirecional de projetos e calendário estão implementadas, incluindo propagação de exclusões. A mídia de vídeo do IndexedDB e o upload/recuperação de arquivos no Storage ainda serão integrados. Consulte `SUPABASE_SETUP.md` e execute o SQL atualizado antes de usar a sincronização.
 
 ## Desenvolvimento
 
