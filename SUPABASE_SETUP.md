@@ -31,13 +31,35 @@ As políticas limitam leitura e gravação ao usuário autenticado dono dos regi
 
 A URL e a chave pública são usadas no navegador. A segurança depende das políticas RLS do banco e do Storage.
 
-## 4. Conectar no gerador
+## 4. Habilitar o login com GitHub
+
+O login no painel do Supabase pela sua conta GitHub não habilita automaticamente o GitHub como provedor de autenticação dos usuários do gerador. É uma configuração separada, feita uma única vez no projeto.
+
+1. No painel do Supabase, abra **Authentication → Sign In / Providers** (ou **Providers**) e expanda **GitHub**.
+2. Copie a **Callback URL** exibida pelo Supabase. Ela terá este formato: `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. Abra https://github.com/settings/developers e entre em **OAuth Apps**. Clique em **New OAuth App**.
+4. Preencha:
+   - **Application name:** Gerador de Postagens MPJ Nutri
+   - **Homepage URL:** `https://mpjbiologo.github.io/gerador-postagens-mpjnutri/gerador.html`
+   - **Authorization callback URL:** cole exatamente a Callback URL copiada do Supabase.
+5. Registre o aplicativo no GitHub. Copie o **Client ID** e gere um **Client secret**.
+6. Volte ao Supabase, ative **GitHub Enabled**, cole o Client ID e o Client secret e clique em **Save**.
+7. No Supabase, abra **Authentication → URL Configuration**. Em **Redirect URLs**, adicione exatamente:
+   `https://mpjbiologo.github.io/gerador-postagens-mpjnutri/gerador.html`
+   Salve as alterações. Se necessário, configure também essa URL como **Site URL**.
+8. Volte ao gerador e use **Configurações → Nuvem → Salvar e conectar** para conectar a URL e a chave pública do projeto. Depois clique em **Entrar com GitHub** e autorize o acesso.
+
+**Importante:** o Client secret do GitHub deve ficar somente no painel do Supabase. Nunca o coloque no gerador, no repositório ou em arquivos públicos. O gerador usa apenas a URL e a chave pública do Supabase. O fluxo de login redireciona ao GitHub e retorna ao endereço do gerador.
+
+## 5. Conectar no gerador
 
 1. Abra https://mpjbiologo.github.io/gerador-postagens-mpjnutri/gerador.html
 2. Clique em **Configurações → Nuvem**.
 3. Cole a Project URL e a chave pública e clique em **Salvar e conectar**.
-4. Informe seu e-mail e senha para criar a conta. Se a confirmação de e-mail estiver ativa, confirme o cadastro na mensagem recebida.
-5. Depois, entre com suas credenciais.
+4. Clique em **Entrar com GitHub** e autorize o aplicativo.
+5. A sessão do Supabase Auth será criada e a sincronização de projetos e calendário poderá começar.
+
+O acesso por e-mail e senha continua disponível como alternativa, dentro de **Outras formas de acesso**.
 
 A configuração pública fica salva apenas neste navegador. A senha não é armazenada pelo gerador; o Supabase Auth mantém a sessão. Para evitar misturar dados de contas diferentes, o perfil do navegador fica vinculado ao primeiro usuário autenticado. Para usar outra conta, utilize outro perfil de navegador ou faça backup e limpe os dados locais antes de trocar.
 
@@ -53,3 +75,9 @@ A mídia de vídeo armazenada no IndexedDB ainda não é enviada ao Storage. Ima
 - Mantenha RLS ativado nas tabelas e políticas do Storage.
 - Use senha forte e confirmação de e-mail.
 - Faça backup local dos projetos antes da próxima etapa de sincronização.
+
+
+## Referências oficiais
+
+- [Supabase: Sign in with GitHub](https://supabase.com/docs/guides/auth/social-login/auth-github)
+- [GitHub: Creating an OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
