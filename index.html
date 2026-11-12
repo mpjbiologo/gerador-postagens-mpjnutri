@@ -800,6 +800,12 @@ body:not(.carousel-mode) .carousel-only{display:none}
       <div class="field"><label>Descrição</label><textarea id="input-desc" oninput="updatePreview()">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</textarea></div>
       <div class="field"><label>Alinhamento do título</label><select id="title-align" onchange="applyTextAlignment();autoSaveDraft()"><option value="left">À esquerda</option><option value="center" selected>Centralizado</option><option value="right">À direita</option></select></div>
       <div class="field"><label>Alinhamento do texto e lista</label><select id="body-align" onchange="applyTextAlignment();autoSaveDraft()"><option value="left" selected>À esquerda</option><option value="center">Centralizado</option><option value="right">À direita</option><option value="justify">Justificado</option></select></div>
+      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
+        <label>Fonte e tamanho</label>
+        <div class="field"><label>Família tipográfica</label><select id="font-family" onchange="applyTypography();autoSaveDraft()"><option value="'Playfair Display', Georgia, serif">Clássica (serifada)</option><option value="'DM Sans', Arial, sans-serif">Moderna (sem serifa)</option><option value="Georgia, serif">Editorial (Georgia)</option><option value="Arial, sans-serif">Simples (Arial)</option><option value="Impact, sans-serif">Impacto (Impact)</option></select></div>
+        <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
+        <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
+      </div>
       <div class="field"><label>Lista de itens (1 por linha)</label><textarea id="input-list" oninput="updatePreview()" placeholder="Um item por linha...">Primeiro item da lista
 Segundo item da lista
 Terceiro item da lista</textarea></div>
@@ -832,12 +838,6 @@ Terceiro item da lista</textarea></div>
       <div class="field"><label>Instagram</label><input type="text" id="input-handle" value="" placeholder="@seuinstagram" oninput="updatePreview()"></div>
       <div class="field"><label>Número WhatsApp</label><input type="text" id="input-wa" value="" placeholder="(31) 9xxxx-xxxx" oninput="updatePreview()"></div>
       <div class="toggle-row"><label>Mostrar WhatsApp</label><label class="toggle"><input type="checkbox" id="toggle-wa" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
-      <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
-        <label>Tipografia da postagem</label>
-        <div class="field"><label>Estilo da fonte</label><select id="font-family" onchange="applyTypography();autoSaveDraft()"><option value="'Playfair Display', Georgia, serif">Clássica (serifada)</option><option value="'DM Sans', Arial, sans-serif">Moderna (sem serifa)</option><option value="Georgia, serif">Editorial (Georgia)</option><option value="Arial, sans-serif">Simples (Arial)</option><option value="Impact, sans-serif">Impacto (Impact)</option></select></div>
-        <div class="field"><label>Tamanho do título: <strong id="title-size-label">52 px</strong></label><input type="range" id="title-size" min="24" max="76" value="52" oninput="applyTypography();autoSaveDraft()"></div>
-        <div class="field"><label>Tamanho do texto: <strong id="body-size-label">16 px</strong></label><input type="range" id="body-size" min="10" max="28" value="16" oninput="applyTypography();autoSaveDraft()"></div>
-      </div>
       <div class="toggle-row"><label>Mostrar ícones do rodapé</label><label class="toggle"><input type="checkbox" id="toggle-icons" onchange="updatePreview()"><div class="toggle-track"></div></label></div>
       <div class="btn-row" style="margin-top:10px">
         <button class="btn" type="button" onclick="saveBrandProfile()">💾 Salvar nas configurações</button>
