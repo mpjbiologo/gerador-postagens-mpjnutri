@@ -231,6 +231,13 @@
   .carousel-tools { display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--app-section-border); }
   .carousel-tools.visible { display:block; }
   .carousel-slide-list { display:flex;flex-wrap:wrap;gap:6px;margin:8px 0; }
+  .preview-carousel-count-wrap,.preview-carousel-selector-wrap{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:10px;color:var(--app-label)}
+  .preview-carousel-count-wrap select,.preview-carousel-selector-wrap select{background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border);border-radius:6px;padding:5px 7px;font:600 11px 'DM Sans',sans-serif}
+  .step-carousel-selector{display:none;align-items:center;gap:8px;margin:10px 0 0;padding:8px 10px;border:1px solid var(--app-section-border);border-radius:8px;background:var(--app-btn-bg)}
+  body.carousel-mode .step-carousel-selector{display:flex}
+  .step-carousel-selector label{font-size:10px;color:var(--app-label);white-space:nowrap}
+  .step-carousel-selector select{min-width:0;flex:1;background:var(--app-input-bg);color:var(--app-input-color);border:1px solid var(--app-input-border);border-radius:6px;padding:6px;font:11px 'DM Sans',sans-serif}
+
   .carousel-slide-chip { min-width:38px;padding:7px 10px;border:1px solid var(--app-btn-border);border-radius:7px;color:var(--app-btn-color);background:var(--app-btn-bg);cursor:pointer;font:600 11px 'DM Sans',sans-serif; }
   .carousel-slide-chip.active { border-color:var(--accent);color:var(--accent);background:rgba(126,219,126,.1); }
   .carousel-actions { display:flex;gap:6px;flex-wrap:wrap;margin:8px 0; }
@@ -1158,6 +1165,16 @@ Terceiro item da lista</textarea></div>
       <button type="button" data-quick-fmt="stories" title="Stories / Reels">9:16</button>
       <button type="button" data-quick-fmt="carrossel" title="Carrossel">Carrossel</button>
     </div>
+    <div id="preview-carousel-count-wrap" class="preview-carousel-count-wrap" hidden>
+      <label for="preview-carousel-count">Slides</label>
+      <select id="preview-carousel-count" aria-label="Quantidade de slides no carrossel">
+        <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+      </select>
+    </div>
+    <div id="preview-carousel-selector-wrap" class="preview-carousel-selector-wrap" hidden>
+      <label for="preview-carousel-selector">Editar slide</label>
+      <select id="preview-carousel-selector" aria-label="Selecionar slide para editar"></select>
+    </div>
   </div>
   <div class="preview-stage" id="preview-stage"><div class="post-scaler" id="post-scaler">
   <div class="post" id="post" data-format="retrato">
@@ -1746,6 +1763,31 @@ Terceiro item da lista</textarea></div>
     updateBackground();renderDecos();applyPostGradient(THEMES[currentTheme]);applyTypography();
     updatePreview();renderCarouselTools();
   }
+  function setCarouselSlideCount(value){
+    const count=Math.max(2,Math.min(12,Number(value)||6));
+    const p=document.getElementById('post');
+    if(p.dataset.mode!=='carrossel')return;
+    saveCurrentCarouselSlide();
+    while(carouselSlides.length<count){
+      const index=carouselSlides.length;
+      carouselSlides.push({...readCarouselFields(),line1:index===count-1?'Encerramento':'Novo slide',line2:'',desc:'Escreva o conteúdo deste slide.',list:'',listNum:false,tag1:'',tag2:'',showTag1:false,showTag2:false,imgUrl:'',image:'',showImg:false,slideType:index===count-1?'closing':'content'});
+    }
+    if(carouselSlides.length>count)carouselSlides=carouselSlides.slice(0,count);
+    if(carouselSlides.length){carouselSlides[0].slideType='cover';if(count>1&&carouselSlides[count-1].slideType==='content')carouselSlides[count-1].slideType='closing';}
+    activeCarouselSlide=Math.min(activeCarouselSlide,count-1);
+    applyCarouselSlide(activeCarouselSlide);autoSaveDraft();
+  }
+  function syncStepCarouselSelectors(){
+    const active=document.getElementById('post').dataset.mode==='carrossel';
+    const options=carouselSlides.map((d,i)=>'<option value="'+i+'" '+(i===activeCarouselSlide?'selected':'')+'>'+(i===0?'Capa':'Slide '+(i+1))+'</option>').join('');
+    document.querySelectorAll('.step-carousel-selector select').forEach(sel=>{sel.innerHTML=options;sel.value=String(activeCarouselSlide);});
+    const wrap=document.getElementById('preview-carousel-selector-wrap'),picker=document.getElementById('preview-carousel-selector');
+    if(wrap)wrap.hidden=!active;
+    if(picker){picker.innerHTML=options;picker.value=String(activeCarouselSlide);}
+    const countWrap=document.getElementById('preview-carousel-count-wrap'),count=document.getElementById('preview-carousel-count');
+    if(countWrap)countWrap.hidden=!active;
+    if(count)count.value=String(Math.max(2,Math.min(12,carouselSlides.length||6)));
+  }
   function syncCarouselPreviewControls(){
     const total=carouselSlides.length||1;
     const position=document.getElementById('preview-slide-position');
@@ -1754,6 +1796,7 @@ Terceiro item da lista</textarea></div>
     if(position)position.textContent=(activeCarouselSlide+1)+' de '+total;
     if(prev)prev.disabled=activeCarouselSlide<=0;
     if(next)next.disabled=activeCarouselSlide>=total-1;
+    syncStepCarouselSelectors();
   }
   function previewCarouselStep(direction){
     if(document.getElementById('post').dataset.mode!=='carrossel')return;
@@ -1808,6 +1851,7 @@ Terceiro item da lista</textarea></div>
     document.querySelectorAll('.format-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
     if(fmt==='carrossel'){
       p.dataset.format='retrato';p.dataset.mode='carrossel';if(!carouselSlides.length)carouselSlides=[readCarouselFields()];
+      if(carouselSlides.length===1)setCarouselSlideCount(6);
       document.getElementById('carousel-tools').classList.add('visible');applyCarouselSlide(Math.min(activeCarouselSlide,carouselSlides.length-1));
     }else{
       p.dataset.format=fmt;p.dataset.mode=fmt;document.getElementById('carousel-tools').classList.remove('visible');
@@ -3077,6 +3121,9 @@ Terceiro item da lista</textarea></div>
       intro.querySelector('.step-kicker').textContent=step.extra?'Ferramentas':'Passo '+(mi+1)+' de '+main.length;
       intro.querySelector('h2').textContent=step.title;
       intro.querySelector('p').textContent=step.desc;
+      const carouselPicker=document.createElement('div');carouselPicker.className='step-carousel-selector';
+      carouselPicker.innerHTML='<label>Slide em edição</label><select aria-label="Selecionar slide para editar" onchange="selectCarouselSlide(Number(this.value))"></select>';
+      intro.appendChild(carouselPicker);
       sec.insertBefore(intro,sec.querySelector('.section-body'));
       const footer=document.createElement('div');footer.className='step-footer';
       if(step.extra){
@@ -3136,6 +3183,8 @@ Terceiro item da lista</textarea></div>
 
     // Formato rápido na barra da prévia + legenda de dimensões
     const SIZES={quadrado:'1080 × 1080',retrato:'1080 × 1350',stories:'1080 × 1920',carrossel:'1080 × 1350 · slides'};
+    document.getElementById('preview-carousel-count')?.addEventListener('change',e=>setCarouselSlideCount(e.target.value));
+    document.getElementById('preview-carousel-selector')?.addEventListener('change',e=>selectCarouselSlide(Number(e.target.value)));
     document.querySelectorAll('[data-quick-fmt]').forEach(b=>b.addEventListener('click',()=>{
       const target=document.querySelector('.format-btn[data-fmt="'+b.dataset.quickFmt+'"]');if(target)setFormat(target);
     }));
