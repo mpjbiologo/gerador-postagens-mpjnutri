@@ -79,5 +79,5 @@ A mídia de vídeo armazenada no IndexedDB ainda não é enviada ao Storage. Ima
 
 ## Referências oficiais
 
-- [Supabase: Sign in with GitHub](https://supabase.com/docs/guides/auth/social-login/auth-github)
+- [Supabase: Sign in with GitHub](https://supabase.com/docs/guides/auth/social-sign-in/auth-github)
 - [GitHub: Creating an OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
