@@ -777,12 +777,17 @@ body:not(.carousel-mode) .carousel-only{display:none}
       <div class="settings-note">Use somente a chave pública do cliente. Nunca cole aqui a chave <code>service_role</code> ou qualquer segredo do projeto. A segurança dos dados será aplicada pelas políticas RLS do banco.</div>
       <div class="divider" style="border-top:1px solid var(--app-section-border);margin:12px 0"></div>
       <h3>Conta</h3>
-      <div class="field"><label for="supabase-email">E-mail</label><input id="supabase-email" type="email" placeholder="seu@email.com" autocomplete="email"></div>
-      <div class="field"><label for="supabase-password">Senha</label><input id="supabase-password" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="current-password"></div>
-      <div class="btn-row"><button class="btn" type="button" onclick="supabaseSignIn()">Entrar</button><button class="btn secondary" type="button" onclick="supabaseSignUp()">Criar conta</button></div>
+      <button class="btn" type="button" onclick="supabaseSignInWithGitHub()" style="background:#24292f;color:#fff;border:1px solid #444"><span aria-hidden="true">◉</span> Entrar com GitHub</button>
+      <p class="settings-note">Use a mesma conta GitHub que você já utiliza. Na primeira utilização, é necessário habilitar o provedor GitHub no Supabase (instruções abaixo).</p>
+      <details style="border:1px solid var(--app-section-border);border-radius:8px;padding:9px">
+        <summary style="cursor:pointer;font-size:11px;color:var(--app-label);font-weight:700">Outras formas de acesso (e-mail e senha)</summary>
+        <div class="field" style="margin-top:10px"><label for="supabase-email">E-mail</label><input id="supabase-email" type="email" placeholder="seu@email.com" autocomplete="email"></div>
+        <div class="field"><label for="supabase-password">Senha</label><input id="supabase-password" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="current-password"></div>
+        <div class="btn-row"><button class="btn" type="button" onclick="supabaseSignIn()">Entrar</button><button class="btn secondary" type="button" onclick="supabaseSignUp()">Criar conta</button></div>
+      </details>
       <div class="btn-row"><button class="btn secondary" type="button" onclick="supabaseSignOut()">Sair da conta</button><button class="btn secondary" type="button" onclick="testSupabaseConnection()">Testar conexão</button><button class="btn" type="button" onclick="syncCloudData(false)">⟳ Sincronizar agora</button></div>
       <div id="supabase-status" class="settings-status" aria-live="polite">Ainda não configurado. Crie seu projeto Supabase e informe a URL e a chave pública.</div>
-      <p class="settings-note">Se a confirmação de e-mail estiver ativada no Supabase, confirme a mensagem recebida antes de entrar. A senha não é salva pelo gerador; a sessão é gerenciada pelo Supabase Auth.</p>
+      <p class="settings-note">O login GitHub autentica você no gerador por meio do Supabase Auth. Ele não altera seu acesso ao painel do Supabase nem concede permissões administrativas ao aplicativo.</p>
     </section>
   </div>
 </div>
@@ -4017,6 +4022,22 @@ Terceiro item da lista</textarea></div>
     try{const {data,error}=await client.auth.signUp({email,password});if(error)throw error;document.getElementById('supabase-password').value='';supabaseStatus(data.session?'Conta criada e sessão iniciada: '+data.user.email+'.':'Conta criada. Verifique seu e-mail para confirmar o cadastro e depois entre.');}
     catch(e){supabaseStatus('Não foi possível criar a conta: '+(e.message||'erro desconhecido'));}
   }
+  async function supabaseSignInWithGitHub(){
+    const client=getSupabaseClient();
+    if(!client){supabaseStatus('Configure e conecte a URL e a chave pública do Supabase antes de entrar com GitHub.');return;}
+    supabaseStatus('Redirecionando para a autenticação segura do GitHub…');
+    try{
+      const redirectTo=window.location.origin+window.location.pathname+window.location.search;
+      const {error}=await client.auth.signInWithOAuth({
+        provider:'github',
+        options:{redirectTo,scopes:'read:user user:email'}
+      });
+      if(error)throw error;
+    }catch(e){
+      supabaseStatus('Não foi possível iniciar o login GitHub: '+(e.message||'verifique se o provedor GitHub está habilitado no Supabase.'));
+    }
+  }
+
   async function supabaseSignIn(){
     const client=getSupabaseClient(),email=(document.getElementById('supabase-email')?.value||'').trim(),password=document.getElementById('supabase-password')?.value||'';
     if(!client){supabaseStatus('Configure a conexão Supabase antes de entrar.');return;}
