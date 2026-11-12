@@ -31,8 +31,22 @@ create table if not exists public.mpjnutri_editorial_plan (
 create index if not exists mpjnutri_editorial_plan_owner_updated_idx
   on public.mpjnutri_editorial_plan (owner_id, updated_at desc);
 
+-- Marcadores de exclusão sincronizados entre dispositivos.
+create table if not exists public.mpjnutri_sync_tombstones (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  record_type text not null check (record_type in ('project','calendar')),
+  local_id text not null,
+  deleted_at timestamptz not null default now(),
+  unique (owner_id, record_type, local_id)
+);
+
+create index if not exists mpjnutri_sync_tombstones_owner_idx
+  on public.mpjnutri_sync_tombstones (owner_id, deleted_at desc);
+
 alter table public.mpjnutri_projects enable row level security;
 alter table public.mpjnutri_editorial_plan enable row level security;
+alter table public.mpjnutri_sync_tombstones enable row level security;
 
 drop policy if exists "Users manage their own projects" on public.mpjnutri_projects;
 create policy "Users manage their own projects"
@@ -45,6 +59,14 @@ create policy "Users manage their own projects"
 drop policy if exists "Users manage their own editorial plan" on public.mpjnutri_editorial_plan;
 create policy "Users manage their own editorial plan"
   on public.mpjnutri_editorial_plan
+  for all
+  to authenticated
+  using (auth.uid() = owner_id)
+  with check (auth.uid() = owner_id);
+
+drop policy if exists "Users manage their own sync tombstones" on public.mpjnutri_sync_tombstones;
+create policy "Users manage their own sync tombstones"
+  on public.mpjnutri_sync_tombstones
   for all
   to authenticated
   using (auth.uid() = owner_id)
