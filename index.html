@@ -1046,6 +1046,21 @@ Terceiro item da lista</textarea></div>
     </div>
   </div>
 
+  <div class="section" id="sec-salvar">
+    <div class="section-header" onclick="toggleSection('sec-salvar')"><div class="section-title">💾 Salvar e exportar</div><div class="section-arrow">▼</div></div>
+    <div class="section-body">
+      <p class="template-hint">Salve o trabalho como projeto neste navegador ou exporte os dados para compartilhar por e-mail.</p>
+      <div class="field"><label for="project-name-input">Nome do projeto</label><input id="project-name-input" type="text" placeholder="Ex.: Série sobre microbiota"></div>
+      <button class="btn" type="button" onclick="saveToHistory()">💾 Salvar como projeto</button>
+      <div id="save-project-status" class="template-hint">A data será adicionada automaticamente ao nome do projeto.</div>
+      <div class="divider" style="border-top:1px solid var(--app-section-border);margin:8px 0"></div>
+      <div class="field"><label for="project-email-to">Enviar projeto por e-mail</label><input id="project-email-to" type="email" placeholder="destinatario@email.com"></div>
+      <button class="btn secondary" type="button" onclick="sendProjectByEmail()">✉️ Preparar envio por e-mail</button>
+      <p class="template-hint">Quando o navegador permitir, será aberto o compartilhamento com o arquivo anexado. Caso contrário, o arquivo será baixado e o aplicativo de e-mail será aberto para você anexá-lo. O sistema não envia mensagens sozinho.</p>
+      <div id="save-export-content"></div>
+    </div>
+  </div>
+
   <div class="section" id="sec-hist">
     <div class="section-header" onclick="toggleSection('sec-hist')">
       <div class="section-title">🗂️ Projetos</div>
@@ -2343,10 +2358,43 @@ Terceiro item da lista</textarea></div>
   function saveHistory(h){localStorage.setItem('mpjnutri_hist',JSON.stringify(h));}
   function saveToHistory(){
     const title=[document.getElementById('input-line1').value,document.getElementById('input-line2').value].filter(Boolean).join(' ').trim()||'Novo projeto';
-    const name=prompt('Nome deste projeto:',title); if(name===null)return;
-    const snap={researchNotes:document.getElementById('research-notes')?.value||'',backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide};
-    const e={id:Date.now(),name:name.trim()||title,snapshot:snap,versions:[],line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
-    const h=getHistory();h.unshift(e);saveHistory(h);currentProjectId=e.id;renderHistory();renderProjectVersions();showToast('✅ Projeto salvo!');
+    const nameInput=document.getElementById('project-name-input');
+    const suggested=(nameInput?.value||'').trim()||title;
+    const name=prompt('Nome deste projeto:',suggested); if(name===null)return;
+    const cleanName=name.trim()||title;
+    const datePrefix=new Date().toLocaleDateString('pt-BR');
+    const datedName=datePrefix+' - '+cleanName.replace(/^\d{2}\/\d{2}\/\d{4}\s*[–-]\s*/,'');
+    const snap={researchNotes:document.getElementById('research-notes')?.value||'',backgroundImage:backgroundImageData,backgroundFit:document.getElementById('background-fit').value,fontFamily:document.getElementById('font-family').value,titleSize:document.getElementById('title-size').value,bodySize:document.getElementById('body-size').value,line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),handle:document.getElementById('input-handle').value,wa:document.getElementById('input-wa').value,showWa:document.getElementById('toggle-wa').checked,showIco:document.getElementById('toggle-icons').checked,showImg:document.getElementById('toggle-img').checked,imgUrl:document.getElementById('input-img').value,imgColor:document.getElementById('toggle-img-color').checked,gradVal:document.getElementById('slider-grad').value,theme:currentTheme,gradStyle:currentGradStyle,decos:Array.from(activeDecos),appTheme:appTheme,format:document.getElementById('post').dataset.mode||document.getElementById('post').dataset.format||'retrato',carouselSlides:document.getElementById('post').dataset.mode==='carrossel'?(saveCurrentCarouselSlide(),carouselSlides):[],activeCarouselSlide:activeCarouselSlide,imageData:window._uploadedImgSrc||'',imageEdit:currentImageEdit(),videoEdit:videoEditState,videoPresent:!!document.getElementById('post-video')?.src,titleAlign:document.getElementById('title-align')?.value||'center',bodyAlign:document.getElementById('body-align')?.value||'left'};
+    const e={id:Date.now(),name:datedName,snapshot:snap,versions:[],line1:snap.line1,line2:snap.line2,listItems:snap.list,listNum:snap.listNum,desc:snap.desc,tag1:snap.tag1,tag2:snap.tag2,showTag1:snap.showTag1,showTag2:snap.showTag2,handle:snap.handle,wa:snap.wa,theme:snap.theme,date:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    const h=getHistory();h.unshift(e);saveHistory(h);currentProjectId=e.id;renderHistory();renderProjectVersions();if(nameInput)nameInput.value=cleanName;const status=document.getElementById('save-project-status');if(status)status.textContent='Projeto salvo: '+datedName;showToast('✅ Projeto salvo!');
+  }
+  async function sendProjectByEmail(){
+    const recipient=(document.getElementById('project-email-to')?.value||'').trim();
+    if(recipient&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){showToast('Informe um endereço de e-mail válido.');return;}
+    try{
+      if(document.getElementById('post').dataset.mode==='carrossel')saveCurrentCarouselSlide();
+      const snapshot=buildCurrentSnapshot();
+      snapshot.imageData=window._uploadedImgSrc||'';
+      snapshot.imageEdit=currentImageEdit();
+      snapshot.videoEdit=videoEditState;
+      snapshot.videoPresent=!!document.getElementById('post-video')?.src;
+      snapshot.titleAlign=document.getElementById('title-align')?.value||'center';
+      snapshot.bodyAlign=document.getElementById('body-align')?.value||'left';
+      const packageData={format:'mpjnutri-project',version:1,exportedAt:new Date().toISOString(),name:[snapshot.line1,snapshot.line2].filter(Boolean).join(' ').trim()||'Projeto sem título',snapshot};
+      const blob=new Blob([JSON.stringify(packageData,null,2)],{type:'application/json'});
+      const safeName=(packageData.name||'projeto').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'projeto';
+      const file=new File([blob],safeName+'-mpjnutri.json',{type:'application/json'});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({title:'Projeto '+packageData.name,text:'Arquivo do projeto criado no Gerador MPJ Nutri.',files:[file]});
+        showToast('Compartilhamento aberto. Escolha seu aplicativo de e-mail.');
+        return;
+      }
+      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+      const subject=encodeURIComponent('Projeto MPJ Nutri: '+packageData.name);
+      const body=encodeURIComponent('Olá!\n\nEstou compartilhando o projeto "'+packageData.name+'".\n\nAnexe a este e-mail o arquivo JSON que acabou de ser baixado. Ele contém os dados editáveis do projeto.\n');
+      window.location.href='mailto:'+encodeURIComponent(recipient)+'?subject='+subject+'&body='+body;
+      showToast('Arquivo do projeto baixado. Anexe-o ao e-mail aberto.');
+    }catch(e){if(e?.name==='AbortError')return;showToast('Não foi possível preparar o compartilhamento: '+(e.message||'erro'));}
   }
   function loadFromHistory(id){
     const e=getHistory().find(x=>String(x.id)===String(id));if(!e)return;currentProjectId=e.id;renderProjectVersions();
@@ -3115,6 +3163,8 @@ Terceiro item da lista</textarea></div>
 
   // ═════ Navegação guiada em etapas + prévia escalonada ═════
   (function initGuidedEditor(){
+    const exportDock=document.getElementById('export-dock'),saveHost=document.getElementById('save-export-content');
+    if(exportDock&&saveHost){exportDock.style.borderTop='0';exportDock.style.padding='8px 0 0';saveHost.appendChild(exportDock);}
     const STEPS=[
       {id:'sec-modelos',   icon:'🧩', title:'Modelo',       hint:'Ponto de partida', desc:'Escolha um modelo pronto para começar. Depois você personaliza textos, cores e imagem.', group:'Criar postagem'},
       {id:'sec-formato',   icon:'📐', title:'Formato',      hint:'Feed, stories ou carrossel', desc:'Defina onde o conteúdo será publicado. No carrossel, você cria e organiza vários slides.'},
@@ -3122,6 +3172,7 @@ Terceiro item da lista</textarea></div>
       {id:'sec-visual',    icon:'🎨', title:'Visual',       hint:'Cores, imagem e fundo', desc:'Ajuste o tema de cor, o gradiente, os elementos decorativos e as imagens.'},
       {id:'sec-ident',     icon:'👤', title:'Identidade',   hint:'@, WhatsApp e fontes', desc:'Inclua seu perfil e contato no rodapé e ajuste a tipografia do post.'},
       {id:'sec-assistente',icon:'✍️', title:'Legenda e IA', hint:'Legenda, roteiro e revisão', desc:'Gere a legenda, monte roteiros de carrossel e revise o conteúdo antes de publicar.', group:'Publicar'},
+      {id:'sec-salvar',    icon:'💾', title:'Salvar',       hint:'Projeto, imagem e compartilhamento', desc:'Salve o projeto, exporte imagens, vídeos ou carrossel e prepare o compartilhamento por e-mail.', group:'Publicar'},
       {id:'sec-hist',      icon:'🗂️', title:'Projetos',     hint:'Salvar e reabrir', desc:'Salve o post atual, busque e reabra projetos anteriores.', group:'Organizar', extra:true},
       {id:'sec-versoes',   icon:'🧬', title:'Versões',      hint:'Marcos de edição', desc:'Guarde versões de um projeto salvo para comparar ou voltar atrás.', extra:true},
       {id:'sec-calendario',icon:'🗓️', title:'Planejamento', hint:'Calendário editorial', desc:'Organize as próximas publicações por data e status.', extra:true},
