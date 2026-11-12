@@ -2864,7 +2864,7 @@ Terceiro item da lista</textarea></div>
     if(id==='title-line1')document.getElementById('input-line1').value=node.innerText;
     else if(id==='title-line2')document.getElementById('input-line2').value=node.innerText;
     else if(id==='preview-desc')document.getElementById('input-desc').value=node.innerText;
-    else if(id==='preview-list')document.getElementById('input-list').value=Array.from(node.querySelectorAll('li')).map(li=>li.innerText.trim()).filter(Boolean).join('\n');
+    else if(id==='preview-list')document.getElementById('input-list').value=node.innerText.split(/\n+/).map(line=>line.replace(/^\s*[•·]\s*/, '').trim()).filter(Boolean).join('\n');
     else if(id==='preview-tag1')document.getElementById('input-tag1').value=node.innerText;
     else if(id==='preview-tag2')document.getElementById('input-tag2').value=node.innerText;
     updatePreview();autoSaveDraft();
