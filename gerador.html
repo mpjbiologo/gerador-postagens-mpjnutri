@@ -1231,8 +1231,8 @@ Terceiro item da lista</textarea></div>
       <input type="search" id="project-search" class="project-search" placeholder="Buscar por nome ou pasta..." oninput="renderHistory()">
       <div class="project-toolbar"><select id="project-folder-filter" aria-label="Filtrar por pasta" onchange="renderHistory()"><option value="">Todas as pastas</option></select><select id="project-status-filter" aria-label="Filtrar por status" onchange="renderHistory()"><option value="">Todos os status</option><option>Rascunho</option><option>Em produção</option><option>Em revisão</option><option>Agendado</option><option>Publicado</option><option>Arquivado</option></select></div>
       <div id="history-list" class="history-list"><div class="history-empty">Nenhum projeto salvo ainda.</div></div>
-      <div class="project-library-actions"><button class="btn secondary" type="button" onclick="exportProjectBackup()">⬇ Backup completo</button><button class="btn secondary" type="button" onclick="document.getElementById('project-backup-file').click()">⬆ Restaurar backup</button><input type="file" id="project-backup-file" accept=".json,application/json" hidden onchange="importProjectBackup(this)"></div>
-      <p class="project-storage-note">Projetos, rascunhos e planejamento entram no backup. O arquivo de vídeo (armazenado separadamente no navegador) deve ser salvo à parte. Faça backups antes de limpar os dados do navegador.</p>
+      <div class="project-library-actions"><button class="btn secondary" type="button" onclick="exportProjectBackup()">⬇ Backup completo</button><button class="btn secondary" type="button" onclick="document.getElementById('project-backup-file').click()">⬆ Restaurar backup</button><input type="file" id="project-backup-file" accept=".zip,.json,application/zip,application/json" hidden onchange="importProjectBackup(this)"></div>
+      <p class="project-storage-note">O backup ZIP inclui projetos, rascunhos, planejamento e o vídeo carregado. Backups JSON antigos continuam aceitos. Faça backups antes de limpar os dados do navegador.</p>
       <div class="history-controls">
         <button class="btn secondary" id="undo-btn" onclick="undoEdit()" disabled>↶ Desfazer</button>
         <button class="btn secondary" id="redo-btn" onclick="redoEdit()" disabled>↷ Refazer</button>
@@ -2889,8 +2889,64 @@ Terceiro item da lista</textarea></div>
   }
   function setProjectStatus(id,status){const h=getHistory(),e=h.find(x=>String(x.id)===String(id));if(!e)return;e.status=status;e.updatedAt=Date.now();saveHistory(h);renderHistory();showToast('Status atualizado.');}
   function setProjectFolder(id){const h=getHistory(),e=h.find(x=>String(x.id)===String(id));if(!e)return;const folder=prompt('Nome da pasta/categoria:',e.folder||'Geral');if(folder===null)return;e.folder=folder.trim()||'Geral';e.updatedAt=Date.now();saveHistory(h);renderHistory();showToast('Pasta atualizada.');}
-  function exportProjectBackup(){try{const payload={format:'mpjnutri-library-backup',version:1,exportedAt:new Date().toISOString(),data:{projects:getHistory(),draft:localStorage.getItem(DRAFT_KEY)||'',editorialPlan:getEditorialPlan(),researchNotes:localStorage.getItem(RESEARCH_KEY)||'',brandProfile:localStorage.getItem(BRAND_PROFILE_KEY)||'',professionalProfile:localStorage.getItem(PROFESSIONAL_PROFILE_KEY)||''}};const blob=new Blob([JSON.stringify(payload)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='backup-gerador-mpjnutri-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);showToast('Backup completo exportado.');}catch(e){showToast('Falha ao gerar backup.');console.error(e);}}
-  async function importProjectBackup(input){const file=input?.files?.[0];if(!file)return;try{if(file.size>100*1024*1024)throw Error('Arquivo maior que 100 MB.');const p=JSON.parse(await file.text());if(p.format!=='mpjnutri-library-backup'||!p.data||!Array.isArray(p.data.projects))throw Error('Arquivo de backup inválido.');const replace=confirm('Restaurar backup? OK substitui a biblioteca atual; Cancelar mescla com os projetos existentes.');let projects=p.data.projects;if(replace){if(!confirm('Confirma substituir todos os projetos atuais?'))return;}else{const cur=getHistory(),seen=new Set(cur.map(x=>String(x.id)));projects=projects.map((x,i)=>{const c={...x};if(seen.has(String(c.id))){c.id=Date.now()+i+Math.floor(Math.random()*1000);c.name='Importado - '+(c.name||'Projeto');}return c;}).concat(cur);}saveHistory(projects);if(p.data.draft)localStorage.setItem(DRAFT_KEY,p.data.draft);if(Array.isArray(p.data.editorialPlan))localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(p.data.editorialPlan));if(p.data.researchNotes!==undefined)localStorage.setItem(RESEARCH_KEY,p.data.researchNotes);if(p.data.brandProfile)localStorage.setItem(BRAND_PROFILE_KEY,p.data.brandProfile);if(p.data.professionalProfile)localStorage.setItem(PROFESSIONAL_PROFILE_KEY,p.data.professionalProfile);renderHistory();renderEditorialPlan();showToast('Backup restaurado. Recarregue a página para aplicar o rascunho.');}catch(e){showToast('Falha ao restaurar: '+(e.message||'arquivo inválido'));}finally{input.value='';}}
+  async function exportProjectBackup(){
+    try{
+      const payload={format:'mpjnutri-library-backup',version:2,exportedAt:new Date().toISOString(),data:{projects:getHistory(),draft:localStorage.getItem(DRAFT_KEY)||'',editorialPlan:getEditorialPlan(),researchNotes:localStorage.getItem(RESEARCH_KEY)||'',brandProfile:localStorage.getItem(BRAND_PROFILE_KEY)||'',professionalProfile:localStorage.getItem(PROFESSIONAL_PROFILE_KEY)||''}};
+      const zip=new JSZip();
+      zip.file('backup.json',JSON.stringify(payload));
+      const video=await readVideoBlob();
+      if(video){
+        const ext=videoExtension(video.type);
+        zip.file('midia/video'+ext,video);
+        payload.data.video={path:'midia/video'+ext,type:video.type||'video/webm',name:video.name||'video'+ext,size:video.size};
+        zip.file('backup.json',JSON.stringify(payload));
+      }
+      const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:3}});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='backup-gerador-mpjnutri-'+new Date().toISOString().slice(0,10)+'.zip';
+      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+      showToast(video?'Backup completo exportado, incluindo o vídeo.':'Backup exportado. Nenhum vídeo estava carregado.');
+    }catch(e){showToast('Falha ao gerar backup: '+(e.message||'erro inesperado'));console.error(e);}
+  }
+  async function importProjectBackup(input){
+    const file=input?.files?.[0];if(!file)return;
+    try{
+      if(file.size>160*1024*1024)throw Error('Arquivo maior que 160 MB.');
+      let p,videoBlob=null;
+      if(file.name.toLowerCase().endsWith('.zip')){
+        const zip=await JSZip.loadAsync(file);
+        const jsonFile=zip.file('backup.json');
+        if(!jsonFile)throw Error('O ZIP não contém backup.json.');
+        p=JSON.parse(await jsonFile.async('string'));
+        if(p?.data?.video?.path){
+          const media=zip.file(p.data.video.path);
+          if(!media)throw Error('O vídeo indicado no backup não foi encontrado.');
+          videoBlob=await media.async('blob');
+          if(p.data.video.type)videoBlob=videoBlob.slice(0,videoBlob.size,p.data.video.type);
+        }
+      }else{
+        p=JSON.parse(await file.text());
+      }
+      if(p.format!=='mpjnutri-library-backup'||!p.data||!Array.isArray(p.data.projects))throw Error('Arquivo de backup inválido.');
+      const replace=confirm('Restaurar backup? OK substitui a biblioteca atual; Cancelar mescla com os projetos existentes.');
+      let projects=p.data.projects;
+      if(replace){if(!confirm('Confirma substituir todos os projetos atuais?'))return;}
+      else{
+        const cur=getHistory(),seen=new Set(cur.map(x=>String(x.id)));
+        projects=projects.map((x,i)=>{const c={...x};if(seen.has(String(c.id))){c.id=Date.now()+i+Math.floor(Math.random()*1000);c.name='Importado - '+(c.name||'Projeto');}return c;}).concat(cur);
+      }
+      if(!saveHistory(projects))throw Error('Não foi possível gravar os projetos. Verifique o espaço disponível.');
+      if(p.data.draft)localStorage.setItem(DRAFT_KEY,p.data.draft);
+      if(Array.isArray(p.data.editorialPlan))localStorage.setItem(EDITORIAL_PLAN_KEY,JSON.stringify(p.data.editorialPlan));
+      if(p.data.researchNotes!==undefined)localStorage.setItem(RESEARCH_KEY,p.data.researchNotes);
+      if(p.data.brandProfile)localStorage.setItem(BRAND_PROFILE_KEY,p.data.brandProfile);
+      if(p.data.professionalProfile)localStorage.setItem(PROFESSIONAL_PROFILE_KEY,p.data.professionalProfile);
+      if(videoBlob){await storeVideoBlob(videoBlob);attachVideoBlob(videoBlob);}
+      renderHistory();renderEditorialPlan();
+      showToast(videoBlob?'Backup restaurado, incluindo o vídeo. Recarregue a página para aplicar o rascunho.':'Backup restaurado. Recarregue a página para aplicar o rascunho.');
+    }catch(e){showToast('Falha ao restaurar: '+(e.message||'arquivo inválido'));console.error(e);}
+    finally{input.value='';}
+  }
   const EDITORIAL_PLAN_KEY='mpjnutri_editorial_plan';
   const RESEARCH_KEY='mpjnutri_research_notes';
   let currentProjectId=null;
