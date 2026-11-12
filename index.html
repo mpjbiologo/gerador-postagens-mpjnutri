@@ -150,6 +150,7 @@
   .theme-swatch.active { border-color: #fff; }
   .theme-swatch span { position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 8px; color: rgba(255,255,255,0.8); font-weight: 600; }
 
+  .custom-color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.custom-color-grid label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:var(--app-label);text-transform:none;letter-spacing:0}.custom-color-grid input[type=color]{width:42px;height:30px;padding:2px;border:1px solid var(--app-input-border);border-radius:6px;background:var(--app-input-bg);cursor:pointer}
   .format-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
   .format-btn {
     background: var(--app-btn-bg); border: 1px solid var(--app-btn-border); border-radius: 8px; padding: 10px 6px;
@@ -876,6 +877,14 @@ Terceiro item da lista</textarea></div>
           <div class="theme-swatch" data-theme="lavanda"         style="background:linear-gradient(135deg,#120a28,#251550)" onclick="setTheme(this)"><span>Lavanda</span></div>
           <div class="theme-swatch" data-theme="branco"          style="background:linear-gradient(135deg,#f8fafc,#dde4ee)" onclick="setTheme(this)"><span style="color:#334155">Branco</span></div>
           <div class="theme-swatch" data-theme="pôr"             style="background:linear-gradient(135deg,#1a0a14,#3d1a08)" onclick="setTheme(this)"><span>Pôr-do-sol</span></div>
+          <div class="theme-swatch" data-theme="coral" style="background:linear-gradient(135deg,#35131b,#ff8a80)" onclick="setTheme(this)"><span>coral</span></div>
+          <div class="theme-swatch" data-theme="oceano" style="background:linear-gradient(135deg,#071e35,#38bdf8)" onclick="setTheme(this)"><span>oceano</span></div>
+          <div class="theme-swatch" data-theme="ameixa" style="background:linear-gradient(135deg,#25102f,#d8a4ff)" onclick="setTheme(this)"><span>ameixa</span></div>
+          <div class="theme-swatch" data-theme="areia" style="background:linear-gradient(135deg,#f3e9d7,#d9a050)" onclick="setTheme(this)"><span>areia</span></div>
+          <div class="theme-swatch" data-theme="mentol" style="background:linear-gradient(135deg,#e6f4ef,#8bd3bd)" onclick="setTheme(this)"><span>mentol</span></div>
+          <div class="theme-swatch" data-theme="ameixa_clara" style="background:linear-gradient(135deg,#f4eafa,#c084fc)" onclick="setTheme(this)"><span>ameixa_clara</span></div>
+          <div class="theme-swatch" data-theme="carvao" style="background:linear-gradient(135deg,#20242b,#f59e0b)" onclick="setTheme(this)"><span>carvao</span></div>
+          <div class="theme-swatch" data-theme="cereja" style="background:linear-gradient(135deg,#350b20,#fb7185)" onclick="setTheme(this)"><span>cereja</span></div>
         </div>
       </div>
 
@@ -890,6 +899,12 @@ Terceiro item da lista</textarea></div>
           <div class="grad-swatch" data-grad="tricolor"          style="background:linear-gradient(160deg,#1e0a2a 0%,#c084f5 50%,#000 100%)" onclick="setGrad(this)"><span>Tri-cor</span></div>
           <div class="grad-swatch" data-grad="horiz"             style="background:linear-gradient(90deg,#0d2a3d,#7ec8db 100%)" onclick="setGrad(this)"><span>Horiz.</span></div>
           <div class="grad-swatch" data-grad="conic"             style="background:conic-gradient(from 135deg,#1a3d1f,#7edb7e,#0d2a3d,#1a3d1f)" onclick="setGrad(this)"><span>Cônico</span></div>
+          <div class="grad-swatch" data-grad="prisma" style="background:linear-gradient(135deg,#0f172a,#0ea5e9 48%,#a78bfa)" onclick="setGrad(this)"><span>Prisma</span></div>
+          <div class="grad-swatch" data-grad="mesh" style="background:radial-gradient(at 15% 20%,#f472b6,transparent 55%),radial-gradient(at 85% 20%,#38bdf8,transparent 55%),radial-gradient(at 50% 90%,#a3e635,transparent 55%),#172554" onclick="setGrad(this)"><span>Mesh</span></div>
+          <div class="grad-swatch" data-grad="noite" style="background:linear-gradient(145deg,#020617,#312e81 55%,#701a75)" onclick="setGrad(this)"><span>Noite</span></div>
+          <div class="grad-swatch" data-grad="ouro" style="background:linear-gradient(120deg,#422006,#d97706,#fde68a)" onclick="setGrad(this)"><span>Ouro</span></div>
+          <div class="grad-swatch" data-grad="fresh" style="background:linear-gradient(135deg,#064e3b,#34d399,#d1fae5)" onclick="setGrad(this)"><span>Fresh</span></div>
+          <div class="grad-swatch" data-grad="oceano2" style="background:linear-gradient(160deg,#082f49,#0891b2,#164e63)" onclick="setGrad(this)"><span>Oceano</span></div>
         </div>
       </div>
 
@@ -934,10 +949,19 @@ Terceiro item da lista</textarea></div>
           <button class="deco-btn" data-deco="grade" onclick="toggleDeco(this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="8" y1="2" x2="8" y2="22"/><line x1="16" y1="2" x2="16" y2="22"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="2" y1="16" x2="22" y2="16"/></svg>Grade
           </button>
+          <button class="deco-btn" data-deco="folhas" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 20C4 8 12 3 21 3c0 9-5 17-17 17Z M4 20 16 8"/></svg>Folhas</button>
+          <button class="deco-btn" data-deco="bolhas" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7" cy="16" r="4"/><circle cx="16" cy="7" r="3"/><circle cx="17" cy="18" r="2"/></svg>Bolhas</button>
+          <button class="deco-btn" data-deco="ondas2" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7Q7 2 12 7T22 7M2 14Q7 9 12 14T22 14M2 21Q7 16 12 21T22 21"/></svg>Ondas finas</button>
+          <button class="deco-btn" data-deco="mosaico" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Mosaico</button>
+          <button class="deco-btn" data-deco="ramos" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 22V4M12 10C4 10 4 3 4 3s8 0 8 7ZM12 16c8 0 8-7 8-7s-8 0-8 7Z"/></svg>Ramos</button>
+          <button class="deco-btn" data-deco="moldura" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/></svg>Moldura</button>
+          <button class="deco-btn" data-deco="arcos" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 21a9 9 0 0 1 18 0M7 21a5 5 0 0 1 10 0"/></svg>Arcos</button>
+          <button class="deco-btn" data-deco="confete" onclick="toggleDeco(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="m5 4 2 4m8-3 1 5m3 5 3-1M4 16l4 1m5 3 1-3"/></svg>Confete</button>
         </div>
       </div>
       <div class="field">
-        <label>Imagem decorativa</label>
+        <div class="field" style="border:1px solid var(--app-section-border);border-radius:9px;padding:10px"><label>Personalizar paleta de cores</label><div class="custom-color-grid"><label>Fundo <input type="color" id="custom-bg-color" value="#1a3d1f" oninput="updateCustomColors()"></label><label>Destaque <input type="color" id="custom-accent-color" value="#7edb7e" oninput="updateCustomColors()"></label><label>Título <input type="color" id="custom-title-color" value="#f0f5f0" oninput="updateCustomColors()"></label><label>Texto <input type="color" id="custom-body-color" value="#dcf0dc" oninput="updateCustomColors()"></label></div><button class="btn secondary" type="button" style="margin-top:8px;padding:8px" onclick="resetCustomColors()">↺ Restaurar cores do tema</button><div class="template-hint">As cores personalizadas acompanham o slide selecionado no carrossel.</div></div>
+      <label>Imagem decorativa</label>
         <div class="img-source-tabs">
           <div class="img-tab active" id="img-tab-url" onclick="switchImgTab('url')">🔗 URL</div>
           <div class="img-tab" id="img-tab-upload" onclick="switchImgTab('upload')">📁 Upload</div>
@@ -1284,11 +1308,24 @@ Terceiro item da lista</textarea></div>
     menta:    { bg:'#071a14', accent:'#6ee7b7', dark:'#030d09', g1:'rgba(100,230,180,0.25)',g2:'rgba(40,160,110,0.3)',footerBorder:'rgba(110,231,183,0.2)', titleColor:'#effffa' },
     lavanda:  { bg:'#120a28', accent:'#c4b5fd', dark:'#08041a', g1:'rgba(180,160,250,0.25)',g2:'rgba(120,90,220,0.3)',footerBorder:'rgba(196,181,253,0.2)', titleColor:'#f5f0ff' },
     branco:   { bg:'#f8fafc', accent:'#334155', dark:'#e2e8f0', g1:'rgba(100,120,160,0.12)',g2:'rgba(60,80,120,0.1)',footerBorder:'rgba(51,65,85,0.2)',     titleColor:'#0f172a', lightBg:true },
-    pôr:      { bg:'#1a0a14', accent:'#fb923c', dark:'#0d0508', g1:'rgba(251,146,60,0.3)',  g2:'rgba(220,60,30,0.3)', footerBorder:'rgba(251,146,60,0.2)',  titleColor:'#fff7ed' }
+    pôr:      { bg:'#1a0a14', accent:'#fb923c', dark:'#0d0508', g1:'rgba(251,146,60,0.3)',  g2:'rgba(220,60,30,0.3)', footerBorder:'rgba(251,146,60,0.2)',  titleColor:'#fff7ed' }    ,coral:{bg:'#35131b',accent:'#ff8a80',dark:'#1b080c',g1:'rgba(255,138,128,0.28)',g2:'rgba(255,80,100,0.24)',footerBorder:'rgba(255,138,128,0.2)',titleColor:'#fff1f0'}
+    ,oceano:{bg:'#071e35',accent:'#38bdf8',dark:'#03101d',g1:'rgba(56,189,248,0.3)',g2:'rgba(29,78,216,0.3)',footerBorder:'rgba(56,189,248,0.2)',titleColor:'#effaff'}
+    ,ameixa:{bg:'#25102f',accent:'#d8a4ff',dark:'#100719',g1:'rgba(216,164,255,0.28)',g2:'rgba(139,92,246,0.28)',footerBorder:'rgba(216,164,255,0.2)',titleColor:'#fbf3ff'}
+    ,areia:{bg:'#f3e9d7',accent:'#a16207',dark:'#e7d7bd',g1:'rgba(217,160,80,0.2)',g2:'rgba(180,120,50,0.16)',footerBorder:'rgba(161,98,7,0.2)',titleColor:'#422006',lightBg:true}
+    ,mentol:{bg:'#e6f4ef',accent:'#087f6b',dark:'#c8e6dc',g1:'rgba(8,127,107,0.18)',g2:'rgba(45,160,130,0.12)',footerBorder:'rgba(8,127,107,0.2)',titleColor:'#064e3b',lightBg:true}
+    ,ameixa_clara:{bg:'#f4eafa',accent:'#8b3fb0',dark:'#e7d5f2',g1:'rgba(139,63,176,0.18)',g2:'rgba(190,120,220,0.14)',footerBorder:'rgba(139,63,176,0.2)',titleColor:'#42105c',lightBg:true}
+    ,carvao:{bg:'#20242b',accent:'#f59e0b',dark:'#090b0e',g1:'rgba(245,158,11,0.22)',g2:'rgba(100,116,139,0.2)',footerBorder:'rgba(245,158,11,0.2)',titleColor:'#f8fafc'}
+    ,cereja:{bg:'#350b20',accent:'#fb7185',dark:'#180510',g1:'rgba(251,113,133,0.28)',g2:'rgba(190,24,93,0.28)',footerBorder:'rgba(251,113,133,0.2)',titleColor:'#fff1f2'}
   };
   let currentTheme = 'verde';
   let currentGradStyle = 'padrao';
   const activeDecos = new Set(['circulos']);
+  let customColors=null;
+  function activeVisualTheme(){return customColors?{...THEMES[currentTheme],bg:customColors.bg,accent:customColors.accent,titleColor:customColors.title,bodyColor:customColors.body,g1:hexToRgba(customColors.accent,.3),g2:hexToRgba(customColors.accent,.18)}:THEMES[currentTheme];}
+  function syncCustomColorInputs(){const t=activeVisualTheme();[['custom-bg-color',t.bg],['custom-accent-color',t.accent],['custom-title-color',t.titleColor],['custom-body-color',t.bodyColor||(t.lightBg?'#26352b':'#dcf0dc')]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.value=v;});}
+  function updateCustomColors(){const ids=['custom-bg-color','custom-accent-color','custom-title-color','custom-body-color'];if(!ids.every(id=>document.getElementById(id)))return;customColors={bg:document.getElementById(ids[0]).value,accent:document.getElementById(ids[1]).value,title:document.getElementById(ids[2]).value,body:document.getElementById(ids[3]).value};const t=activeVisualTheme(),root=document.documentElement;root.style.setProperty('--accent',t.accent);root.style.setProperty('--accent-dark',t.dark);root.style.setProperty('--bg-post',t.bg);document.getElementById('post').style.background=t.bg;document.getElementById('title-line1').style.color=t.titleColor;document.getElementById('title-line2').style.color=t.accent;['preview-desc','preview-list','preview-wa'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.color=t.bodyColor;});document.getElementById('preview-list').querySelectorAll('li').forEach(li=>li.style.color=t.bodyColor);document.getElementById('footer').style.borderTopColor=t.footerBorder;renderDecos();applyPostGradient(t);saveCurrentCarouselSlide();autoSaveDraft();}
+  function resetCustomColors(){customColors=null;syncCustomColorInputs();setTheme(document.querySelector('.theme-swatch[data-theme="'+currentTheme+'"]'));}
+
 
   const POST_TEMPLATES = {
   "original": {
@@ -1570,6 +1607,7 @@ Terceiro item da lista</textarea></div>
     document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
     el.classList.add('active');
     currentTheme = el.dataset.theme;
+    customColors=null;syncCustomColorInputs();
     const t = THEMES[currentTheme];
     document.getElementById('post').style.background = t.bg;
     document.documentElement.style.setProperty('--accent', t.accent);
@@ -1604,7 +1642,7 @@ Terceiro item da lista</textarea></div>
   function updateGrad(el) {
     document.documentElement.style.setProperty('--grad-intensity', el.value / 100);
     document.getElementById('grad-val').textContent = el.value + '%';
-    applyPostGradient(THEMES[currentTheme]);
+    applyPostGradient(activeVisualTheme());
   }
 
   function applyPostGradient(t) {
@@ -1620,6 +1658,12 @@ Terceiro item da lista</textarea></div>
       tricolor: 'linear-gradient(160deg,'+t.bg+' 0%,'+g1+' 50%,rgba(0,0,0,'+(0.4*intensity).toFixed(2)+') 100%)',
       horiz:    'linear-gradient(90deg,'+t.bg+','+g1+')',
       conic:    'conic-gradient(from 135deg at 60% 40%,'+t.bg+','+g1+','+t.bg+','+g2+','+t.bg+')',
+      prisma:'linear-gradient(135deg,'+t.bg+' 0%,'+g1+' 48%,'+g2+' 100%)',
+      mesh:'radial-gradient(ellipse at 15% 20%,'+g1+' 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,'+g2+' 0%,transparent 55%),radial-gradient(ellipse at 50% 90%,'+g1+' 0%,transparent 55%),'+t.bg,
+      noite:'linear-gradient(145deg,'+t.bg+' 0%,'+g1+' 55%,'+g2+' 100%)',
+      ouro:'linear-gradient(120deg,'+t.bg+' 0%,'+g1+' 50%,'+g2+' 100%)',
+      fresh:'linear-gradient(135deg,'+t.bg+' 0%,'+g1+' 55%,'+g2+' 100%)',
+      oceano2:'linear-gradient(160deg,'+t.bg+' 0%,'+g1+' 55%,'+g2+' 100%)',
     };
     const val = map[currentGradStyle] || map['padrao'];
     let s = document.getElementById('_grad_style');
@@ -1647,7 +1691,7 @@ Terceiro item da lista</textarea></div>
   }
 
   function renderDecos() {
-    const t = THEMES[currentTheme];
+    const t = activeVisualTheme();
     const a = t.accent;
     const svg = document.getElementById('deco-svg-layer');
     svg.innerHTML = '';
@@ -1744,6 +1788,13 @@ Terceiro item da lista</textarea></div>
         });
       });
     }
+    if(activeDecos.has('folhas')||activeDecos.has('ramos')){const gr=g(0.18);[[70,100],[520,360],[110,440],[550,90]].forEach(([x,y],i)=>{const dir=i%2?-1:1;gr.appendChild(el('path',{d:'M'+x+','+y+' q'+(55*dir)+',-65 '+(90*dir)+',-35 q'+(-5*dir)+',55 '+(-90*dir)+',35 Z',fill:'none',stroke:a,'stroke-width':'2'}));gr.appendChild(el('path',{d:'M'+x+','+y+' l'+(90*dir)+',-35',stroke:a,'stroke-width':'1.2'}));});}
+    if(activeDecos.has('bolhas')){const gr=g(0.18);[[80,90,24],[530,130,38],[470,430,18],[130,360,12],[330,70,9]].forEach(([x,y,r])=>gr.appendChild(el('circle',{cx:x,cy:y,r,fill:'none',stroke:a,'stroke-width':'1.5'})));}
+    if(activeDecos.has('ondas2')){const gr=g(0.16);for(let y=70;y<520;y+=32)gr.appendChild(el('path',{d:'M0,'+y+' Q80,'+(y-18)+' 160,'+y+' T320,'+y+' T480,'+y+' T640,'+y,fill:'none',stroke:a,'stroke-width':'1'}));}
+    if(activeDecos.has('mosaico')){const gr=g(0.12);for(let x=390;x<620;x+=34)for(let y=40;y<500;y+=34)gr.appendChild(el('rect',{x,y,width:18,height:18,rx:3,fill:'none',stroke:a,'stroke-width':'1'}));}
+    if(activeDecos.has('moldura')){const gr=g(0.28);gr.appendChild(el('path',{d:'M18 90V18H90 M430 18H502V90 M18 430V502H90 M430 502H502V430',fill:'none',stroke:a,'stroke-width':'2'}));}
+    if(activeDecos.has('arcos')){const gr=g(0.18);[70,95,120].forEach(r=>gr.appendChild(el('path',{d:'M'+(320-r)+',520 A'+r+','+r+' 0 0 1 '+(320+r)+',520',fill:'none',stroke:a,'stroke-width':'1.4'})));}
+    if(activeDecos.has('confete')){const gr=g(0.2);[[65,70],[530,85],[480,440],[100,400],[300,55],[570,300],[210,470],[400,170]].forEach(([x,y],i)=>gr.appendChild(el('line',{x1:x,y1:y,x2:x+(i%2?9:-7),y2:y+14,stroke:a,'stroke-width':'3','stroke-linecap':'round'})));}
     if (activeDecos.has('grade')) {
       const gr = g(0.07);
       for (let x=320; x<=600; x+=30) gr.appendChild(el('line', {x1:x,y1:0,x2:x,y2:520,stroke:a,'stroke-width':'0.6'}));
@@ -1762,7 +1813,7 @@ Terceiro item da lista</textarea></div>
   let carouselSlides=[];
   let activeCarouselSlide=0;
   function readCarouselFields(){
-    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content'),slideFormat:document.getElementById('post').dataset.format||'retrato',slideTheme:currentTheme,slideGrad:currentGradStyle,slideDecos:Array.from(activeDecos),slideFontFamily:document.getElementById('font-family').value,slideTitleSize:document.getElementById('title-size').value,slideBodySize:document.getElementById('body-size').value,slideTitleAlign:document.getElementById('title-align')?.value||'center',slideBodyAlign:document.getElementById('body-align')?.value||'left',slideBackground:backgroundImageData,slideBackgroundFit:document.getElementById('background-fit')?.value||'cover'};
+    return {line1:document.getElementById('input-line1').value,line2:document.getElementById('input-line2').value,desc:document.getElementById('input-desc').value,list:document.getElementById('input-list').value,listNum:document.getElementById('toggle-list-num').checked,tag1:document.getElementById('input-tag1').value,tag2:document.getElementById('input-tag2').value,showTag1:document.getElementById('btn-tag1-toggle').classList.contains('active'),showTag2:document.getElementById('btn-tag2-toggle').classList.contains('active'),imgUrl:document.getElementById('input-img').value,image:window._uploadedImgSrc||'',showImg:document.getElementById('toggle-img').checked,imgColor:document.getElementById('toggle-img-color').checked,imageEdit:currentImageEdit(),slideType:carouselSlides[activeCarouselSlide]?.slideType||(activeCarouselSlide===0?'cover':'content'),slideFormat:document.getElementById('post').dataset.format||'retrato',slideTheme:currentTheme,slideGrad:currentGradStyle,slideDecos:Array.from(activeDecos),slideCustomColors:customColors?{...customColors}:null,slideFontFamily:document.getElementById('font-family').value,slideTitleSize:document.getElementById('title-size').value,slideBodySize:document.getElementById('body-size').value,slideTitleAlign:document.getElementById('title-align')?.value||'center',slideBodyAlign:document.getElementById('body-align')?.value||'left',slideBackground:backgroundImageData,slideBackgroundFit:document.getElementById('background-fit')?.value||'cover'};
   }
   function saveCurrentCarouselSlide(){
     if(document.getElementById('post').dataset.mode!=='carrossel'||!carouselSlides.length)return;
@@ -1772,6 +1823,7 @@ Terceiro item da lista</textarea></div>
   function applyCarouselSlide(i){
     const d=carouselSlides[i];if(!d)return;activeCarouselSlide=i;
     currentTheme=THEMES[d.slideTheme]?d.slideTheme:'verde';
+    customColors=d.slideCustomColors?{...d.slideCustomColors}:null;syncCustomColorInputs();
     currentGradStyle=d.slideGrad||'padrao';
     activeDecos.clear();(Array.isArray(d.slideDecos)?d.slideDecos:['circulos']).forEach(x=>activeDecos.add(x));
     document.querySelectorAll('.theme-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===currentTheme));
