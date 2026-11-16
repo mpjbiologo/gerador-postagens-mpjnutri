@@ -2207,22 +2207,24 @@ Terceiro item da lista</textarea></div>
   }
   function setFormat(el){
     const p=document.getElementById('post'),fmt=el.dataset.fmt;
-    if(p.dataset.mode==='carrossel'&&fmt!=='carrossel'){
-      saveCurrentCarouselSlide();p.dataset.format=fmt;
-      document.querySelectorAll('.format-btn').forEach(b=>b.classList.toggle('active',b===el));
-      if(carouselSlides[activeCarouselSlide])carouselSlides[activeCarouselSlide].slideFormat=fmt;
-      updatePreview();autoSaveDraft();return;
-    }
+    // Salva o slide atual antes de trocar de formato, mas permite sair do carrossel.
     if(p.dataset.mode==='carrossel')saveCurrentCarouselSlide();
-    document.querySelectorAll('.format-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
+    document.querySelectorAll('.format-btn').forEach(b=>b.classList.toggle('active',b===el));
     if(fmt==='carrossel'){
-      p.dataset.format='retrato';p.dataset.mode='carrossel';if(!carouselSlides.length)carouselSlides=[readCarouselFields()];
+      p.dataset.format='retrato';p.dataset.mode='carrossel';
+      if(!carouselSlides.length)carouselSlides=[readCarouselFields()];
       if(carouselSlides.length===1)setCarouselSlideCount(6);
-      document.getElementById('carousel-tools').classList.add('visible');applyCarouselSlide(Math.min(activeCarouselSlide,carouselSlides.length-1));
-      syncStepCarouselSelectors();
+      document.getElementById('carousel-tools').classList.add('visible');
+      applyCarouselSlide(Math.min(activeCarouselSlide,carouselSlides.length-1));
     }else{
-      p.dataset.format=fmt;p.dataset.mode=fmt;document.getElementById('carousel-tools').classList.remove('visible');
+      // Formatos 1:1, 4:5 e 9:16 representam uma publicação única.
+      // Os slides ficam guardados no estado local para poder reativar o carrossel depois.
+      p.dataset.format=fmt;p.dataset.mode=fmt;
+      document.getElementById('carousel-tools').classList.remove('visible');
       p.classList.remove('is-carousel','carousel-cover','carousel-content');
+      ['list','comparison','tip','closing'].forEach(t=>p.classList.remove('carousel-type-'+t));
+      syncStepCarouselSelectors();
+      updatePreview();
     }
     requestAnimationFrame(fitTitleFonts);autoSaveDraft();
   }
