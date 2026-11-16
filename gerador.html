@@ -1342,12 +1342,12 @@ Terceiro item da lista</textarea></div>
         </div>
 
         <div class="editorial-card">
-          <div class="editorial-card-head"><div><span class="editorial-kicker">03 · CARROSSEL</span><h3>Roteiro e estrutura</h3><p>Crie uma sequência de slides com ou sem IA.</p></div><span class="editorial-card-icon">▤</span></div>
-          <div class="field"><label for="editor-slide-count">Quantidade de slides</label><select id="editor-slide-count"><option value="2">2 slides</option><option value="3">3 slides</option><option value="4">4 slides</option><option value="5">5 slides</option><option value="6" selected>6 slides</option><option value="7">7 slides</option><option value="8">8 slides</option><option value="9">9 slides</option><option value="10">10 slides</option><option value="11">11 slides</option><option value="12">12 slides</option></select><small class="template-hint">A quantidade inclui a capa e o encerramento.</small></div>
-          <button class="btn" type="button" onclick="generateEditorialCarousel()">Criar estrutura de carrossel</button>
-          <button class="btn" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA</button>
-          <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">Copiar briefing para IA</button>
-          <div id="ai-generation-status" class="settings-status" aria-live="polite">O roteiro gerado não será aplicado sem sua aprovação.</div>
+          <div class="editorial-card-head"><div><span class="editorial-kicker">03 · CRIAÇÃO DE CONTEÚDO</span><h3>Roteiro e estrutura</h3><p>Escolha entre uma publicação única ou um carrossel, com criação manual assistida ou IA.</p></div><span class="editorial-card-icon">▤</span></div>
+          <div class="editorial-action-row"><button class="btn" type="button" onclick="generateEditorialSinglePost()">Criar estrutura de post único</button><button class="btn secondary" type="button" onclick="generateSinglePostWithAI()" id="ai-single-generate-btn">🤖 Gerar post único com IA</button></div>
+          <div class="field"><label for="editor-slide-count">Quantidade de slides do carrossel</label><select id="editor-slide-count"><option value="2">2 slides</option><option value="3">3 slides</option><option value="4">4 slides</option><option value="5">5 slides</option><option value="6" selected>6 slides</option><option value="7">7 slides</option><option value="8">8 slides</option><option value="9">9 slides</option><option value="10">10 slides</option><option value="11">11 slides</option><option value="12">12 slides</option></select><small class="template-hint">A quantidade inclui a capa e o encerramento.</small></div>
+          <div class="editorial-action-row"><button class="btn" type="button" onclick="generateEditorialCarousel()">Criar estrutura de carrossel</button><button class="btn secondary" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA</button></div>
+          <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">Copiar briefing de carrossel para IA</button>
+          <div id="ai-generation-status" class="settings-status" aria-live="polite">Escolha o tipo de publicação. O conteúdo gerado poderá ser revisado e editado.</div>
           <div id="ai-draft-review" class="template-hint" style="display:none"></div>
           <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro ao carrossel</button>
         </div>
@@ -3236,6 +3236,60 @@ Terceiro item da lista</textarea></div>
     document.getElementById('ai-generation-status').textContent='Roteiro aplicado. Personalize os slides e revise as referências antes de publicar.';
     document.getElementById('ai-apply-btn').style.display='none';document.getElementById('ai-draft-review').style.display='none';stagedAISlides=null;
     showToast('Carrossel da IA aplicado. Revise antes de publicar.');
+  }
+
+  function generateEditorialSinglePost(){
+    const topic=document.getElementById('editor-topic').value.trim();
+    const audience=document.getElementById('editor-audience').value.trim()||'público geral';
+    const goal=document.getElementById('editor-goal').value;
+    if(!topic){showToast('Informe o tema da publicação.');return;}
+    const formatButton=document.querySelector('.format-btn[data-fmt="retrato"]');
+    if(formatButton)setFormat(formatButton);
+    document.getElementById('input-line1').value=topic;
+    document.getElementById('input-line2').value='O que você precisa saber';
+    document.getElementById('input-desc').value='Uma informação essencial sobre '+topic+', explicada de forma clara e útil para '+audience+'. Contextualize o tema, destaque o principal cuidado e evite generalizações.';
+    document.getElementById('input-list').value='Entenda o contexto\nConsidere as particularidades\nBusque informações confiáveis';
+    document.getElementById('toggle-list-num').checked=false;
+    document.getElementById('input-tag1').value=goal==='educar'?'Informação de qualidade':'Conteúdo para você';
+    document.getElementById('input-tag2').value='';
+    setTagActive(1,true);setTagActive(2,false);
+    updatePreview();autoSaveDraft();
+    document.getElementById('ai-generation-status').textContent='Estrutura de post único criada. Edite o texto, personalize o visual e revise as informações.';
+    showToast('Estrutura de post único criada.');
+  }
+  async function generateSinglePostWithAI(){
+    const topic=document.getElementById('editor-topic').value.trim();
+    if(!topic){showToast('Informe o tema da publicação.');return;}
+    const btn=document.getElementById('ai-single-generate-btn'),status=document.getElementById('ai-generation-status');
+    const audience=document.getElementById('editor-audience').value.trim()||'público geral';
+    const goal=document.getElementById('editor-goal').value;
+    btn.disabled=true;btn.textContent='⏳ Gerando post...';status.textContent='A IA está preparando uma publicação única. O conteúdo será aplicado ao editor para revisão.';
+    try{
+      const prompt=[
+        'Crie o conteúdo de UMA ÚNICA ARTE estática para Instagram, em português brasileiro.',
+        buildProfessionalEditorialContext(),
+        'Tema: '+topic+'. Público: '+audience+'. Objetivo: '+goal+'.',
+        'Produza uma chamada principal curta, um complemento curto, uma descrição objetiva e até 3 itens opcionais de apoio. Priorize uma ideia central, boa hierarquia e leitura rápida em celular. Não escreva sequência de slides nem use expressões como deslize para continuar.',
+        'Respeite os limites: line1 até 55 caracteres; line2 até 55; desc até 220; list até 3 itens curtos.',
+        'Não invente estudos, números, DOI, autores ou referências. Evite promessas, diagnósticos e prescrições individualizadas.',
+        'Referências/observações fornecidas: '+(document.getElementById('research-notes').value.trim()||'(nenhuma)'),
+        'Retorne SOMENTE JSON válido: {"line1":"...","line2":"...","desc":"...","list":["...","..."],"tag1":"..."}'
+      ].join('\n\n');
+      const result=await requestConfiguredAI(prompt,'Você é um editor de conteúdo para Instagram. Crie uma arte única clara, concisa, responsável e tecnicamente cuidadosa.');
+      if(!result||typeof result!=='object'||!String(result.line1||'').trim()||!String(result.desc||'').trim())throw new Error('A IA não retornou os campos essenciais. Tente novamente.');
+      const formatButton=document.querySelector('.format-btn[data-fmt="retrato"]');if(formatButton)setFormat(formatButton);
+      document.getElementById('input-line1').value=String(result.line1).trim().slice(0,90);
+      document.getElementById('input-line2').value=String(result.line2||'').trim().slice(0,90);
+      document.getElementById('input-desc').value=String(result.desc).trim().slice(0,650);
+      document.getElementById('input-list').value=(Array.isArray(result.list)?result.list:String(result.list||'').split('\n')).map(x=>String(x).trim()).filter(Boolean).slice(0,3).join('\n');
+      document.getElementById('toggle-list-num').checked=false;
+      document.getElementById('input-tag1').value=String(result.tag1||'').trim().slice(0,45);
+      document.getElementById('input-tag2').value='';setTagActive(1,!!result.tag1);setTagActive(2,false);
+      updatePreview();autoSaveDraft();
+      status.textContent='Post único gerado e aplicado ao editor. Revise o texto, as fontes e a adequação profissional antes de publicar.';
+      showToast('Post único gerado com IA. Revise antes de publicar.');
+    }catch(e){status.textContent='Não foi possível gerar o post único: '+(e.message||'erro desconhecido');}
+    finally{btn.disabled=false;btn.textContent='🤖 Gerar post único com IA';}
   }
 
   function generateEditorialCarousel(){
