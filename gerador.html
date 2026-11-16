@@ -1347,6 +1347,7 @@ Terceiro item da lista</textarea></div>
           <div class="field"><label for="editor-slide-count">Quantidade de slides do carrossel</label><select id="editor-slide-count"><option value="2">2 slides</option><option value="3">3 slides</option><option value="4">4 slides</option><option value="5">5 slides</option><option value="6" selected>6 slides</option><option value="7">7 slides</option><option value="8">8 slides</option><option value="9">9 slides</option><option value="10">10 slides</option><option value="11">11 slides</option><option value="12">12 slides</option></select><small class="template-hint">A quantidade inclui a capa e o encerramento.</small></div>
           <div class="editorial-action-row"><button class="btn" type="button" onclick="generateEditorialCarousel()">Criar estrutura de carrossel</button><button class="btn secondary" type="button" onclick="generateCarouselWithAI()" id="ai-generate-btn">🤖 Gerar carrossel com IA</button></div>
           <button class="btn secondary" type="button" onclick="copyEditorialPrompt()">Copiar briefing de carrossel para IA</button>
+          <button class="btn secondary" type="button" onclick="clearEditorialStructure()">🗑 Limpar tudo</button>
           <div id="ai-generation-status" class="settings-status" aria-live="polite">Escolha o tipo de publicação. O conteúdo gerado poderá ser revisado e editado.</div>
           <div id="ai-draft-review" class="template-hint" style="display:none"></div>
           <button class="btn" type="button" id="ai-apply-btn" style="display:none" onclick="applyAIGeneratedCarousel()">✓ Aplicar roteiro ao carrossel</button>
@@ -3236,6 +3237,26 @@ Terceiro item da lista</textarea></div>
     document.getElementById('ai-generation-status').textContent='Roteiro aplicado. Personalize os slides e revise as referências antes de publicar.';
     document.getElementById('ai-apply-btn').style.display='none';document.getElementById('ai-draft-review').style.display='none';stagedAISlides=null;
     showToast('Carrossel da IA aplicado. Revise antes de publicar.');
+  }
+
+  function clearEditorialStructure(){
+    if(!confirm('Limpar os dados de roteiro e estrutura? Isso apagará o tema, público, objetivo e um roteiro de IA ainda não aplicado. A arte que já está no editor e os projetos salvos serão preservados.'))return;
+    const topic=document.getElementById('editor-topic');
+    const audience=document.getElementById('editor-audience');
+    const goal=document.getElementById('editor-goal');
+    const count=document.getElementById('editor-slide-count');
+    if(topic)topic.value='';
+    if(audience)audience.value='';
+    if(goal)goal.value='educar';
+    if(count)count.value='6';
+    stagedAISlides=null;
+    const review=document.getElementById('ai-draft-review');
+    if(review){review.innerHTML='';review.style.display='none';}
+    const apply=document.getElementById('ai-apply-btn');
+    if(apply)apply.style.display='none';
+    const status=document.getElementById('ai-generation-status');
+    if(status)status.textContent='Roteiro e estrutura limpos. A arte atual e os projetos salvos foram preservados.';
+    showToast('Roteiro e estrutura limpos.');
   }
 
   function generateEditorialSinglePost(){
