@@ -945,7 +945,7 @@ body:not(.carousel-mode) .carousel-only{display:none}
       <div class="field"><label>Linha 1 do título</label><input type="text" id="input-line1" value="Seu título" oninput="updatePreview()"></div>
       <div class="field"><label>Linha 2 (destaque colorido)</label><input type="text" id="input-line2" value="aqui" oninput="updatePreview()"></div>
       <div class="field"><label>Descrição</label><textarea id="input-desc" oninput="updatePreview()">Escreva aqui uma descrição curta e envolvente sobre o assunto do post.</textarea></div>
-      <div class="field"><label>Alinhamento do título</label><select id="title-align" onchange="applyTextAlignment();autoSaveDraft()"><option value="left">À esquerda</option><option value="center" selected>Centralizado</option><option value="right">À direita</option></select></div>
+      <div class="field"><label>Alinhamento do título</label><select id="title-align" onchange="applyTextAlignment();autoSaveDraft()"><option value="left">À esquerda</option><option value="center" selected>Centralizado</option><option value="right">À direita</option><option value="justify">Justificado</option></select></div>
       <div class="field"><label>Alinhamento do texto e lista</label><select id="body-align" onchange="applyTextAlignment();autoSaveDraft()"><option value="left" selected>À esquerda</option><option value="center">Centralizado</option><option value="right">À direita</option><option value="justify">Justificado</option></select></div>
       <div class="field" style="border-top:1px solid var(--app-section-border);padding-top:12px;margin-top:8px">
         <label>Fonte e tamanho</label>
@@ -3911,6 +3911,7 @@ Terceiro item da lista</textarea></div>
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return false;
       const d = JSON.parse(raw);
+      if(d.textBoxLayout)applyTextBoxLayout(d.textBoxLayout);
       if(d.researchNotes!==undefined&&document.getElementById('research-notes'))document.getElementById('research-notes').value=d.researchNotes;
       if(d.caption!==undefined&&document.getElementById('caption-output'))document.getElementById('caption-output').value=d.caption;
       if (d.line1  !== undefined) document.getElementById('input-line1').value  = d.line1;
